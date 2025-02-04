@@ -1,0 +1,34 @@
+[font]
+size = 14.0
+
+[font.bold]
+family = "Hack"
+style = "Bold"
+
+[font.bold_italic]
+family = "Hack"
+style = "Bold Italic"
+
+[font.italic]
+family = "Hack"
+style = "Italic"
+
+[font.normal]
+family = "Hack"
+style = "Regular"
+
+# [font.bold]
+# family = "DMMono"
+# style = "Bold"
+#
+# [font.bold_italic]
+# family = "DMMono"
+# style = "Bold Italic"
+#
+# [font.italic]
+# family = "DMMono"
+# style = "Italic"
+#
+# [font.normal]
+# family = "DMMono"
+# style = "Regular"
