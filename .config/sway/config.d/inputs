@@ -1,0 +1,14 @@
+# Custom stuff
+input type:keyboard {
+    xkb_layout us,dk
+    xkb_options grp:lwin_toggle,caps:escape
+
+    repeat_delay 200
+    repeat_rate 25
+}
+input type:touchpad {
+      dwt enabled
+      tap enabled
+      natural_scroll enabled
+      middle_emulation enabled
+  }

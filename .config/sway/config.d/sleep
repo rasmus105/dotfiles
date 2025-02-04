@@ -1,0 +1,10 @@
+### Idle configuration
+exec swayidle -w \
+         timeout 3000 'swaylock -f -c 000000 -i $lockscreenbg; bash /home/rasmus105/.config/sway/scripts/audioOff.sh' \
+         timeout 3200 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
+         before-sleep 'swaylock -f -c 000000 -i $lockscreenbg; bash /home/rasmus105/.config/sway/scripts/audioOff.sh'
+         # after-resume 'bash /home/rasmus105/.config/sway/scripts/restart_touchpad.sh'
+         # before-sleep 'bash /home/rasmus105/.config/sway/scripts/audioOff.sh'
+
+set $lockscreenbg /home/rasmus105/.config/sway/images/Windows-11-Bloom-Screensaver-Dark-scaled.jpg
+bindsym $mod+o exec  'swaylock -f -i $lockscreenbg'

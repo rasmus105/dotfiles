@@ -1,0 +1,26 @@
+# File for setting the default workspaces.
+# Get monitors with 'swaymsg -t get_outputs'
+
+# The following retrieves e.g. DP-7
+# Not sure if $leftMonitor will always be left etc., but think it's the position of the monitors in sway
+#
+# set $leftMonitor  swaymsg -t get_outputs | grep name | awk ' NR == 1 { print $2 } ' | tr -d '",'
+# set $middleMonitor swaymsg -t get_outputs | grep name | awk ' NR == 2 { print $2 } ' | tr -d '",'
+# set $rightMonitor swaymsg -t get_outputs | grep name | awk ' NR == 3 { print $2 } ' | tr -d '",'
+
+output "AOC 24G1WG4 0x00004A88" mode 1920x1080@120.000Hz pos 0 320
+# output "Philips Consumer Electronics Company PHL 243V7 UHB1936009762" mode 1920x1080@60.000Hz pos 1920 0
+output "Dell Inc. DELL G3223Q C73MF34" mode 3840x2160@59.997Hz pos 1920 0 adaptive_sync disabled scale 1
+output "BOE 0x0931 Unknown" mode 2240x1400@60.002Hz pos 5760 760
+
+workspace 1 output "AOC 24G1WG4 0x00004A88"
+workspace 5 output "AOC 24G1WG4 0x00004A88"
+
+# workspace 2 output "Philips Consumer Electronics Company PHL 243V7 UHB1936009762"
+# workspace 4 output "Philips Consumer Electronics Company PHL 243V7 UHB1936009762"
+workspace 2 output "Dell Inc. DELL G3223Q C73MF34"
+workspace 4 output "Dell Inc. DELL G3223Q C73MF34"
+
+workspace 3 output "BOE 0x0931 Unknown"
+workspace 8 output "BOE 0x0931 Unknown"
+workspace 9 output "BOE 0x0931 Unknown"
