@@ -1,2 +1,2 @@
-modprobe -r hid_multitouch
-modprobe hid_multitouch
+sudo modprobe -r hid_multitouch
+sudo modprobe hid_multitouch

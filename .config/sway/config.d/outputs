@@ -10,8 +10,9 @@
 
 output "AOC 24G1WG4 0x00004A88" mode 1920x1080@120.000Hz pos 0 320
 # output "Philips Consumer Electronics Company PHL 243V7 UHB1936009762" mode 1920x1080@60.000Hz pos 1920 0
-output "Dell Inc. DELL G3223Q C73MF34" mode 3840x2160@59.997Hz pos 1920 0 adaptive_sync disabled scale 1
-output "BOE 0x0931 Unknown" mode 2240x1400@60.002Hz pos 5760 760
+output "Dell Inc. DELL G3223Q C73MF34" mode 3840x2160@59.997Hz pos 1920 0 adaptive_sync disabled scale 1.4
+# output "BOE 0x0931 Unknown" mode 2240x1400@60.002Hz pos 5760 760
+output "BOE 0x0931 Unknown" mode 2240x1400@60.002Hz pos 4666 760
 
 workspace 1 output "AOC 24G1WG4 0x00004A88"
 workspace 5 output "AOC 24G1WG4 0x00004A88"
