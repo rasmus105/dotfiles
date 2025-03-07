@@ -32,7 +32,8 @@ return {
 					desc = "Find Files",
 				},
 				{
-					";a",
+					-- ";a",
+					"\\a",
 					function()
 						require("telescope.builtin").find_files({
 							no_ignore = false,

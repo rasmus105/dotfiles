@@ -51,7 +51,6 @@ require("lazy").setup({
 		{ "akinsho/bufferline.nvim", enabled = false },
 		{ "catppuccin/nvim", enabled = false },
 		{ "folke/tokyonight.nvim", enabled = false },
-		{ "folke/noice.nvim", enabled = false },
 	},
 	defaults = {
 		-- By default, only LazyVim plugins will be lazy-loaded. Your custom plugins will load during startup.

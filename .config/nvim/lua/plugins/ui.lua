@@ -9,6 +9,16 @@ return {
 		-- Animations
 	},
 
+	{
+		"folke/noice.nvim",
+		enabled = true,
+		require("noice").setup({
+			cmdline = {
+				view = "cmdline",
+			},
+		}),
+	},
+
 	-- statusline
 	{
 		"nvim-lualine/lualine.nvim",
@@ -30,7 +40,7 @@ return {
 
 	{ -- TODO CHECK
 		"MeanderingProgrammer/render-markdown.nvim",
-		enabled = false,
+		enabled = true,
 	},
 
 	{

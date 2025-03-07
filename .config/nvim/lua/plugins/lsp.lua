@@ -146,4 +146,10 @@ return {
 			})
 		end,
 	},
+
+	{ -- Toggle lsp diagnostics
+		vim.keymap.set("n", "<leader>te", function()
+			vim.diagnostic.enable(not vim.diagnostic.is_enabled())
+		end, { silent = true, noremap = true }),
+	},
 }
