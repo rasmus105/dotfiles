@@ -8,4 +8,6 @@ end
 vim.print = _G.dd
 ]]
 
+require("config.options")
+require("config.keymaps")
 require("config.lazy")

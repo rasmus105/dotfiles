@@ -55,12 +55,13 @@ keymap.set("n", "<leader>Y", '"+Y')
 -- Change all strings matching this string
 vim.keymap.set("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
 
--- vim.keymap.set("n", "<C-h>", "<C-w>h")
+-- Change shortcuts for switching view
 keymap.set("n", "<C-h>", "<C-w>h")
 keymap.set("n", "<C-l>", "<C-w>l")
 keymap.set("n", "<C-j>", "<C-w>j")
 keymap.set("n", "<C-k>", "<C-w>k")
 
+-- Clear highlights
 keymap.set("n", "<leader>/", ":noh<CR>")
 
 -- Disable mouse scrolling
@@ -68,6 +69,3 @@ keymap.set("", "<up>", "<nop>", { noremap = true })
 keymap.set("", "<down>", "<nop>", { noremap = true })
 keymap.set("i", "<up>", "<nop>", { noremap = true })
 keymap.set("i", "<down>", "<nop>", { noremap = true })
-
---
--- keymap.set("n", "<SHIFT-,>", )

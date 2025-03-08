@@ -12,41 +12,67 @@ return {
 		-- Animations
 	},
 
-	{
-		"folke/noice.nvim",
-		enabled = true,
-		require("noice").setup({
-			cmdline = {
-				view = "cmdline",
-			},
-		}),
-	},
-
+	-- {
+	-- 	"folke/noice.nvim",
+	-- 	enabled = true,
+	-- 	require("noice").setup({
+	-- 		cmdline = {
+	-- 			view = "cmdline",
+	-- 		},
+	-- 	}),
+	-- },
+	--
 	-- statusline
 	{
 		"nvim-lualine/lualine.nvim",
-		opts = function(_, opts)
-			local LazyVim = require("lazyvim.util")
-			opts.sections.lualine_c[4] = {
-				LazyVim.lualine.pretty_path({
-					length = 0,
-					relative = "cwd",
-					modified_hl = "MatchParen",
-					directory_hl = "",
-					filename_hl = "Bold",
-					modified_sign = "",
-					readonly_icon = " 󰌾 ",
-				}),
-			}
-		end,
+        opts = {
+            options = {
+                icons_enabled = true,
+                theme = 'auto',
+                component_separators = { left = '', right = ''},
+                section_separators = { left = '', right = ''},
+                disabled_filetypes = {
+                    statusline = {},
+                    winbar = {},
+                },
+                ignore_focus = {},
+                always_divide_middle = true,
+                globalstatus = false,
+                refresh = {
+                    statusline = 1000,
+                    tabline = 1000,
+                    winbar = 1000,
+                }
+            },
+            sections = {
+                lualine_a = {'mode'},
+                lualine_b = {'branch', 'diff', 'diagnostics'},
+                lualine_c = {'filename'},
+                lualine_x = {'encoding', 'fileformat', 'filetype'},
+                lualine_y = {'progress'},
+                lualine_z = {'location'}
+            },
+            inactive_sections = {
+                lualine_a = {},
+                lualine_b = {},
+                lualine_c = {'filename'},
+                lualine_x = {'location'},
+                lualine_y = {},
+                lualine_z = {}
+            },
+            tabline = {},
+            winbar = {},
+            inactive_winbar = {},
+            extensions = {}
+        }
 	},
 
-	{ -- TODO CHECK
+	{ -- Live rendering of markdown documents
 		"MeanderingProgrammer/render-markdown.nvim",
-		enabled = true,
+		enabled = false,
 	},
 
-	{
+	{ 
 		"folke/snacks.nvim",
 		opts = {
 			dashboard = {
