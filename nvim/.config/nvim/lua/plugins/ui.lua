@@ -3,6 +3,9 @@ return {
 		"snacks.nvim",
 		opts = {
 			scroll = { enabled = false },
+			words = { -- disable word highlighting (using mini.cursorword for similar effect)
+				enabled = false,
+			},
 		},
 		keys = {},
 

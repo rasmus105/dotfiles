@@ -21,6 +21,7 @@ require("lazy").setup({
 				colorscheme = "gruvbox",
 
 				defaults = {
+
 					keymaps = false,
 				},
 
@@ -32,7 +33,7 @@ require("lazy").setup({
 		},
 		-- import any extras modules here
 		{ import = "lazyvim.plugins.extras.linting.eslint" },
-		{ import = "lazyvim.plugins.extras.formatting.prettier" },
+		-- { import = "lazyvim.plugins.extras.formatting.prettier" },
 		{ import = "lazyvim.plugins.extras.lang.typescript" },
 		{ import = "lazyvim.plugins.extras.lang.json" },
 		-- { import = "lazyvim.plugins.extras.lang.markdown" },
@@ -51,6 +52,8 @@ require("lazy").setup({
 		{ "akinsho/bufferline.nvim", enabled = false },
 		{ "catppuccin/nvim", enabled = false },
 		{ "folke/tokyonight.nvim", enabled = false },
+
+		{ "stevearc/conform.nvim", enabled = false },
 	},
 	defaults = {
 		-- By default, only LazyVim plugins will be lazy-loaded. Your custom plugins will load during startup.
