@@ -209,6 +209,15 @@ return {
 				desc = "Rename File",
 			},
 
+			{
+				"gr",
+				function()
+					Snacks.picker.lsp_references()
+				end,
+				nowait = true,
+				desc = "References",
+			},
+
 			-- Other
 			{
 				"<leader>N",

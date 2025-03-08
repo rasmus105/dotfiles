@@ -180,13 +180,13 @@ return {
 					vim.keymap.set("n", "gi", vim.lsp.buf.implementation, opts) --
 					-- vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts) -- show window with references
 
-					-- Show referneces in telescope prompt
-					vim.keymap.set("n", "gr", function()
-						require("telescope.builtin").lsp_references({
-							include_declaration = false, -- Set to true if you want to include declarations
-							show_line = true,
-						})
-					end, opts)
+					-- Show referneces in telescope prompt (SWITCHED TO USING SNACKS PICKER INSTEAD!)
+					-- vim.keymap.set("n", "gr", function()
+					-- 	require("telescope.builtin").lsp_references({
+					-- 		include_declaration = false, -- Set to true if you want to include declarations
+					-- 		show_line = true,
+					-- 	})
+					-- end, opts)
 
 					vim.keymap.set("n", "<leader>cs", vim.lsp.buf.signature_help, opts) --
 					-- vim.keymap.set('n', '<leader>cr', vim.lsp.buf.rename, opts) -- Rename
@@ -208,6 +208,9 @@ return {
 		opts = {
 			formatters_by_ft = { -- If a specific formatter is wanted, put it here
 				lua = { "stylua" },
+				rust = { "rustfmt" },
+				c = { "clang-format" },
+				cpp = { "clang-format" },
 			},
 			format_on_save = function(bufnr)
 				-- Allow for toggling format on save
