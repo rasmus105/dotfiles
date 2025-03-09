@@ -74,3 +74,11 @@ keymap.set("n", "<leader>tf", function()
 	vim.g.disable_autoformat = not vim.g.disable_autoformat
 	vim.notify("Auto formatting has been " .. (vim.g.disable_autoformat and "disabled" or "enabled"))
 end, { desc = "Toggle Autoformatting" })
+
+-- Terminal
+keymap.set("n", "<C-/>", ":ToggleTerm<CR>")
+-- Allow normal keybindings for moving between windows in the terminal
+keymap.set("t", "<C-h>", "<C-\\><C-n><C-w>h", { noremap = true, silent = true })
+keymap.set("t", "<C-j>", "<C-\\><C-n><C-w>j", { noremap = true, silent = true })
+keymap.set("t", "<C-k>", "<C-\\><C-n><C-w>k", { noremap = true, silent = true })
+keymap.set("t", "<C-l>", "<C-\\><C-n><C-w>l", { noremap = true, silent = true })

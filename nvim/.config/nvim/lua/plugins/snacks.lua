@@ -9,10 +9,21 @@ return {
 			animate = { enabled = false },
 			scroll = { enabled = false }, -- Smooth scrolling
 			statuscolumn = { enabled = false }, -- Don't know?
+			words = { enabled = false }, -- Disable word highlighting.
+			terminal = { enabled = false },
+
 			-- Enabled plugins
 			picker = { enabled = true }, -- Similar to telescope -- Maybe remove?
-
 			bigfile = { enabled = true }, -- Optimizations when working with big files
+			explorer = { enabled = true }, -- File explorer
+			indent = { enabled = true }, -- TODO Not working with alacritty + ueber...
+			input = { enabled = true }, -- Input box at top
+			quickfile = { enabled = true }, -- makes `nvim somefile.txt` faster (load plugins after opening)
+			scope = { enabled = true }, -- Detects code scope
+			notifier = { -- Notifications in top right
+				enabled = true,
+				timeout = 3000,
+			},
 			dashboard = {
 				sections = {
 					{ section = "header" },
@@ -49,22 +60,7 @@ return {
 					},
 					{ section = "startup" },
 				},
-			}, -- Menu being shown upon start
-			explorer = { enabled = true }, -- File explorer
-			indent = { enabled = true }, -- TODO Not working with alacritty + ueber...
-			input = { enabled = true }, -- Input box at top
-			notifier = { -- Notifications in top right
-				enabled = true,
-				timeout = 3000,
 			},
-			quickfile = { enabled = true }, -- makes `nvim somefile.txt` faster (load plugins after opening)
-			scope = { enabled = true }, -- Detects code scope
-			words = { enabled = false }, -- Disable word highlighting.
-			-- styles = {
-			--   notification = {
-			--     -- wo = { wrap = true } -- Wrap notifications
-			--   }
-			-- }
 		},
 		keys = {
 			-- Toggle views
@@ -232,15 +228,6 @@ return {
 					Snacks.picker.git_log_file()
 				end,
 				desc = "Git Log File",
-			},
-
-			-- Terminal
-			{
-				"<c-/>",
-				function()
-					Snacks.terminal()
-				end,
-				desc = "Toggle Terminal",
 			},
 
 			-- Other
