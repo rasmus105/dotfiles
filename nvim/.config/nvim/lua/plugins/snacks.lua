@@ -13,7 +13,43 @@ return {
 			picker = { enabled = true }, -- Similar to telescope -- Maybe remove?
 
 			bigfile = { enabled = true }, -- Optimizations when working with big files
-			dashboard = { enabled = true }, -- Menu being shown upon start
+			dashboard = {
+				sections = {
+					{ section = "header" },
+					{ -- Empty space to align right pane with left pane.
+						pane = 2,
+						section = "terminal",
+						cmd = 'echo ""',
+						height = 5,
+						padding = 1,
+					},
+					{ section = "keys", gap = 1, padding = 1 },
+					{
+						pane = 2,
+						icon = " ",
+						title = "Recent Files",
+						section = "recent_files",
+						indent = 2,
+						padding = 1,
+					},
+					{ pane = 2, icon = " ", title = "Projects", section = "projects", indent = 2, padding = 1 },
+					{
+						pane = 2,
+						icon = " ",
+						title = "Git Status",
+						section = "terminal",
+						enabled = function()
+							return Snacks.git.get_root() ~= nil
+						end,
+						cmd = "git status --short --branch --renames",
+						height = 5,
+						padding = 1,
+						ttl = 5 * 60,
+						indent = 3,
+					},
+					{ section = "startup" },
+				},
+			}, -- Menu being shown upon start
 			explorer = { enabled = true }, -- File explorer
 			indent = { enabled = true }, -- TODO Not working with alacritty + ueber...
 			input = { enabled = true }, -- Input box at top
@@ -23,7 +59,7 @@ return {
 			},
 			quickfile = { enabled = true }, -- makes `nvim somefile.txt` faster (load plugins after opening)
 			scope = { enabled = true }, -- Detects code scope
-			words = { enabled = false }, -- TODO what is this?
+			words = { enabled = false }, -- Disable word highlighting.
 			-- styles = {
 			--   notification = {
 			--     -- wo = { wrap = true } -- Wrap notifications
@@ -111,6 +147,20 @@ return {
 				end,
 				desc = "Registers",
 			},
+			{ -- Search for icons
+				"\\i",
+				function()
+					Snacks.picker.icons()
+				end,
+				desc = "Icons",
+			},
+			{
+				"\\p",
+				function()
+					Snacks.picker.projects()
+				end,
+				desc = "Find Projects",
+			},
 			{
 				"<leader><space>",
 				function()
@@ -118,13 +168,6 @@ return {
 				end,
 				desc = "Smart Find Files",
 			},
-			{
-				"<leader>si",
-				function()
-					Snacks.picker.icons()
-				end,
-				desc = "Icons",
-			}, -- Search for icons
 
 			-- Git
 			{

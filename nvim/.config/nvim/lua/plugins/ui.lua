@@ -56,7 +56,7 @@ return {
 
 	{ -- Live rendering of markdown documents
 		"MeanderingProgrammer/render-markdown.nvim",
-		enabled = false,
+		enabled = true,
 	},
 
 	{ -- Show icons in plugins (i.e. snacks)

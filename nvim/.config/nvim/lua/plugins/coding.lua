@@ -46,7 +46,7 @@ return {
 		end,
 	},
 
-	{
+	{ -- Underline under current and any matching words
 		"echasnovski/mini.cursorword",
 		config = function()
 			local cursorword = require("mini.cursorword")

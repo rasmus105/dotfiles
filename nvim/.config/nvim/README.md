@@ -1,12 +1,5 @@
 # TODO
-- [ ] Add plugins
-- [ ] Remove plugins
-- [] Modify configs
-- [ ] Switch plugins for select stuff
-- [ ] Modify keybindings (see Helix for inspiration)
-    - <leader>ff -> <leader>f
-- [ ] Check out new plugins
-- [ ] Look into TODO/CHECK
+- [ ] Add DAP integration
+- [ ] Add good terminal functionality 
+- [ ] Figure out how to improve colorscheme and snacks.picker (text is unclear)
 
-# Plugins to check out
-- folke/snacks.nvim
