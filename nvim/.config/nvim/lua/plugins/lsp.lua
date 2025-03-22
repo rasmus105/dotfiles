@@ -209,8 +209,15 @@ return {
 			formatters_by_ft = { -- If a specific formatter is wanted, put it here
 				lua = { "stylua" },
 				rust = { "rustfmt" },
-				c = { "clang-format" },
-				cpp = { "clang-format" },
+				c = { "c_formatter" },
+				cpp = { "c_formatter" },
+				arduino = { "c_formatter" },
+			},
+			formatters = {
+				c_formatter = {
+					command = "clang-format",
+					args = '--style="{BasedOnStyle: LLVM, UseTab: Always, IndentWidth: 4, TabWidth: 4, AlignConsecutiveMacros: true}"',
+				},
 			},
 			format_on_save = function(bufnr)
 				-- Allow for toggling format on save
