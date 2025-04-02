@@ -248,6 +248,17 @@ return {
 				desc = "References",
 			},
 
+			{
+				"gw",
+				function()
+					vim.cmd("normal! viwy")
+					local word = vim.fn.getreg('"') -- Get yanked word from register
+					Snacks.picker.grep({ search = word })
+				end,
+				nowait = true,
+				desc = "References of word",
+			},
+
 			-- Other
 			{
 				"<leader>N",
