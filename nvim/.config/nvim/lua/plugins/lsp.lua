@@ -7,10 +7,12 @@ return {
 				"clangd", -- C/C++ language server
 				"lua_ls", -- Lua language server
 				"ts_ls", -- Typescript language server
+				"pylsp", -- Python language server
 
 				"rustfmt", -- Rust formatter
 				"clang-format", -- C/C++ formatter
 				"stylua", -- Lua formatter
+				"black", -- Python formatter
 
 				-- Not sure about below
 				-- "stylua",
@@ -169,6 +171,7 @@ return {
 			lspconfig.clangd.setup({})
 			lspconfig.lua_ls.setup({})
 			lspconfig.ts_ls.setup({})
+			lspconfig.pylsp.setup({})
 
 			-- Setup keymaps for LSP functionality
 			vim.api.nvim_create_autocmd("LspAttach", {
