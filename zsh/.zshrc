@@ -14,6 +14,7 @@ wmname LG3D  # Needed for Ghidra, Maple, and other Java-based software
 # Exports
 # ===============================
 export PATH=$PATH:/home/rasmus105/.platformio/penv/bin
+# export TERM=xterm-256color
 
 # ===============================
 # Aliases

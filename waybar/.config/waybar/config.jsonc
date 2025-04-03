@@ -9,11 +9,13 @@
         "custom/rectangle-dark",
 	],
 	"modules-center": [
+        "custom/rectangle-dark",
 		"clock#1",
         "custom/rectangle-dark",
 		"clock#2",
         "custom/rectangle-dark",
-		"clock#3"
+		"clock#3",
+        "custom/rectangle-dark"
 	],
 	"modules-right": [
         "network",
