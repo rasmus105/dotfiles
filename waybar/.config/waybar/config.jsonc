@@ -34,25 +34,10 @@
         "custom/rectangle-dark",
 		"tray"
 	],
-
-
-	"custom/rectangle-dark": {
-		"format": " ",
-		"tooltip": false
-	},
-	"custom/left-arrow-light": {
-		"format": "",
-		"tooltip": false
-	},
-	"custom/right-arrow-dark": {
-		"format": "",
-		"tooltip": false
-	},
-	"custom/right-arrow-light": {
-		"format": "",
-		"tooltip": false
-	},
-
+    "custom/rectangle-dark": {
+        "format": " ",
+        "tooltip": false,
+    },
     "hyprland/language": {
         "format": " {}",
     },
@@ -74,7 +59,7 @@
 		"tooltip": false
 	},
     "backlight": {
-        "format": "󰃠 {percent}%"
+        "format": " 󰃠 {percent}% "
     },
     "network": {
         "interval": 5,
@@ -128,7 +113,7 @@
 	},
 	"disk": {
 		"interval": 5,
-		"format": "󰋊 {percentage_used:2}%",
+		"format": " 󰋊 {percentage_used:2}% ",
 		"path": "/"
 	},
 	"tray": {
