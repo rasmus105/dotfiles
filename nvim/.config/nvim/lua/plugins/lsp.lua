@@ -122,6 +122,11 @@ return {
 				preset = "luasnip",
 			}
 
+			-- This is temporary, until tmux implements `Kitty key protocol`, so
+			-- that it will recognize `Ctrl+Enter`.
+			local in_alacritty = vim.env.TERM == "alacritty"
+			local autocomplete_keybind = in_alacritty and "<C-y>" or "<C-Enter>"
+
 			-- https://cmp.saghen.dev/configuration/keymap.html
 			opts.keymap = {
 				preset = "default",
@@ -129,7 +134,8 @@ return {
 				["<Tab>"] = { "select_next", "fallback" },
 				["<C-Tab>"] = { "select_prev", "fallback" },
 
-				["<C-Enter>"] = { "accept", "fallback" },
+				-- ["<C-Enter>"] = { "accept", "fallback" },
+				[autocomplete_keybind] = { "accept", "fallback" },
 
 				["<C-l>"] = { "snippet_forward", "fallback" },
 				["<C-h>"] = { "snippet_backward", "fallback" },

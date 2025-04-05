@@ -32,3 +32,13 @@ style = "Regular"
 # [font.normal]
 # family = "DMMono"
 # style = "Regular"
+
+# Tmux doesn't implement 'Kitty key protocol' (not yet, but it's currently being worked on), 
+# which is the protocol used by alacritty, meaning key combinations like Ctrl+Enter are being
+# interpreted as just Enter. As a workaround for Ctrl+Enter, i've changed Ctrl+Enter in alacritty
+# to Ctrl+Y, and in my neovim config, i optionally bind autocomplete to Ctrl+Y or Ctrl+Enter
+# depending on whether I'm running neovim in alacritty or not.
+[[keyboard.bindings]]
+key = "Return"
+mods = "Control"
+chars = "\u0019" # This is Ctrl+Y
