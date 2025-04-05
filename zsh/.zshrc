@@ -33,7 +33,7 @@ KEYTIMEOUT=1  # Set key timeout for vi mode
 # ===============================
 # Plugin Management (Antidote)
 # ===============================
-source .antidote/antidote.zsh  # Load Antidote
+source ~/.antidote/antidote.zsh  # Load Antidote
 antidote load ${ZDOTDIR:-$HOME}/.zsh_plugins.txt  # Load plugins from file
 
 # ===============================
