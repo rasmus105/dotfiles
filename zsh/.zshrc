@@ -118,3 +118,17 @@ function colored() {
 function man dman debman {
   colored $0 "$@"
 }
+
+# ===============================
+# Tmux
+# ===============================
+function dev() {
+    DIR=${1:-.} # directory should be either first argument or `.`, i.e. current directory
+    DIR_NAME=$(basename "$DIR") 
+    SESSION_NAME="dev-$DIR_NAME"
+
+    tmux new-session -d -s "$SESSION_NAME" -c "$DIR" -n "neovim" "nvim"
+    tmux new-window -t "$SESSION_NAME":2 -c "$DIR" -n "terminal"
+    tmux select-window -t "$SESSION_NAME":1
+    tmux attach-session -t "$SESSION_NAME"
+}
