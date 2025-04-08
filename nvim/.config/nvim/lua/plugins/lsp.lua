@@ -173,7 +173,7 @@ return {
 				require("blink.cmp").get_lsp_capabilities()
 			)
 
-			lspconfig.rust_analyzer.setup({})
+			-- lspconfig.rust_analyzer.setup({}) -- using seperate plugin now, so this is commented out.
 			lspconfig.clangd.setup({})
 			lspconfig.lua_ls.setup({})
 			lspconfig.ts_ls.setup({})
@@ -239,5 +239,11 @@ return {
 				return { timeout_ms = 500, lsp_format = "fallback" }
 			end,
 		},
+	},
+
+	{ -- Fancy features for rust
+		"mrcjkb/rustaceanvim",
+		version = "^6", -- Recommended
+		lazy = false, -- This plugin is already lazy
 	},
 }
