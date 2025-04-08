@@ -43,3 +43,5 @@ vim.g.disable_autoformat = false -- Autoformatting diabled by default (<leader>t
 -- Plugins
 
 vim.g.snacks_animate = false
+
+vim.diagnostic.config({ virtual_text = true })
