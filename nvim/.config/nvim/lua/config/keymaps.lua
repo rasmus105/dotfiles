@@ -76,7 +76,7 @@ keymap.set("n", "<leader>tf", function()
 end, { desc = "Toggle Autoformatting" })
 
 -- Terminal
-keymap.set("n", "<C-/>", ":ToggleTerm<CR>")
+-- keymap.set("n", "<C-/>", ":ToggleTerm<CR>")
 -- Allow normal keybindings for moving between windows in the terminal
 keymap.set("t", "<C-h>", "<C-\\><C-n><C-w>h", { noremap = true, silent = true })
 keymap.set("t", "<C-j>", "<C-\\><C-n><C-w>j", { noremap = true, silent = true })
