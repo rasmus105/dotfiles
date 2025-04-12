@@ -35,11 +35,6 @@ window#waybar {
 	box-shadow: inherit;
 	text-shadow: inherit;
 }
-#workspaces button:hover {
-	background: #1a1a1a;
-	border: #1a1a1a;
-	padding: 0 3px;
-}
 
 #battery {
 	/* color: #289828; */
