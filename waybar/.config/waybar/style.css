@@ -31,10 +31,6 @@ window#waybar {
 #workspaces button.active {
     color: #268bd2;
 }
-#workspaces button:hover {
-	box-shadow: inherit;
-	text-shadow: inherit;
-}
 
 #battery {
 	/* color: #289828; */
