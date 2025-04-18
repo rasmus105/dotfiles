@@ -14,6 +14,7 @@ wmname LG3D  # Needed for Ghidra, Maple, and other Java-based software
 # Exports
 # ===============================
 export PATH=$PATH:~/.npm/bin:home/rasmus105/.platformio/penv/bin
+export MANPAGER="nvim +Man!" # use neovim for man pages.
 # export TERM=xterm-256color
 
 # ===============================
