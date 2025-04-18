@@ -23,6 +23,8 @@ export MANPAGER="nvim +Man!" # use neovim for man pages.
 alias ls='ls --color=auto'  # Enable color output for ls
 alias grep='grep --color=auto'  # Enable color output for grep
 alias cd='z'  # Use zoxide for quick directory navigation
+alias cat='bat' # better 'cat'.
+# alias cat='bat --paging=never'
 
 # ===============================
 # Keybindings & Zoxide Integration
