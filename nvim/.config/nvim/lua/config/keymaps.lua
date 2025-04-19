@@ -1,6 +1,6 @@
 local keymap = vim.keymap
 
--- Do things without affecting the registers -- NEW CHECK
+-- Do things without affecting the registers
 keymap.set("n", "x", '"_x')
 keymap.set("n", "<Leader>p", '"0p')
 keymap.set("n", "<Leader>P", '"0P')
@@ -14,17 +14,17 @@ keymap.set("n", "<Leader>D", '"_D')
 keymap.set("v", "<Leader>d", '"_d')
 keymap.set("v", "<Leader>D", '"_D')
 
--- Increment/decrement - NEW CHECK
+-- Increment/decrement
 keymap.set("n", "+", "<C-a>")
 keymap.set("n", "-", "<C-x>")
 
--- Select all -- NEW
+-- Select all
 keymap.set("n", "<C-a>", "gg<S-v>G")
 
--- Jumplist -- CHECK
+-- Jumplist
 -- keymap.set("n", "<C-m>", "<C-i>", opts)
 
--- Resize window -- NEW
+-- Resize window
 keymap.set("n", "<C-w><left>", "<C-w><")
 keymap.set("n", "<C-w><right>", "<C-w>>")
 keymap.set("n", "<C-w><up>", "<C-w>+")
@@ -43,6 +43,7 @@ keymap.set("v", "K", ":m '>-2<CR>gv=gv")
 -- Always center when moving up/down
 keymap.set("n", "<C-d>", "<C-d>zz")
 keymap.set("n", "<C-u>", "<C-u>zz")
+
 -- Always center when moving between matches
 keymap.set("n", "n", "nzzzv")
 keymap.set("n", "N", "Nzzzv")
