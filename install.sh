@@ -63,7 +63,7 @@ ask() {
 install_packages() {
     print_header "Installing Required Packages"
     
-    local common_packages="stow git curl wget zsh"
+    local common_packages="stow git curl wget zsh bat"
     local arch_packages="yay hyprland waybar alacritty tmux neovim dunst"
     local ubuntu_packages="i3 polybar alacritty tmux neovim dunst"
     
