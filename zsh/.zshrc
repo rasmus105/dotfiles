@@ -37,11 +37,6 @@ bindkey -v  # Enable vi mode
 KEYTIMEOUT=1  # Set key timeout for vi mode
 
 # ===============================
-# Homebrew package manager
-# ===============================
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-# ===============================
 # Plugin Management (Antidote)
 # ===============================
 source ~/.antidote/antidote.zsh  # Load Antidote
