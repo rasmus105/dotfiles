@@ -221,14 +221,18 @@ return {
 			formatters_by_ft = { -- If a specific formatter is wanted, put it here
 				lua = { "stylua" },
 				rust = { "rustfmt" },
-				c = { "c_formatter" },
-				cpp = { "c_formatter" },
-				arduino = { "c_formatter" },
+				c = { "clang_format" },
+				cpp = { "clang_format" },
+				arduino = { "clang_format" },
 			},
 			formatters = {
 				c_formatter = {
 					command = "clang-format",
 					args = '--style="{BasedOnStyle: LLVM, UseTab: Always, IndentWidth: 4, TabWidth: 4, AlignConsecutiveMacros: true}"',
+				},
+				clang_format = {
+					"--style=file ",
+					'--fallback-style="{BasedOnStyle: LLVM, UseTab: Always, IndentWidth: 4, TabWidth: 4, AlignConsecutiveMacros: true}"',
 				},
 			},
 			format_on_save = function(bufnr)
