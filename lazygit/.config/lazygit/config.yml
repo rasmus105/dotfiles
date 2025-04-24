@@ -1,5 +1,6 @@
 git:
   paging:
-    pager: delta --dark --paging=never
+    colorArg: always
+    pager: delta --side-by-side --dark --paging=never
 gui:
-  showIcons: true
+  nerdFontsVersion: "3"
