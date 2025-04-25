@@ -231,8 +231,11 @@ return {
 					args = '--style="{BasedOnStyle: LLVM, UseTab: Always, IndentWidth: 4, TabWidth: 4, AlignConsecutiveMacros: true}"',
 				},
 				clang_format = {
-					"--style=file ",
-					'--fallback-style="{BasedOnStyle: LLVM, UseTab: Always, IndentWidth: 4, TabWidth: 4, AlignConsecutiveMacros: true}"',
+					command = "clang-format",
+					prepend_args = {
+						"--style=file ",
+						"--fallback-style=LLVM",
+					},
 				},
 			},
 			format_on_save = function(bufnr)
