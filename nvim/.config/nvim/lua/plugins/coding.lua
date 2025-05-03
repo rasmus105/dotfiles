@@ -58,7 +58,7 @@ return {
 
 	{ -- Functionality to work with two "paired" characters (Automatically adds ')' when typing '(', does the same for '[', '{', '"', ''', '`'))
 		"echasnovski/mini.pairs",
-		enabled = true,
+		enabled = false,
 
 		version = "*",
 
