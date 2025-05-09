@@ -57,6 +57,7 @@ return {
 	{ -- Live rendering of markdown documents
 		"MeanderingProgrammer/render-markdown.nvim",
 		enabled = true,
+		ft = { "markdown", "codecompanion" },
 	},
 
 	{ -- Show icons in plugins (i.e. snacks)

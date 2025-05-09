@@ -118,4 +118,144 @@ return {
 			return keys
 		end,
 	},
+
+	{
+		"zbirenbaum/copilot.lua",
+		cmd = "Copilot",
+		build = ":Copilot auth",
+		config = function()
+			require("copilot").setup({
+				log_level = vim.log.levels.DEBUG,
+				suggestion = {
+					enabled = true,
+					auto_trigger = true,
+					keymap = {
+						accept = "<C-J>",
+					},
+				},
+				panel = { enabled = false },
+			})
+		end,
+	},
+
+	{
+		"olimorris/codecompanion.nvim",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-treesitter/nvim-treesitter",
+		},
+		keys = {
+			{ "<leader>al", "<cmd>CodeCompanion<CR>", desc = "Inline" },
+			{ "<leader>ac", "<cmd>CodeCompanionChat Toggle<CR>", desc = "Chat" },
+			{ "<leader>aa", "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
+		},
+		opts = {
+			opts = {
+				log_level = "DEBUG",
+			},
+			display = {
+				chat = {
+					show_settings = true,
+					retain_context = false, -- keep the context of the conversation
+				},
+			},
+			strategies = {
+				chat = {
+					adapter = "copilot",
+					keymaps = {
+						completion = {
+							modes = {
+								i = "<C-J>",
+							},
+							index = 1,
+							callback = "keymaps.completion",
+							description = "Completion Menu",
+						},
+					},
+				},
+				slash_commands = {
+					["buffer"] = {
+						callback = "strategies.chat.slash_commands.buffer",
+						description = "Insert open buffers",
+						opts = {
+							contains_code = true,
+							provider = "telescope", -- default|telescope|mini_pick|fzf_lua
+						},
+					},
+					["fetch"] = {
+						callback = "strategies.chat.slash_commands.fetch",
+						description = "Insert URL contents",
+						opts = {
+							adapter = "jina",
+						},
+					},
+					["file"] = {
+						callback = "strategies.chat.slash_commands.file",
+						description = "Insert a file",
+						opts = {
+							contains_code = true,
+							max_lines = 1000,
+							provider = "telescope", -- default|telescope|mini_pick|fzf_lua
+						},
+					},
+					["files"] = {
+						callback = "strategies.chat.slash_commands.files",
+						description = "Insert multiple files",
+						opts = {
+							contains_code = true,
+							max_lines = 1000,
+							provider = "telescope", -- default|telescope|mini_pick|fzf_lua
+						},
+					},
+					["help"] = {
+						callback = "strategies.chat.slash_commands.help",
+						description = "Insert content from help tags",
+						opts = {
+							contains_code = false,
+							provider = "telescope", -- telescope|mini_pick|fzf_lua
+						},
+					},
+					["now"] = {
+						callback = "strategies.chat.slash_commands.now",
+						description = "Insert the current date and time",
+						opts = {
+							contains_code = false,
+						},
+					},
+					["symbols"] = {
+						callback = "strategies.chat.slash_commands.symbols",
+						description = "Insert symbols for a selected file",
+						opts = {
+							contains_code = true,
+							provider = "telescope", -- default|telescope|mini_pick|fzf_lua
+						},
+					},
+					["terminal"] = {
+						callback = "strategies.chat.slash_commands.terminal",
+						description = "Insert terminal output",
+						opts = {
+							contains_code = false,
+						},
+					},
+				},
+				inline = {
+					adapter = "copilot",
+				},
+				agent = {
+					adapter = "copilot",
+				},
+			},
+			adapters = {
+				copilot = function()
+					return require("codecompanion.adapters").extend("copilot", {
+						schema = {
+							model = {
+								default = "claude-3.5-sonnet",
+							},
+						},
+					})
+				end,
+			},
+		},
+	},
 }
