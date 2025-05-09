@@ -2,8 +2,8 @@
 # History Configuration
 # ===============================
 HISTFILE=~/.histfile  # Location of history file
-HISTSIZE=1000         # Number of commands to keep in memory
-SAVEHIST=1000         # Number of commands to save to HISTFILE
+HISTSIZE=50000         # Number of commands to keep in memory
+SAVEHIST=50000         # Number of commands to save to HISTFILE
 
 # ===============================
 # Path Configuration
