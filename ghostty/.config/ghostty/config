@@ -15,6 +15,10 @@ window-decoration = none
 gtk-tabs-location = hidden
 
 ## Keybinds
+# Unbinding
+keybind = ctrl+enter=unbind
+keybind = ctrl+tab=unbind
+
 # Misc
 keybind = ctrl+/>q=close_surface
 
@@ -50,5 +54,7 @@ keybind = ctrl+/>8=goto_tab:8
 keybind = ctrl+/>9=goto_tab:9
 
 # Scrolling
-keybind = ctrl+up=scroll_page_up
-keybind = ctrl+down=scroll_page_down
+# keybind = ctrl+up=scroll_page_up
+# keybind = ctrl+down=scroll_page_down
+keybind = ctrl+up=scroll_page_fractional:-0.5
+keybind = ctrl+down=scroll_page_fractional:0.5
