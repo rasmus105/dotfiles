@@ -148,6 +148,11 @@ return {
 			{ "<leader>al", "<cmd>CodeCompanion<CR>", desc = "Inline" },
 			{ "<leader>ac", "<cmd>CodeCompanionChat Toggle<CR>", desc = "Chat" },
 			{ "<leader>aa", "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
+			{
+				"<leader>at",
+				'<cmd>lua require("copilot.suggestion").toggle_auto_trigger()<CR>',
+				desc = "Toggle Inline",
+			},
 		},
 		opts = {
 			opts = {

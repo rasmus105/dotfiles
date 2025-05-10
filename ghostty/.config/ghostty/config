@@ -14,6 +14,8 @@ window-save-state = always
 window-decoration = none
 gtk-tabs-location = hidden
 
+resize-overlay = never
+
 ## Keybinds
 # Unbinding
 keybind = ctrl+enter=unbind
