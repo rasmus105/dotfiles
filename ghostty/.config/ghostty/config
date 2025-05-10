@@ -16,6 +16,8 @@ gtk-tabs-location = hidden
 
 resize-overlay = never
 
+window-new-tab-position = end
+
 ## Keybinds
 # Unbinding
 keybind = ctrl+enter=unbind

@@ -128,7 +128,7 @@ return {
 				log_level = vim.log.levels.DEBUG,
 				suggestion = {
 					enabled = true,
-					auto_trigger = true,
+					auto_trigger = false, -- enable with shortcut on a file basis
 					keymap = {
 						accept = "<C-J>",
 					},
