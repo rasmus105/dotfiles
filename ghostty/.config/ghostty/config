@@ -3,7 +3,8 @@ shell-integration = zsh
 font-family = Hack
 theme = GruvboxDark
 mouse-hide-while-typing = true
-scrollback-limit = 1000000
+# 536870912 bytes = 0.5 GB
+scrollback-limit = 536870912
 
 ## General Options 
 # Misc
