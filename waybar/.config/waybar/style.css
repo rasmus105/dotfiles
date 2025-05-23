@@ -1,76 +1,129 @@
+@define-color foreground #eff0f1;
+@define-color foreground-inactive #7f8c8d;
+@define-color background #232629;
+@define-color background-alt #31363b;
+
 * {
-	font-size: 20px;
-	font-family: monospace;
+    font-family: Hack;
+    font-size: 15px;
+    padding: 0;
+    margin: 0;
 }
 
-window#waybar {
-	background: #292b2e;
-	color: #fdf6e3;
-}
-
-#workspaces,
-#clock.1,
-#clock.2,
-#clock.3,
-#pulseaudio,
-#memory,
-#cpu,
-#battery,
-#disk,
-#network,
-#language,
-#backlight,
-#tray {
-	background: #0a0a0a;
+#waybar {
+    color: @foreground;
+    background-color: @background;
 }
 
 #workspaces button {
-	padding: 0 8px;
-	color: #fdf6e3;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    border-radius: 0px;
+    color: @foreground-inactive;
+    background-color: @background-alt;
 }
+
+#workspaces button.empty {
+}
+
 #workspaces button.active {
-    color: #268bd2;
+    background-color: @background-alt;
+    color: @foreground; 
+    border-radius: 0px;
 }
 
-#battery {
-	/* color: #289828; */
-	color: #A7C080;
-}
-#memory {
-	/* color: #F9D923; */
-	color: #DBBC7F;
-}
-#cpu {
-	/* color: #F9D923; */
-	color: #DBBC7F;
-}
-#disk {
-	/* color: #F9D923; */
-	color: #DBBC7F;
-}
-#pulseaudio {
-	color: #E69875;
-}
-#network {
-    color: #7FBBB3;
+#wireplumber,
+#bat,
+#tray,
+#usage,
+#disk,
+#net {
+    background-color: @background-alt;
+    border-radius: 2px;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    margin-left: 0.3em;
 }
 
-#language {
-    color: #82A598;
-}
-
-#backlight {
-    color: #FABD2F;
-}
-
-#clock,
-#pulseaudio,
-#memory,
-#cpu,
 #battery,
-#network,
+#memory,
 #language,
-#backlight
-#disk {
-	padding: 0 10px;
+#network {
+    margin-right: 0.8em;
 }
+/* * { */
+/* 	font-size: 20px; */
+/* 	font-family: monospace; */
+/* } */
+/**/
+/* window#waybar { */
+/* 	background: #292b2e; */
+/* 	color: #fdf6e3; */
+/* } */
+/**/
+/* #workspaces, */
+/* #clock.1, */
+/* #clock.2, */
+/* #clock.3, */
+/* #pulseaudio, */
+/* #memory, */
+/* #cpu, */
+/* #battery, */
+/* #disk, */
+/* #network, */
+/* #language, */
+/* #backlight, */
+/* #tray { */
+/* 	background: #0a0a0a; */
+/* } */
+/**/
+/* #workspaces button { */
+/* 	padding: 0 8px; */
+/* 	color: #fdf6e3; */
+/* } */
+/* #workspaces button.active { */
+/*     color: #268bd2; */
+/* } */
+/**/
+/* #battery { */
+	/* color: #289828; */
+/* 	color: #A7C080; */
+/* } */
+/* #memory { */
+	/* color: #F9D923; */
+/* 	color: #DBBC7F; */
+/* } */
+/* #cpu { */
+	/* color: #F9D923; */
+/* 	color: #DBBC7F; */
+/* } */
+/* #disk { */
+	/* color: #F9D923; */
+/* 	color: #DBBC7F; */
+/* } */
+/* #pulseaudio { */
+/* 	color: #E69875; */
+/* } */
+/* #network { */
+/*     color: #7FBBB3; */
+/* } */
+/**/
+/* #language { */
+/*     color: #82A598; */
+/* } */
+/**/
+/* #backlight { */
+/*     color: #FABD2F; */
+/* } */
+/**/
+/* #clock, */
+/* #pulseaudio, */
+/* #memory, */
+/* #cpu, */
+/* #battery, */
+/* #network, */
+/* #language, */
+/* #backlight */
+/* #disk { */
+/* 	padding: 0 10px; */
+/* } */

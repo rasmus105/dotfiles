@@ -1,79 +1,48 @@
-// -*- mode: json -*-
-
 {
-	"layer": "top",
-	"position": "top",
+    "layer": "top",
+    "position": "top",
+    "height": 24,
+    "spacing": 5,
 
-	"modules-left": [
-		"hyprland/workspaces",
-        "custom/rectangle-dark",
-	],
-	"modules-center": [
-        "custom/rectangle-dark",
-		"clock#1",
-        "custom/rectangle-dark",
-		"clock#2",
-        "custom/rectangle-dark",
-		"clock#3",
-        "custom/rectangle-dark"
-	],
-	"modules-right": [
-        "network",
-        "custom/rectangle-dark",
-        "hyprland/language",
-        "custom/rectangle-dark",
-		"pulseaudio",
-        "custom/rectangle-dark",
-        "backlight",
-        "custom/rectangle-dark",
-		"cpu",
-        "custom/rectangle-dark",
-		"memory",
-        "custom/rectangle-dark",
-		"disk",
-        "custom/rectangle-dark",
-		"battery",
-        "custom/rectangle-dark",
-		"tray"
-	],
-    "custom/rectangle-dark": {
-        "format": " ",
-        "tooltip": false,
-    },
-    "hyprland/language": {
-        "format": " {}",
-    },
-	"hyprland/workspaces": {
-		"disable-scroll": true,
-		"format": "{name}"
-	},
+    "modules-left": ["hyprland/workspaces"],
+    "modules-center": ["clock"],
+    "modules-right": ["group/usage", "disk", "wireplumber", "group/bat", "group/net", "tray"],
 
-	"clock#1": {
-		"format": "{:%a}",
-		"tooltip": false
-	},
-	"clock#2": {
-		"format": "{:%H:%M}",
-		"tooltip": false
-	},
-	"clock#3": {
-		"format": "{:%m-%d}",
-		"tooltip": false
-	},
-    "backlight": {
-        "format": " 󰃠 {percent}% "
+    "group/usage": {
+        "orientation": "horizontal",
+        "modules": ["memory", "cpu"]
     },
-    "network": {
-        "interval": 5,
-		"format-wifi": "  {essid} ({signalStrength}%)",
-		"format-ethernet": " {ifname}",
-		"format-disconnected": "No connection",
-		"format-alt": " {ipaddr}/{cidr}",
-		"tooltip": false
+
+    "group/bat": {
+        "orientation": "horizontal",
+        "modules": ["battery", "backlight"]
     },
+
+    "group/net": {
+        "orientation": "horizontal",
+        "modules": ["hyprland/language", "network"]
+        // "modules": ["hyprland/language", "network", "bluetooth"]
+    },
+
+    "hyprland/workspaces": {
+        "format": "{icon}",
+        "on-click": "activate",
+        "icon-size": 15,
+        "sort-by-number": true,
+    },
+
+    "clock": {
+        "format": "{:%d.%m.%Y | %H:%M}"
+    },
+
+    "wireplumber": {
+        "format": "\udb81\udd7e  {volume}%",
+        "max-volume": 100,
+        "scroll-step": 5
+    },
+
 	"pulseaudio": {
-		"format": "{icon} {volume:2}%",
-		"format-bluetooth": "{icon}  {volume}%",
+        "format": "\udb81\udd7e  {volume}%",
 		"format-muted": "MUTE",
 		"format-icons": {
 			"headphones": "",
@@ -86,24 +55,12 @@
 		"on-click": "pamixer -t",
 		"on-click-right": "pavucontrol"
 	},
-	"memory": {
-		"interval": 5,
-        "format": "  {used:0.1f}G/{total:0.1f}G",
+    "battery": {
         "states": {
-			"warning": 70,
-			"critical": 90
-		},
-	},
-	"cpu": {
-		"interval": 5,
-		"format": " {usage:2}%"
-	},
-	"battery": {
-		"states": {
-			"good": 95,
-			"warning": 30,
-			"critical": 15
-		},
+            "good": 95,
+            "warning": 30,
+            "critical": 15
+        },
 		"format": "{icon} {capacity}%",
 		"format-icons": [
 			"",
@@ -111,14 +68,51 @@
 			"",
 			"",
 			""
-		]
-	},
+		],
+        "interval": 60
+    },
+
+    "backlight": {
+        "format": "\udb80\udcdf  {percent}%"
+    },
+
+    "memory": {
+        "interval": 30,
+        "format": "\uf4bc {used:0.1f}G / {total:0.1f}G"
+    },
+
 	"disk": {
-		"interval": 5,
-		"format": " 󰋊 {percentage_used:2}% ",
+		"interval": 60,
+		"format": "󰋊 {percentage_used:2}%",
 		"path": "/"
 	},
-	"tray": {
-		"icon-size": 20
-	}
+
+    "network": {
+        "format": "",
+        "format-ethernet": "\udb83\udc9d ",
+        "format-wifi": "{icon}",
+        "format-disconnected": "\udb83\udc9c ",
+        "format-icons": ["\udb82\udd2f", "\udb82\udd1f", "\udb82\udd22", "\udb82\udd25", "\udb82\udd28"],
+        "tooltip-format-wifi": "{essid} ({signalStrength}%)",
+        "tooltip-format-ethernet": "{ifname}",
+        "tooltip-format-disconnected": "Disconnected",
+    },
+
+    // "bluetooth": {
+    //     "format": "\udb80\udcaf",
+    //     "format-disabled": "\udb80\udcb2",
+    //     "format-connected": "\udb80\udcb1",
+    //     "tooltip-format": "{controller_alias}\t{controller_address}",
+    //     "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{device_enumerate}",
+    //     "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}"
+    // },
+
+    "hyprland/language": {
+        "format": "{short}"
+    },
+
+    "tray": {
+        "icon-size": 16,
+        "spacing": 16
+    }
 }
