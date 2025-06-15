@@ -201,13 +201,13 @@ return {
 				end,
 				desc = "Find Git Files",
 			}, -- files used in git repo
-			{
-				"<leader>gd",
-				function()
-					Snacks.picker.git_diff()
-				end,
-				desc = "Git Diff (Hunks)",
-			},
+			-- {
+			-- 	"<leader>gd",
+			-- 	function()
+			-- 		Snacks.picker.git_diff()
+			-- 	end,
+			-- 	desc = "Git Diff (Hunks)",
+			-- },
 			{
 				"<leader>gb",
 				function()
