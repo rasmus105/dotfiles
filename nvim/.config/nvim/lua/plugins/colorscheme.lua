@@ -9,7 +9,7 @@ return {
 			terminal_colors = true, -- add neovim terminal colors
 			undercurl = true,
 			underline = true,
-			bold = false,
+			bold = true,
 			italic = {
 				strings = false,
 				emphasis = true,
@@ -25,7 +25,10 @@ return {
 			inverse = true, -- invert background for search, diffs, statuslines and errors
 			contrast = "", -- can be "hard", "soft" or empty string
 			palette_overrides = {},
-			overrides = {},
+			overrides = {
+				Function = { fg = "#b8bb26", bold = false },
+				TSFunction = { fg = "#b8bb26", bold = false },
+			},
 			dim_inactive = false,
 			transparent_mode = false,
 		},
@@ -65,4 +68,6 @@ return {
 		"Mofiqul/dracula.nvim",
 		enabled = false,
 	},
+
+	{ "catppuccin/nvim", name = "catppuccin", priority = 1000 },
 }

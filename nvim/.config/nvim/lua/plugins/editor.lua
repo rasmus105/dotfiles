@@ -276,7 +276,7 @@ return {
 			-- 👇 in this section, choose your own keymappings!
 			{
 				"<leader>-",
-				mode = { "n", "v" },
+				mode = { "n" },
 				"<cmd>Yazi<cr>",
 				desc = "Open yazi at the current file",
 			},
@@ -314,7 +314,7 @@ return {
 			{ "TimUntersberger/neogit", config = { disable_commit_confirmation = true } },
 		},
 		keys = {
-			{ "<leader>gd", "<CMD>DiffviewOpen<CR>", mode = { "n", "i", "v" } },
+			{ "<leader>gd", "<CMD>DiffviewOpen<CR>", mode = { "n", "v" } },
 		},
 		config = {
 			keymaps = {
