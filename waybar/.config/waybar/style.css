@@ -35,7 +35,8 @@
 #wireplumber,
 #bat,
 #tray,
-#usage,
+#cpu,
+#memory,
 #disk,
 #net {
     background-color: @background-alt;
@@ -46,84 +47,7 @@
 }
 
 #battery,
-#memory,
 #language,
 #network {
     margin-right: 0.8em;
 }
-/* * { */
-/* 	font-size: 20px; */
-/* 	font-family: monospace; */
-/* } */
-/**/
-/* window#waybar { */
-/* 	background: #292b2e; */
-/* 	color: #fdf6e3; */
-/* } */
-/**/
-/* #workspaces, */
-/* #clock.1, */
-/* #clock.2, */
-/* #clock.3, */
-/* #pulseaudio, */
-/* #memory, */
-/* #cpu, */
-/* #battery, */
-/* #disk, */
-/* #network, */
-/* #language, */
-/* #backlight, */
-/* #tray { */
-/* 	background: #0a0a0a; */
-/* } */
-/**/
-/* #workspaces button { */
-/* 	padding: 0 8px; */
-/* 	color: #fdf6e3; */
-/* } */
-/* #workspaces button.active { */
-/*     color: #268bd2; */
-/* } */
-/**/
-/* #battery { */
-	/* color: #289828; */
-/* 	color: #A7C080; */
-/* } */
-/* #memory { */
-	/* color: #F9D923; */
-/* 	color: #DBBC7F; */
-/* } */
-/* #cpu { */
-	/* color: #F9D923; */
-/* 	color: #DBBC7F; */
-/* } */
-/* #disk { */
-	/* color: #F9D923; */
-/* 	color: #DBBC7F; */
-/* } */
-/* #pulseaudio { */
-/* 	color: #E69875; */
-/* } */
-/* #network { */
-/*     color: #7FBBB3; */
-/* } */
-/**/
-/* #language { */
-/*     color: #82A598; */
-/* } */
-/**/
-/* #backlight { */
-/*     color: #FABD2F; */
-/* } */
-/**/
-/* #clock, */
-/* #pulseaudio, */
-/* #memory, */
-/* #cpu, */
-/* #battery, */
-/* #network, */
-/* #language, */
-/* #backlight */
-/* #disk { */
-/* 	padding: 0 10px; */
-/* } */
