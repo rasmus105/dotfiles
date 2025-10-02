@@ -24,6 +24,8 @@ export MANPAGER="nvim +Man!" # use neovim for man pages.
 alias grep='grep --color=auto'  # Enable color output for grep
 alias cd='z'  # Use zoxide for quick directory navigation
 alias cat='bat' # better 'cat'.
+alias g='lazygit'
+alias clear_outputs='for i in {0..10}; do hyprctl output remove HEADLESS-$i; done'
 # alias cat='bat --paging=never'
 ls() { # better ls command
     command eza "$@" 
