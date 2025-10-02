@@ -6,12 +6,7 @@
 
     "modules-left": ["hyprland/workspaces"],
     "modules-center": ["clock"],
-    "modules-right": ["group/usage", "disk", "wireplumber", "group/bat", "group/net", "tray"],
-
-    "group/usage": {
-        "orientation": "horizontal",
-        "modules": ["memory", "cpu"]
-    },
+    "modules-right": ["memory", "cpu", "disk", "wireplumber", "group/bat", "group/net", "tray"],
 
     "group/bat": {
         "orientation": "horizontal",
@@ -73,12 +68,17 @@
     },
 
     "backlight": {
-        "format": "\udb80\udcdf  {percent}%"
+        "format": "\udb80\udcdf {percent}%"
     },
 
     "memory": {
         "interval": 30,
-        "format": "\uf4bc {used:0.1f}G / {total:0.1f}G"
+        "format": "{used:0.1f}G / {total:0.1f}G " // 
+    },
+
+    "cpu": {
+        "interval": 1,
+        "format": "{usage:>2}% \uf4bc",
     },
 
 	"disk": {
