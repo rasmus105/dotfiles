@@ -6,8 +6,8 @@ vim.opt.shell = "zsh"
 
 -- Mouse options
 vim.opt.splitkeep = "cursor" -- Keeps cursor visible when splitting windows
-vim.opt.mouse = "" -- Disable mouse support (except for scrolling)
-vim.opt.mousescroll = "ver:0,hor:0" -- Disable scrolling
+-- vim.opt.mouse = "" -- Disable mouse support (except for scrolling)
+vim.opt.mousescroll = "ver:1,hor:1" -- Disable scrolling
 
 vim.opt.splitbelow = true -- Put new windows below current
 vim.opt.splitright = true -- Put new windows right of current

@@ -7,7 +7,8 @@ return {
 				"clangd", -- C/C++ language server
 				"lua_ls", -- Lua language server
 				"ts_ls", -- Typescript language server
-				"pylsp", -- Python language server
+				"pyright", -- Python language server
+				"zls", -- Zig language server
 
 				"rustfmt", -- Rust formatter
 				"clang-format", -- C/C++ formatter
@@ -174,10 +175,16 @@ return {
 			)
 
 			-- lspconfig.rust_analyzer.setup({}) -- using seperate plugin now, so this is commented out.
-			lspconfig.clangd.setup({})
+			lspconfig.clangd.setup({
+				cmd = {
+					"clangd",
+					"--query-driver=/home/rk105/programming/toolchains/arm-gnu-toolchain-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc",
+				},
+			})
 			lspconfig.lua_ls.setup({})
 			lspconfig.ts_ls.setup({})
-			lspconfig.pylsp.setup({})
+			lspconfig.pyright.setup({})
+			lspconfig.zls.setup({})
 
 			-- Setup keymaps for LSP functionality
 			vim.api.nvim_create_autocmd("LspAttach", {
@@ -208,6 +215,7 @@ return {
 						return ":IncRename " -- Start with empty name
 					end, { expr = true })
 					vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts) -- code action
+					vim.keymap.set("n", "<leader>ch", ":ClangdSwitchSourceHeader<CR>") -- code action
 				end,
 			})
 		end,
@@ -233,7 +241,7 @@ return {
 				clang_format = {
 					command = "clang-format",
 					prepend_args = {
-						"--style=file ",
+						"--style=file",
 						"--fallback-style=LLVM",
 					},
 				},
