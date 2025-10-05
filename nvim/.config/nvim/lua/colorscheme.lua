@@ -44,6 +44,8 @@ end
 local select_background_prefix = "<leader>b"
 map('n', select_background_prefix .. "g", function() select_custom_gruvbox() end, { desc = "Select `gruvbox` colorscheme" })
 map('n', select_background_prefix .. "v", function() vim.cmd.colorscheme('vague') end, { desc = "Select `vague` colorscheme" })
+map('n', select_background_prefix .. "l", function() vim.cmd.colorscheme('catppuccin-latte') end, { desc = "Select `catppuccin-latte` colorscheme" })
+map('n', select_background_prefix .. "m", function() vim.cmd.colorscheme('catppuccin-mocha') end, { desc = "Select `catppuccin-mocha` colorscheme" })
 
 ---- Select the default colorscheme ----
 select_custom_gruvbox()

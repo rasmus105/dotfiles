@@ -51,6 +51,10 @@
       "rev": "96ee37d",
       "src": "https://github.com/nvim-mini/mini.pick"
     },
+    "nvim": {
+      "rev": "e79d09f",
+      "src": "https://github.com/catppuccin/nvim"
+    },
     "nvim-lspconfig": {
       "rev": "e688b48",
       "src": "https://github.com/neovim/nvim-lspconfig"

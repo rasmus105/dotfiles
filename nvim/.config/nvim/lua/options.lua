@@ -1,4 +1,6 @@
 local opt = vim.opt
+vim.g.mapleader = ' '
+vim.g.maplocalleader = ','
 
 opt.wrap = false -- don't wrap by default
 opt.number = true -- show line numbers
