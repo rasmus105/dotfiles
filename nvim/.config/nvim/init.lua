@@ -122,6 +122,8 @@ harpoon.setup({
     },
 })
 
+local harpoon_list = harpoon:list()
+
 harpoon:extend(require("harpoon.extensions").builtins.highlight_current_file())
 
 -- Override the default menu UI to add number key mappings
@@ -138,12 +140,13 @@ harpoon.ui.toggle_quick_menu = function(...)
     if bufname:match("harpoon") then
         -- Map 1-9 keys in the harpoon buffer
         for i = 1, 9 do
-            vim.api.nvim_buf_set_keymap(
-                buf,
+            map(
                 "n",
                 tostring(i),
-                ":lua require('harpoon'):list():select(" .. i .. ")<CR>",
-                { noremap = true, silent = true }
+                function()
+                    harpoon_list:select(i)
+                end,
+                { buffer = buf, noremap = true, silent = true }
             )
         end
     end
@@ -184,16 +187,16 @@ map("n", "<leader>-", ":Yazi<CR>")
 
 -- Harpoon
 map("n", "<leader>h", function()
-    require("harpoon"):list():add()
+    harpoon_list:add()
 end)
 
 map("n", "<S-h>", function()
-    require("harpoon").ui:toggle_quick_menu(harpoon:list())
+    harpoon.ui:toggle_quick_menu(harpoon_list)
 end)
 
 for i = 1, 9 do
     map("n", "<leader>" .. i, function()
-        require("harpoon"):list():select(i)
+        harpoon_list:select(i)
     end)
 end
 
