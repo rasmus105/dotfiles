@@ -18,8 +18,6 @@ keymap.set("v", "<Leader>D", '"_D')
 keymap.set("n", "+", "<C-a>")
 keymap.set("n", "-", "<C-x>")
 
--- Select all
-keymap.set("n", "<C-a>", "gg<S-v>G")
 
 -- Jumplist
 -- keymap.set("n", "<C-m>", "<C-i>", opts)
@@ -56,11 +54,6 @@ keymap.set("n", "<leader>Y", '"+Y')
 -- Change all strings matching this string
 vim.keymap.set("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
 
--- Change shortcuts for switching view
-keymap.set("n", "<C-h>", "<C-w>h")
-keymap.set("n", "<C-l>", "<C-w>l")
-keymap.set("n", "<C-j>", "<C-w>j")
-keymap.set("n", "<C-k>", "<C-w>k")
 
 -- Clear highlights
 keymap.set("n", "<leader>/", ":noh<CR>")
