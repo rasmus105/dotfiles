@@ -89,6 +89,7 @@ vim.pack.add({
     -- Colorschemes & Visuals
     { src = "https://github.com/nvim-mini/mini.icons" },
     { src = "https://github.com/folke/which-key.nvim" },
+    { src = "https://github.com/nvim-lualine/lualine.nvim" },
 
     { src = "https://github.com/vague2k/vague.nvim" },
     { src = "https://github.com/ellisonleao/gruvbox.nvim" },
@@ -101,6 +102,7 @@ vim.pack.add({
 require("colorscheme")
 
 require('mini.icons').setup()
+require('lualine').setup({})
 require('grug-far').setup()
 -- require('oil').setup()
 require('fff').setup({})

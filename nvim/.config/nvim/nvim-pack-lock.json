@@ -27,6 +27,10 @@
       "version": "'harpoon2'"
     },
     "harpoon2": [],
+    "lualine.nvim": {
+      "rev": "b8c2315",
+      "src": "https://github.com/nvim-lualine/lualine.nvim"
+    },
     "mason-lspconfig.nvim": {
       "rev": "155eac5",
       "src": "https://github.com/mason-org/mason-lspconfig.nvim"
