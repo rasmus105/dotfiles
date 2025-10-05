@@ -1,11 +1,11 @@
 local map = vim.keymap.set
-vim.g.mapleader = " "
+vim.g.mapleader = ' '
+vim.g.maplocalleader = ','
 
 ---- Options ----
 require("options")
 
 ---- Keymaps ----
-map("n", "<leader>b", ":w<CR> :so<CR>")
 -- Change shortcuts for switching & resizing view
 map("n", "<C-h>", "<C-w>h")
 map("n", "<C-l>", "<C-w>l")
@@ -33,15 +33,11 @@ map("n", "<C-a>", "gg<S-v>G")
 map("n", "<leader>/", ":noh<CR>")
 
 -- Remove
--- map("n", "q:", "")
+map("n", "q:", "")
 
 -- Better indenting (stay in visual mode)
 map("v", "<", "<gv")
 map("v", ">", ">gv")
-
--- Always center when moving between matches
-map("n", "n", "nzzzv")
-map("n", "N", "Nzzzv")
 
 -- Tab
 map("n", "<leader><tab><tab>", ":tabnew<CR>")
@@ -57,11 +53,12 @@ map({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, 
 map("n", "<leader>tw", ":set wrap!<CR>")
 
 -- Always go forward/backward (regardless of whether '/' or '?' is used)
-map("n", "n", "'Nn'[v:searchforward].'zv'", { expr = true, desc = "Next Search Result" })
-map("n", "N", "'nN'[v:searchforward].'zv'", { expr = true, desc = "Prev Search Result" })
+-- and center after moving
+map("n", "n", "'Nn'[v:searchforward].'zzzv'", { expr = true, desc = "Next Search Result" })
+map("n", "N", "'nN'[v:searchforward].'zzzv'", { expr = true, desc = "Prev Search Result" })
 
 -- Better paste
-map("v", "p", '"_dP', opts)
+map("v", "p", '"_dP')
 
 -- Fix spelling (picks first suggestion)
 map("n", "z0", "1z=", { desc = "Fix word under cursor" })
@@ -73,7 +70,7 @@ vim.pack.add({
 
     -- File
     -- { src = "https://github.com/stevearc/oil.nvim" },
-    { src = "https://github.com/ThePrimeagen/harpoon", version = "harpoon2" },
+    { src = "https://github.com/ThePrimeagen/harpoon",                     version = "harpoon2" },
     { src = "https://github.com/mikavilpas/yazi.nvim" },
 
     -- Searching & Replacing
@@ -91,6 +88,7 @@ vim.pack.add({
 
     -- Colorschemes & Visuals
     { src = "https://github.com/nvim-mini/mini.icons" },
+    { src = "https://github.com/folke/which-key.nvim" },
 
     { src = "https://github.com/vague2k/vague.nvim" },
     { src = "https://github.com/ellisonleao/gruvbox.nvim" },
@@ -99,19 +97,19 @@ vim.pack.add({
 
 
 ---- Plugin Setup & Configuration ----
--- Select colorscheme
-vim.cmd(":colorscheme gruvbox")
+-- Select and configure colorscheme
+require("colorscheme")
 
 require('mini.icons').setup()
 require('grug-far').setup()
 -- require('oil').setup()
-require('fff').setup()
+require('fff').setup({})
 
 vim.g.fff = {
     lazy_sync = true, -- start syncing only when the picker is open
     prompt = "> ",    -- default icon isn't loaded properly
     debug = {
-        enabled = true,
+        enabled = false,
         show_scores = true,
     },
 }
@@ -168,7 +166,7 @@ map('n', 'gr', function()
     require('fzf-lua').lsp_references()
 end, { desc = 'LSP References' })
 
-map('n', '<leader>gd', function()
+map('n', 'gd', function()
     require('fzf-lua').lsp_definitions()
 end, { desc = 'LSP Definitions' })
 
@@ -184,19 +182,21 @@ map('n', '<leader>g', function() require('grug-far').open() end,
 -- Yazi
 map("n", "<leader>-", ":Yazi<CR>")
 
--- Harpoon 
-map("n", "<leader>h", function ()
-    require("harpoon"):list():add() end)
+-- Harpoon
+map("n", "<leader>h", function()
+    require("harpoon"):list():add()
+end)
 
-map("n", "<S-h>", function ()
-    require("harpoon").ui:toggle_quick_menu(harpoon:list()) end)
+map("n", "<S-h>", function()
+    require("harpoon").ui:toggle_quick_menu(harpoon:list())
+end)
 
 for i = 1, 9 do
-    map("n", "<leader>" .. i, function ()
+    map("n", "<leader>" .. i, function()
         require("harpoon"):list():select(i)
     end)
 end
 
----- LSP & Autocmds----
+-- ---- LSP & Autocmds----
 require("lsp")
 require("autocmds")

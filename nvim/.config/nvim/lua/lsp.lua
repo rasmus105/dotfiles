@@ -1,18 +1,22 @@
 local map = vim.keymap.set
 
-require("nvim-treesitter").setup({
-    ensure_installed = {
-        "zig",
-        "rust",
-        "c",
-        "cpp",
-        "lua",
-        "vim",
-        "vimdoc",
-        "query",
-        "markdown",
-        "markdown_inline",
-    }
+require("nvim-treesitter.configs").setup({
+    ensure_installed = { "c", "zig", "rust", "lua", "javascript" },
+    sync_install = false,
+    auto_install = true,
+    ignore_install = {},
+    modules = {},
+    highlight = {
+        enable = true,
+        disable = function(lang, buf)
+            local max_filesize = 1000 * 1024 -- 1 MB
+            local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
+            if ok and stats and stats.size > max_filesize then
+                return true
+            end
+        end,
+
+    },
 })
 require('mason').setup()
 require('mason-lspconfig').setup()
@@ -41,7 +45,8 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
         -- Navigation
         map('n', 'K', vim.lsp.buf.hover, opts)
-        map('n', 'gd', vim.lsp.buf.definition, opts)
+        map('n', 'gk', vim.lsp.buf.signature_help, opts)
+        -- map('n', 'gd', vim.lsp.buf.definition, opts)
         map('n', 'gD', vim.lsp.buf.declaration, opts)
         -- map('n', 'gr', vim.lsp.buf.references, opts) -- using fzf-lua for this
         map('n', 'gi', vim.lsp.buf.implementation, opts)
@@ -67,7 +72,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 -- Autocompletion
 require('blink.cmp').setup({
     fuzzy = { implementation = 'prefer_rust_with_warning' },
-    build = 'cargo build --release',
+    -- build = 'cargo build --release',
     signature = { enabled = true },
     keymap = {
         preset = "default",
@@ -94,13 +99,6 @@ require('blink.cmp').setup({
             auto_show = true,
             auto_show_delay_ms = 0,
         }
-    },
-
-    cmdline = {
-        keymap = {
-            preset = 'inherit',
-            ['<CR>'] = { 'accept_and_enter', 'fallback' },
-        },
     },
 
     sources = { default = { "lsp" } }

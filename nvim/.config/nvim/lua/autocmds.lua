@@ -1,9 +1,10 @@
 -- Highlight on yank (neet visual feedback when yanking)
-vim.api.nvim_create_autocmd("TextYankPost", {
-    callback = function()
-        (vim.hl or vim.highlight).on_yank()
-    end,
-})
+vim.highlight.on_yank = true
+-- vim.api.nvim_create_autocmd("TextYankPost", {
+--     callback = function()
+--         (vim.hl or vim.highlight).on_yank()
+--     end,
+-- })
 
 -- Auto create dir when saving a file
 vim.api.nvim_create_autocmd({ "BufWritePre" }, {
