@@ -75,6 +75,10 @@
       "rev": "25107de",
       "src": "https://github.com/vague2k/vague.nvim"
     },
+    "which-key.nvim": {
+      "rev": "904308e",
+      "src": "https://github.com/folke/which-key.nvim"
+    },
     "yazi.nvim": {
       "rev": "3d6e3ee",
       "src": "https://github.com/mikavilpas/yazi.nvim"
