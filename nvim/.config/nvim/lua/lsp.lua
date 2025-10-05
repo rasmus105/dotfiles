@@ -125,3 +125,9 @@ vim.lsp.config('lua_ls', {
         },
     },
 })
+
+vim.lsp.config('zls', {
+    settings = {
+        enable_build_on_save = true,
+    }
+})
