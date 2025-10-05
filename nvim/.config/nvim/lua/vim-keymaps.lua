@@ -34,10 +34,11 @@ map("v", "<", "<gv")
 map("v", ">", ">gv")
 
 -- Tab
-map("n", "<leader><tab><tab>", ":tabnew<CR>")
+map("n", "<leader><tab>n", ":tabnew<CR>")
 map("n", "<leader><tab>q", ":tabclose<CR>")
-map("n", "<leader><tab>]", ":tabnext<CR>")
-map("n", "<leader><tab>[", ":tabprevious<CR>")
+map("n", "<leader><tab>l", ":tabnext<CR>")
+map("n", "<leader><tab>h", ":tabprevious<CR>")
+map("n", "<leader><tab>m", "<C-w>T")
 
 -- Better up/down (wrapped lines will count as multiple)
 map({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
@@ -57,3 +58,5 @@ map("v", "p", '"_dP')
 -- Fix spelling (picks first suggestion)
 map("n", "z0", "1z=", { desc = "Fix word under cursor" })
 
+-- Ctrl+Tab to go to previous
+map("c", "<C-Tab>", "<S><Tab>")
