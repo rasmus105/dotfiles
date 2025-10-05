@@ -60,3 +60,7 @@ map("n", "z0", "1z=", { desc = "Fix word under cursor" })
 
 -- Ctrl+Tab to go to previous
 map("c", "<C-Tab>", "<S><Tab>")
+
+-- Move lines up/down
+map("v", "J", ":m '>+1<CR>gv=gv")
+map("v", "K", ":m '>-2<CR>gv=gv")
