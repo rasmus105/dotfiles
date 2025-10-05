@@ -20,6 +20,18 @@ require('lualine').setup({})
 require('grug-far').setup()
 require('fff').setup({})
 
+require("yazi").setup({
+    floating_window_scaling_factor = 1,
+    yazi_floating_window_zindex = 1,
+    yazi_floating_window_border = "none",  -- Remove border for true fullscreen
+})
+
+require('fzf-lua').setup({
+    winopts = {
+        fullscreen = true
+    }
+})
+
 vim.g.fff = {
     lazy_sync = true, -- start syncing only when the picker is open
     prompt = "> ",    -- default icon isn't loaded properly
@@ -69,8 +81,11 @@ end
 
 ---- Plugin Mappings ----
 -- Find files
-map('n', '\\f', function() require('fff').find_files() end,
-    { desc = 'FFFind files' })
+-- fff is currently lacking some functionality such as full screen and next/prev keybindings
+-- map('n', '\\f', function() require('fff').find_files() end,
+--     { desc = 'FFFind files' })
+map('n', '\\f', function() require('fzf-lua').files() end,
+    { desc = 'Find files' })
 
 -- Grep
 map('n', '\\w', function() require('fzf-lua').live_grep() end,
@@ -87,7 +102,7 @@ map('n', 'gw', function() require('fzf-lua').grep_cword() end,
 
 map('n', 'gr', function()
     require('fzf-lua').lsp_references()
-    end, { desc = 'LSP References (fzf-lua)' })
+end, { desc = 'LSP References (fzf-lua)' })
 
 map('n', 'gd', function()
     require('fzf-lua').lsp_definitions()
