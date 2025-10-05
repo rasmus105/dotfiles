@@ -1,5 +1,10 @@
 {
   "plugins": {
+    "blink.cmp": {
+      "rev": "327fff9",
+      "src": "https://github.com/Saghen/blink.cmp",
+      "version": "1.0.0 - 2.0.0"
+    },
     "fff.nvim": {
       "rev": "550a905",
       "src": "https://github.com/dmtrKovalenko/fff.nvim"
@@ -16,6 +21,12 @@
       "rev": "5e0a460",
       "src": "https://github.com/ellisonleao/gruvbox.nvim"
     },
+    "harpoon": {
+      "rev": "ed1f853",
+      "src": "https://github.com/ThePrimeagen/harpoon",
+      "version": "'harpoon2'"
+    },
+    "harpoon2": [],
     "mason-lspconfig.nvim": {
       "rev": "155eac5",
       "src": "https://github.com/mason-org/mason-lspconfig.nvim"
@@ -44,6 +55,10 @@
       "rev": "72f56f7",
       "src": "https://github.com/nvim-pack/nvim-spectre"
     },
+    "nvim-treesitter": {
+      "rev": "42fc28ba",
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter"
+    },
     "nvim-web-devicons": {
       "rev": "b8221e4",
       "src": "https://github.com/nvim-tree/nvim-web-devicons"
@@ -59,6 +74,10 @@
     "vague.nvim": {
       "rev": "25107de",
       "src": "https://github.com/vague2k/vague.nvim"
+    },
+    "yazi.nvim": {
+      "rev": "3d6e3ee",
+      "src": "https://github.com/mikavilpas/yazi.nvim"
     }
   }
 }

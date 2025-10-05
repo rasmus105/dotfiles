@@ -1,5 +1,19 @@
 local map = vim.keymap.set
 
+require("nvim-treesitter").setup({
+    ensure_installed = {
+        "zig",
+        "rust",
+        "c",
+        "cpp",
+        "lua",
+        "vim",
+        "vimdoc",
+        "query",
+        "markdown",
+        "markdown_inline",
+    }
+})
 require('mason').setup()
 require('mason-lspconfig').setup()
 require('mason-tool-installer').setup({
@@ -18,7 +32,6 @@ require('mason-tool-installer').setup({
     }
 })
 
-map("n", "<leader>te", function() vim.diagnostic.enable(not vim.diagnostic.is_enabled()) end)
 
 -- LSP Keymaps (apply to all LSP servers)
 vim.api.nvim_create_autocmd('LspAttach', {
@@ -30,9 +43,10 @@ vim.api.nvim_create_autocmd('LspAttach', {
         map('n', 'K', vim.lsp.buf.hover, opts)
         map('n', 'gd', vim.lsp.buf.definition, opts)
         map('n', 'gD', vim.lsp.buf.declaration, opts)
-        map('n', 'gr', vim.lsp.buf.references, opts)
+        -- map('n', 'gr', vim.lsp.buf.references, opts) -- using fzf-lua for this
         map('n', 'gi', vim.lsp.buf.implementation, opts)
-        map('n', '<C-k>', vim.lsp.buf.signature_help, opts)
+        map('n', '<S-k>', vim.lsp.buf.signature_help, opts)
+        -- map('n', '<S-k>', vim.lsp.buf.information??
 
         -- Code actions
         map('n', '<leader>ca', vim.lsp.buf.code_action, opts)
@@ -48,6 +62,48 @@ vim.api.nvim_create_autocmd('LspAttach', {
         map("n", "<leader>ch", ":ClangdSwitchSourceHeader<CR>") -- code action
         map("n", "gl", vim.diagnostic.open_float, { desc = "Show diagnostic as float" })
     end,
+})
+
+-- Autocompletion
+require('blink.cmp').setup({
+    fuzzy = { implementation = 'prefer_rust_with_warning' },
+    build = 'cargo build --release',
+    signature = { enabled = true },
+    keymap = {
+        preset = "default",
+        ["<C-Tab>"] = { "select_prev", "fallback" },
+        ["<Tab>"] = { "select_next", "fallback" },
+
+        ["<C-l>"] = { "snippet_forward", "fallback" },
+        ["<C-h>"] = { "snippet_backward", "fallback" },
+
+        ["<C-Enter>"] = { "accept", "fallback" },
+
+        ["<C-b>"] = { "scroll_documentation_down", "fallback" },
+        ["<C-f>"] = { "scroll_documentation_up", "fallback" },
+        ["<C-y>"] = { "show", "show_documentation", "hide_documentation" },
+    },
+
+    appearance = {
+        use_nvim_cmp_as_default = true,
+        nerd_font_variant = "normal",
+    },
+
+    completion = {
+        documentation = {
+            auto_show = true,
+            auto_show_delay_ms = 0,
+        }
+    },
+
+    cmdline = {
+        keymap = {
+            preset = 'inherit',
+            ['<CR>'] = { 'accept_and_enter', 'fallback' },
+        },
+    },
+
+    sources = { default = { "lsp" } }
 })
 
 vim.lsp.config('lua_ls', {

@@ -33,7 +33,7 @@ map("n", "<C-a>", "gg<S-v>G")
 map("n", "<leader>/", ":noh<CR>")
 
 -- Remove
-map("n", "q:", "")
+-- map("n", "q:", "")
 
 -- Better indenting (stay in visual mode)
 map("v", "<", "<gv")
@@ -68,71 +68,134 @@ map("n", "z0", "1z=", { desc = "Fix word under cursor" })
 
 ---- Plugins ----
 vim.pack.add({
-	
-	-- General Utils
-	{ src = "https://github.com/nvim-lua/plenary.nvim" },
+    -- General Utils
+    { src = "https://github.com/nvim-lua/plenary.nvim" },
 
-	-- File
-	{ src = "https://github.com/stevearc/oil.nvim" },
+    -- File
+    -- { src = "https://github.com/stevearc/oil.nvim" },
+    { src = "https://github.com/ThePrimeagen/harpoon", version = "harpoon2" },
+    { src = "https://github.com/mikavilpas/yazi.nvim" },
 
-	-- Searching & Replacing
-	{ src = "https://github.com/ibhagwan/fzf-lua" },
-	{ src = "https://github.com/dmtrKovalenko/fff.nvim" },
-	{ src = "https://github.com/MagicDuck/grug-far.nvim" },
+    -- Searching & Replacing
+    { src = "https://github.com/ibhagwan/fzf-lua" },
+    { src = "https://github.com/dmtrKovalenko/fff.nvim" },
+    { src = "https://github.com/MagicDuck/grug-far.nvim" },
 
-	-- LSP
-	{ src = 'https://github.com/neovim/nvim-lspconfig' },
-	{ src = 'https://github.com/mason-org/mason.nvim' },
-	{ src = 'https://github.com/mason-org/mason-lspconfig.nvim' },
-	{ src = 'https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim' },
+    -- LSP
+    { src = 'https://github.com/neovim/nvim-lspconfig' },
+    { src = 'https://github.com/mason-org/mason.nvim' },
+    { src = 'https://github.com/mason-org/mason-lspconfig.nvim' },
+    { src = 'https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim' },
+    { src = 'https://github.com/Saghen/blink.cmp',                         version = vim.version.range("^1") },
+    { src = 'https://github.com/nvim-treesitter/nvim-treesitter' },
 
-	-- Colorschemes & Visuals
-	{ src = "https://github.com/nvim-mini/mini.icons" },
+    -- Colorschemes & Visuals
+    { src = "https://github.com/nvim-mini/mini.icons" },
 
-	{ src = "https://github.com/vague2k/vague.nvim" },
-	{ src = "https://github.com/ellisonleao/gruvbox.nvim" },
+    { src = "https://github.com/vague2k/vague.nvim" },
+    { src = "https://github.com/ellisonleao/gruvbox.nvim" },
 });
 
 
 
 ---- Plugin Setup & Configuration ----
 -- Select colorscheme
-vim.cmd(":colorscheme vague")
+vim.cmd(":colorscheme gruvbox")
 
 require('mini.icons').setup()
 require('grug-far').setup()
-require('oil').setup()
+-- require('oil').setup()
 require('fff').setup()
 
 vim.g.fff = {
-  lazy_sync = true, -- start syncing only when the picker is open
-  prompt = "> ", -- default icon isn't loaded properly
-  debug = {
-    enabled = true,
-    show_scores = true,
-  },
+    lazy_sync = true, -- start syncing only when the picker is open
+    prompt = "> ",    -- default icon isn't loaded properly
+    debug = {
+        enabled = true,
+        show_scores = true,
+    },
 }
+
+local harpoon = require("harpoon")
+harpoon.setup({
+    settings = {
+        save_on_toggle = true,
+        sync_on_ui_close = true,
+    },
+})
+
+harpoon:extend(require("harpoon.extensions").builtins.highlight_current_file())
+
+-- Override the default menu UI to add number key mappings
+local orig_ui_toggle = harpoon.ui.toggle_quick_menu
+harpoon.ui.toggle_quick_menu = function(...)
+    orig_ui_toggle(...)
+
+    -- Get the harpoon window/buffer if it exists
+    local win = vim.api.nvim_get_current_win()
+    local buf = vim.api.nvim_win_get_buf(win)
+    local bufname = vim.api.nvim_buf_get_name(buf)
+
+    -- Check if this is the harpoon menu
+    if bufname:match("harpoon") then
+        -- Map 1-9 keys in the harpoon buffer
+        for i = 1, 9 do
+            vim.api.nvim_buf_set_keymap(
+                buf,
+                "n",
+                tostring(i),
+                ":lua require('harpoon'):list():select(" .. i .. ")<CR>",
+                { noremap = true, silent = true }
+            )
+        end
+    end
+end
 
 ---- Plugin Mappings ----
 -- Find files
 map('n', '\\f', function() require('fff').find_files() end,
-  { desc = 'FFFind files' })
+    { desc = 'FFFind files' })
 
--- Grep 
+-- Grep
 map('n', '\\w', function() require('fzf-lua').live_grep() end,
-	{ desc = 'Grep words' })
+    { desc = 'Grep words' })
 
 -- Grep word on cursor
-map('n', 'gw', function() require('fzf-lua').grep_cword() end, 
-	{ desc = 'Grep for word cursor is on' })
+map('n', 'gw', function() require('fzf-lua').grep_cword() end,
+    { desc = 'Grep for word cursor is on' })
+
+map('n', 'gr', function()
+    require('fzf-lua').lsp_references()
+end, { desc = 'LSP References' })
+
+map('n', '<leader>gd', function()
+    require('fzf-lua').lsp_definitions()
+end, { desc = 'LSP Definitions' })
+
+map("n", "<leader>te", function() vim.diagnostic.enable(not vim.diagnostic.is_enabled()) end)
 
 -- Search & Replace
 map('n', '<leader>g', function() require('grug-far').open() end,
-	{ desc = 'Search & Replace' })
+    { desc = 'Search & Replace' })
 
 -- Oil (file editor)
-map('n', '<leader>o', ':Oil<CR>')
+-- map('n', '<leader>o', ':Oil<CR>')
 
+-- Yazi
+map("n", "<leader>-", ":Yazi<CR>")
+
+-- Harpoon 
+map("n", "<leader>h", function ()
+    require("harpoon"):list():add() end)
+
+map("n", "<S-h>", function ()
+    require("harpoon").ui:toggle_quick_menu(harpoon:list()) end)
+
+for i = 1, 9 do
+    map("n", "<leader>" .. i, function ()
+        require("harpoon"):list():select(i)
+    end)
+end
 
 ---- LSP & Autocmds----
 require("lsp")
