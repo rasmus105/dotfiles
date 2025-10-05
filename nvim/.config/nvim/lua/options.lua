@@ -1,4 +1,3 @@
-local opts = { noremap = true, silent = true }
 local opt = vim.opt
 
 opt.wrap = false -- don't wrap by default
