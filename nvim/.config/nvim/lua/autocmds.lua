@@ -42,7 +42,7 @@ vim.api.nvim_create_autocmd("FileType", {
     callback = function(event)
         vim.keymap.set("n", "q", function()
             vim.cmd("close")
-        end, { buffer = event.buf, silent = true })
+        end, { buffer = event.buf, silent = true, nowait = true })
     end,
 })
 
