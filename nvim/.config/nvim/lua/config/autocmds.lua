@@ -6,7 +6,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 })
 
 -- Auto create dir when saving a file
-vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+vim.api.nvim_create_autocmd("BufWritePre", {
     callback = function(event)
         local file = vim.uv.fs_realpath(event.match) or event.match
         vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
@@ -47,10 +47,10 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 ---- Plugin Related ----
-vim.api.nvim_create_autocmd('PackChanged', {
-    callback = function(event)
-        if event.data.updated then
-            require('fff.download').download_or_build_binary()
-        end
-    end,
-})
+-- vim.api.nvim_create_autocmd('PackChanged', {
+--     callback = function(event)
+--         if event.data.updated then
+--             require('fff.download').download_or_build_binary()
+--         end
+--     end,
+-- })

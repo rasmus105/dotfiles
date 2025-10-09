@@ -42,30 +42,25 @@ vim.api.nvim_create_autocmd('LspAttach', {
     group = vim.api.nvim_create_augroup('UserLspConfig', {}),
     callback = function(ev)
         local opts = { buffer = ev.buf }
+        map("n", "<leader>te", function() vim.diagnostic.enable(not vim.diagnostic.is_enabled()) end,
+            { buffer = ev.buf, desc = "Toggle Diagnostics" });
 
         -- Navigation
         map('n', 'K', vim.lsp.buf.hover, opts)
         map('n', 'gk', vim.lsp.buf.signature_help, opts)
-        -- map('n', 'gd', vim.lsp.buf.definition, opts)
         map('n', 'gD', vim.lsp.buf.declaration, opts)
-        -- map('n', 'gr', vim.lsp.buf.references, opts) -- using fzf-lua for this
         map('n', 'gi', vim.lsp.buf.implementation, opts)
-        map('n', '<S-k>', vim.lsp.buf.signature_help, opts)
-        -- map('n', '<S-k>', vim.lsp.buf.information??
+        -- map('n', 'gd', vim.lsp.buf.definition, opts) -- using fzf-lua for this
+        -- map('n', 'gr', vim.lsp.buf.references, opts) -- using fzf-lua for this
 
         -- Code actions
         map('n', '<leader>ca', vim.lsp.buf.code_action, opts)
         map('n', '<leader>rn', vim.lsp.buf.rename, opts)
-        map('n', '<leader>f', function()
-            vim.lsp.buf.format { async = true }
-        end, opts)
+        map('n', '<leader>f', function() vim.lsp.buf.format { async = true } end, opts)
 
         -- Diagnostics
-        map('n', '[d', vim.diagnostic.get_prev, opts)
-        map('n', ']d', vim.diagnostic.get_next, opts)
-        map('n', '<leader>q', vim.diagnostic.setloclist, opts)
-        map("n", "<leader>ch", ":ClangdSwitchSourceHeader<CR>") -- code action
-        map("n", "gl", vim.diagnostic.open_float, { desc = "Show diagnostic as float" })
+        map("n", "<leader>ch", ":LspClangdSwitchSourceHeader<CR>") -- code action
+        map("n", "gl", vim.diagnostic.open_float, { buffer = ev.buf, desc = "Show diagnostic as float" })
     end,
 })
 
@@ -130,4 +125,12 @@ vim.lsp.config('zls', {
     settings = {
         enable_build_on_save = true,
     }
+})
+
+-- specific to work project ("gt115")
+vim.lsp.config('clangd', {
+    cmd = {
+        "clangd",
+        "--query-driver=/home/rk105/programming/toolchains/arm-gnu-toolchain-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc",
+    },
 })

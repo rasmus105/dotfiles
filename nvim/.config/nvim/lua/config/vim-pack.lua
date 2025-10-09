@@ -8,7 +8,7 @@ vim.pack.add({
 
     -- Searching & Replacing
     { src = "https://github.com/ibhagwan/fzf-lua" },
-    { src = "https://github.com/dmtrKovalenko/fff.nvim" },
+    -- { src = "https://github.com/dmtrKovalenko/fff.nvim" },
     { src = "https://github.com/MagicDuck/grug-far.nvim" },
 
     -- LSP
@@ -23,6 +23,7 @@ vim.pack.add({
     { src = "https://github.com/nvim-mini/mini.icons" },
     { src = "https://github.com/folke/which-key.nvim" },
     { src = "https://github.com/nvim-lualine/lualine.nvim" },
+    { src = "https://github.com/OXY2DEV/markview.nvim" },
 
     { src = "https://github.com/catppuccin/nvim" },
     { src = "https://github.com/vague2k/vague.nvim" },

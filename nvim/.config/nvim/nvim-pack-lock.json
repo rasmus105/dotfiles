@@ -17,6 +17,10 @@
       "rev": "48f9afb",
       "src": "https://github.com/MagicDuck/grug-far.nvim"
     },
+    "gruvbox-material.nvim": {
+      "rev": "f68f346",
+      "src": "https://github.com/f4z3r/gruvbox-material.nvim"
+    },
     "gruvbox.nvim": {
       "rev": "5e0a460",
       "src": "https://github.com/ellisonleao/gruvbox.nvim"
@@ -30,6 +34,10 @@
     "lualine.nvim": {
       "rev": "b8c2315",
       "src": "https://github.com/nvim-lualine/lualine.nvim"
+    },
+    "markview.nvim": {
+      "rev": "89405b5",
+      "src": "https://github.com/OXY2DEV/markview.nvim"
     },
     "mason-lspconfig.nvim": {
       "rev": "155eac5",

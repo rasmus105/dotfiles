@@ -48,7 +48,7 @@ opt.undofile = true                           -- Persistent undo
 opt.undolevels = 10000
 opt.undodir = vim.fn.expand("~/.vim/undodir") -- Undo directory
 opt.updatetime = 300                          -- Faster completion
-opt.timeoutlen = vim.g.vscode and 1000 or 300 -- Lower than default (1000) to quickly trigger which-key
+opt.timeoutlen = 300                          -- Lower than default (1000) to quickly trigger which-key
 opt.ttimeoutlen = 0                           -- Key code timeout
 opt.autoread = true                           -- Auto reload files changed outside vim
 opt.autowrite = true                          -- Auto save
@@ -60,9 +60,10 @@ opt.backspace = "indent,eol,start" -- Better backspace behavior
 opt.autochdir = false              -- Don't auto change directory
 opt.path:append("**")              -- include subdirectories in search
 opt.mouse = "a"                    -- Enable mouse support
+opt.mousescroll = "ver:1,hor:1"
 -- opt.clipboard = vim.env.SSH_TTY and "" or "unnamedplus" -- Sync with system clipboard
-opt.modifiable = true              -- Allow buffer modifications
-opt.encoding = "UTF-8"             -- Set encoding
+opt.modifiable = true  -- Allow buffer modifications
+opt.encoding = "UTF-8" -- Set encoding
 
 -- Folding settings
 opt.smoothscroll = true
