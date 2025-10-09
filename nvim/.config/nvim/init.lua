@@ -13,6 +13,7 @@ require('plugins.harpoon')
 require('plugins.fzf-lua')
 require('plugins.markview')
 require('plugins.lualine')
+require('plugins.tabby')
 
 ---- Misc Plugins With Minimal Configuration ----
 require('mini.icons').setup()

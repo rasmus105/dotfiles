@@ -24,6 +24,7 @@ vim.pack.add({
     { src = "https://github.com/folke/which-key.nvim" },
     { src = "https://github.com/nvim-lualine/lualine.nvim" },
     { src = "https://github.com/OXY2DEV/markview.nvim" },
+    { src = "https://github.com/nanozuki/tabby.nvim" },
 
     { src = "https://github.com/catppuccin/nvim" },
     { src = "https://github.com/vague2k/vague.nvim" },
