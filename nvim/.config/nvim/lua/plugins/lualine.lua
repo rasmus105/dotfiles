@@ -69,6 +69,7 @@ local config = {
             },
             { 'fileformat' },
             { 'encoding' },
+            { 'filesize' },
         },
         lualine_z = { '%l:%c', '%p%% of %L' },
     },
