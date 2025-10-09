@@ -34,6 +34,7 @@ require("gruvbox").setup({
 ---- Custom colorschemes ----
 
 local select_custom_gruvbox = function()
+    vim.cmd(":set background=dark");
     vim.cmd.colorscheme('gruvbox')
     vim.cmd(":hi normal guibg=#292522")
 end
