@@ -1,14 +1,14 @@
 local map = vim.keymap.set
 
-require("nvim-treesitter.configs").setup({
-    ensure_installed = { "c", "zig", "rust", "lua", "javascript" },
+require('nvim-treesitter.configs').setup({
+    ensure_installed = { 'c', 'zig', 'rust', 'lua', 'javascript' },
     sync_install = false,
     auto_install = true,
     ignore_install = {},
     modules = {},
     highlight = {
         enable = true,
-        disable = function(lang, buf)
+        disable = function(_, buf)
             local max_filesize = 1000 * 1024 -- 1 MB
             local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
             if ok and stats and stats.size > max_filesize then
@@ -22,28 +22,39 @@ require('mason').setup()
 require('mason-lspconfig').setup()
 require('mason-tool-installer').setup({
     ensure_installed = {
-        "rust_analyzer", -- Rust language server
-        "clangd",        -- C/C++ language server
-        "lua_ls",        -- Lua language server
-        "ts_ls",         -- Typescript language server
-        "pyright",       -- Python language server
-        "zls",           -- Zig language server
+        'rust_analyzer', -- Rust language server
+        'clangd',        -- C/C++ language server
+        'lua_ls',        -- Lua language server
+        'ts_ls',         -- Typescript language server
+        'pyright',       -- Python language server
+        'zls',           -- Zig language server
 
-        "rustfmt",       -- Rust formatter
-        "clang-format",  -- C/C++ formatter
-        "stylua",        -- Lua formatter
-        "black",         -- Python formatter
+        'rustfmt',       -- Rust formatter
+        'clang-format',  -- C/C++ formatter
+        'stylua',        -- Lua formatter
+        'black',         -- Python formatter
     }
 })
 
+-- Global auto-format toggle (add this before your LSP config)
+vim.g.autoformat = true
+
+local function toggle_autoformat()
+    vim.g.autoformat = not vim.g.autoformat
+    local status = vim.g.autoformat and "enabled" or "disabled"
+    print("Auto-formatting " .. status)
+end
 
 -- LSP Keymaps (apply to all LSP servers)
 vim.api.nvim_create_autocmd('LspAttach', {
     group = vim.api.nvim_create_augroup('UserLspConfig', {}),
     callback = function(ev)
         local opts = { buffer = ev.buf }
-        map("n", "<leader>te", function() vim.diagnostic.enable(not vim.diagnostic.is_enabled()) end,
-            { buffer = ev.buf, desc = "Toggle Diagnostics" });
+
+        -- Toggle keymaps
+        map('n', '<leader>te', function() vim.diagnostic.enable(not vim.diagnostic.is_enabled()) end,
+            { buffer = ev.buf, desc = 'Toggle Diagnostics' });
+        map('n', '<leader>tf', toggle_autoformat, { buffer = ev.buf, desc = 'Toggle auto-format' })
 
         -- Navigation
         map('n', 'K', vim.lsp.buf.hover, opts)
@@ -59,8 +70,18 @@ vim.api.nvim_create_autocmd('LspAttach', {
         map('n', '<leader>f', function() vim.lsp.buf.format { async = true } end, opts)
 
         -- Diagnostics
-        map("n", "<leader>ch", ":LspClangdSwitchSourceHeader<CR>") -- code action
-        map("n", "gl", vim.diagnostic.open_float, { buffer = ev.buf, desc = "Show diagnostic as float" })
+        map('n', '<leader>ch', ':LspClangdSwitchSourceHeader<CR>') -- code action
+        map('n', 'gl', vim.diagnostic.open_float, { buffer = ev.buf, desc = 'Show diagnostic as float' })
+
+        -- Format on save
+        vim.api.nvim_create_autocmd('BufWritePre', {
+            buffer = ev.buf,
+            callback = function()
+                if vim.g.autoformat then
+                    vim.lsp.buf.format { async = false, id = ev.data.client_id }
+                end
+            end,
+        })
     end,
 })
 
@@ -70,23 +91,23 @@ require('blink.cmp').setup({
     -- build = 'cargo build --release',
     signature = { enabled = true },
     keymap = {
-        preset = "default",
-        ["<C-Tab>"] = { "select_prev", "fallback" },
-        ["<Tab>"] = { "select_next", "fallback" },
+        preset = 'default',
+        ['<C-Tab>'] = { 'select_prev', 'fallback' },
+        ['<Tab>'] = { 'select_next', 'fallback' },
 
-        ["<C-l>"] = { "snippet_forward", "fallback" },
-        ["<C-h>"] = { "snippet_backward", "fallback" },
+        ['<C-l>'] = { 'snippet_forward', 'fallback' },
+        ['<C-h>'] = { 'snippet_backward', 'fallback' },
 
-        ["<C-Enter>"] = { "accept", "fallback" },
+        ['<C-Enter>'] = { 'accept', 'fallback' },
 
-        ["<C-b>"] = { "scroll_documentation_down", "fallback" },
-        ["<C-f>"] = { "scroll_documentation_up", "fallback" },
-        ["<C-y>"] = { "show", "show_documentation", "hide_documentation" },
+        ['<C-b>'] = { 'scroll_documentation_down', 'fallback' },
+        ['<C-f>'] = { 'scroll_documentation_up', 'fallback' },
+        ['<C-y>'] = { 'show', 'show_documentation', 'hide_documentation' },
     },
 
     appearance = {
         use_nvim_cmp_as_default = true,
-        nerd_font_variant = "normal",
+        nerd_font_variant = 'normal',
     },
 
     completion = {
@@ -96,8 +117,10 @@ require('blink.cmp').setup({
         }
     },
 
-    sources = { default = { "lsp" } }
+    sources = { default = { 'lsp' } }
 })
+
+---- Language specific configurations ---
 
 vim.lsp.config('lua_ls', {
     settings = {
@@ -112,7 +135,7 @@ vim.lsp.config('lua_ls', {
                 },
             },
             workspace = {
-                library = vim.api.nvim_get_runtime_file("", true),
+                library = vim.api.nvim_get_runtime_file('', true),
             },
             telemetry = {
                 enable = false,
@@ -127,10 +150,10 @@ vim.lsp.config('zls', {
     }
 })
 
--- specific to work project ("gt115")
+-- specific to work project ('gt115')
 vim.lsp.config('clangd', {
     cmd = {
-        "clangd",
-        "--query-driver=/home/rk105/programming/toolchains/arm-gnu-toolchain-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc",
+        'clangd',
+        '--query-driver=/home/rk105/programming/toolchains/arm-gnu-toolchain-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc',
     },
 })
