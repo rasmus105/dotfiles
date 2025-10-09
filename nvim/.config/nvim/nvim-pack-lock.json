@@ -87,6 +87,10 @@
       "rev": "b9fd522",
       "src": "https://github.com/nvim-lua/plenary.nvim"
     },
+    "tabby.nvim": {
+      "rev": "b3affa6",
+      "src": "https://github.com/nanozuki/tabby.nvim"
+    },
     "vague.nvim": {
       "rev": "25107de",
       "src": "https://github.com/vague2k/vague.nvim"
