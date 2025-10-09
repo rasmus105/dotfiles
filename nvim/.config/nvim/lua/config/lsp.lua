@@ -1,7 +1,7 @@
 local map = vim.keymap.set
 
 require('nvim-treesitter.configs').setup({
-    ensure_installed = { 'c', 'zig', 'rust', 'lua', 'javascript' },
+    ensure_installed = { 'c', 'zig', 'rust', 'lua', 'javascript', 'typst' },
     sync_install = false,
     auto_install = true,
     ignore_install = {},
@@ -28,6 +28,7 @@ require('mason-tool-installer').setup({
         'ts_ls',         -- Typescript language server
         'pyright',       -- Python language server
         'zls',           -- Zig language server
+        'tinymist',      -- Typst language server
 
         'rustfmt',       -- Rust formatter
         'clang-format',  -- C/C++ formatter
