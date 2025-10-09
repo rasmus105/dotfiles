@@ -1,15 +1,9 @@
--- TODO
--- - [ ] Better lualine configuration
--- - [x] Format on write (+ toggle format on write)
--- - [ ] Improved tab bar (maybe lualine?)
--- - [ ] Typst setup
-
 local map = vim.keymap.set
 
 ---- Configuration ----
 require('config.vim-pack')
-require('config.vim-keymaps') -- vim native keymaps
 require('config.options')     -- vim options (i.e. vim.opt.*)
+require('config.vim-keymaps') -- vim native keymaps
 require('config.colorscheme') -- colorscheme configuration and setup
 require('config.lsp')         -- LSP setup, configuration and keymaps
 require('config.autocmds')    -- Useful autocommands
