@@ -39,6 +39,11 @@ map("n", "<leader><tab>q", ":tabclose<CR>")
 map("n", "<leader><tab>l", ":tabnext<CR>")
 map("n", "<leader><tab>h", ":tabprevious<CR>")
 map("n", "<leader><tab>m", "<C-w>T")
+for i = 1, 9 do
+    map("n", "<leader><tab>" .. i, ":tabn " .. i .. "<CR>")
+end
+
+
 
 -- Better up/down (wrapped lines will count as multiple)
 map({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
