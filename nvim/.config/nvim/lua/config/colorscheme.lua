@@ -51,6 +51,12 @@ map('n', select_background_prefix .. 'l', function() vim.cmd.colorscheme('catppu
     { desc = 'Select `catppuccin-latte` colorscheme' })
 map('n', select_background_prefix .. 'm', function() vim.cmd.colorscheme('catppuccin-mocha') end,
     { desc = 'Select `catppuccin-mocha` colorscheme' })
+map('n', select_background_prefix .. 'r', function() vim.cmd.colorscheme('rose-pine-moon') end,
+    { desc = 'Select `rose-pine-moon` colorscheme' })
+map('n', select_background_prefix .. 'p', function() vim.cmd.colorscheme('rose-pine-main') end,
+    { desc = 'Select `rose-pine-main` colorscheme' })
+map('n', select_background_prefix .. 'd', function() vim.cmd.colorscheme('rose-pine-dawn') end,
+    { desc = 'Select `rose-pine-dawn` colorscheme' })
 
 ---- Select the default colorscheme ----
 select_custom_gruvbox()

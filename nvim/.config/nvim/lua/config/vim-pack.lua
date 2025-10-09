@@ -29,4 +29,5 @@ vim.pack.add({
     { src = "https://github.com/catppuccin/nvim" },
     { src = "https://github.com/vague2k/vague.nvim" },
     { src = "https://github.com/ellisonleao/gruvbox.nvim" },
+    { src = "https://github.com/rose-pine/neovim" },
 });
