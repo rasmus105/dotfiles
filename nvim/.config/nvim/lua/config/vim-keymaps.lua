@@ -44,7 +44,6 @@ for i = 1, 9 do
 end
 
 
-
 -- Better up/down (wrapped lines will count as multiple)
 map({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
 map({ "n", "x" }, "k", "v:count == 0 ? 'gk' : 'k'", { desc = "Up", expr = true, silent = true })
@@ -69,3 +68,6 @@ map("c", "<C-Tab>", "<S><Tab>")
 -- Move lines up/down
 map("v", "J", ":m '>+1<CR>gv=gv")
 map("v", "K", ":m '>-2<CR>gv=gv")
+
+-- Change all strings matching this string
+vim.keymap.set("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])

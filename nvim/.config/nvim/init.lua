@@ -14,6 +14,7 @@ require('plugins.fzf-lua')
 require('plugins.markview')
 require('plugins.lualine')
 require('plugins.tabby')
+require('plugins.surround')
 
 ---- Misc Plugins With Minimal Configuration ----
 require('mini.icons').setup()
