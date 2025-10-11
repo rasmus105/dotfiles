@@ -59,6 +59,10 @@
       "rev": "96ee37d",
       "src": "https://github.com/nvim-mini/mini.pick"
     },
+    "mini.surround": {
+      "rev": "444e155",
+      "src": "https://github.com/nvim-mini/mini.surround"
+    },
     "neovim": {
       "rev": "72a04c4",
       "src": "https://github.com/rose-pine/neovim"
