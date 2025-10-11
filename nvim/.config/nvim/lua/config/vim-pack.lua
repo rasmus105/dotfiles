@@ -11,6 +11,9 @@ vim.pack.add({
     -- { src = "https://github.com/dmtrKovalenko/fff.nvim" },
     { src = "https://github.com/MagicDuck/grug-far.nvim" },
 
+    -- Editor improvements
+    { src = "https://github.com/nvim-mini/mini.surround" },
+
     -- LSP
     { src = 'https://github.com/neovim/nvim-lspconfig' },
     { src = 'https://github.com/mason-org/mason.nvim' },
