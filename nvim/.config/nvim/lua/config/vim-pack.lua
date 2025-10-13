@@ -21,6 +21,7 @@ vim.pack.add({
     { src = 'https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim' },
     { src = 'https://github.com/Saghen/blink.cmp',                         version = vim.version.range("^1") },
     { src = 'https://github.com/nvim-treesitter/nvim-treesitter' },
+    { src = 'https://github.com/mrcjkb/rustaceanvim' },
 
     -- Colorschemes & Visuals
     { src = "https://github.com/nvim-mini/mini.icons" },
