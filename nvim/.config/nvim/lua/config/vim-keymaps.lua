@@ -11,6 +11,11 @@ map("n", "<C-w>l", "<C-w>>")
 map("n", "<C-w>j", "<C-w>+")
 map("n", "<C-w>k", "<C-w>-")
 
+map("n", "<C-w>H", "<C-w>Hzz")
+map("n", "<C-w>L", "<C-w>Lzz")
+map("n", "<C-w>J", "<C-w>Jzz")
+map("n", "<C-w>K", "<C-w>Kzz")
+
 -- Always center when moving up/down
 map("n", "<C-d>", "<C-d>zz")
 map("n", "<C-u>", "<C-u>zz")
@@ -70,4 +75,10 @@ map("v", "J", ":m '>+1<CR>gv=gv")
 map("v", "K", ":m '>-2<CR>gv=gv")
 
 -- Change all strings matching this string
-vim.keymap.set("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
+map("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
+
+-- Tip: Use ]q/[q for moving in quickfix list.
+-- useful in combination with Fzf-lua:
+--  1. search for files or regex pattern
+--  2. press Ctrl+q
+--  3. ]q, [q to go to next/prev in the list.
