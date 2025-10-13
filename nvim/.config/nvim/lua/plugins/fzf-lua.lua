@@ -3,6 +3,19 @@ local map = vim.keymap.set
 require('fzf-lua').setup({
     winopts = {
         fullscreen = true
+    },
+    keymap = {
+        builtin = {
+            true,
+            ["<C-d>"] = "preview-page-down",
+            ["<C-u>"] = "preview-page-up",
+        },
+        fzf = {
+            true,
+            ["ctrl-d"] = "preview-page-down",
+            ["ctrl-u"] = "preview-page-up",
+            ["ctrl-q"] = "select-all+accept",
+        },
     }
 })
 
