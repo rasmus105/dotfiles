@@ -1,7 +1,7 @@
 local map = vim.keymap.set
 
 require('nvim-treesitter.configs').setup({
-    ensure_installed = { 'c', 'zig', 'rust', 'lua', 'javascript', 'typst' },
+    ensure_installed = { 'c', 'zig', 'rust', 'lua', 'javascript', 'typst', 'gitignore', 'make' },
     sync_install = false,
     auto_install = true,
     ignore_install = {},
@@ -19,7 +19,13 @@ require('nvim-treesitter.configs').setup({
     },
 })
 require('mason').setup()
-require('mason-lspconfig').setup()
+require('mason-lspconfig').setup({
+    automatic_enable = {
+        exclude = {
+            "rust_analyzer",
+        }
+    }
+})
 require('mason-tool-installer').setup({
     ensure_installed = {
         'rust_analyzer', -- Rust language server
@@ -29,6 +35,7 @@ require('mason-tool-installer').setup({
         'pyright',       -- Python language server
         'zls',           -- Zig language server
         'tinymist',      -- Typst language server
+        'marksman',      -- Markdown language server
 
         'rustfmt',       -- Rust formatter
         'clang-format',  -- C/C++ formatter
