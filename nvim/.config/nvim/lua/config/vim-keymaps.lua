@@ -24,6 +24,8 @@ map("n", "<C-u>", "<C-u>zz")
 map("n", "<leader>y", '"+y')
 map("v", "<leader>y", '"+y')
 map("n", "<leader>Y", '"+Y')
+map("n", "<leader>p", '"+P')
+
 
 -- Select all
 map("n", "<C-a>", "gg<S-v>G")
