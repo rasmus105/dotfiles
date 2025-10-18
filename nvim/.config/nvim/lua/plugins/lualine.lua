@@ -24,6 +24,10 @@ local config = {
                     local icon = icons.get('file', filename) or icons.get('extension', extension) or ''
                     local modified = vim.bo.modified and ' [+]' or ''
 
+                    if filename == '' then
+                        return string.format("%s [New Buffer]%s", icon, modified)
+                    end
+
                     return string.format('%s %s%s', icon, filename, modified)
                 end,
                 color = { gui = 'bold' },
