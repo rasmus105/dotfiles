@@ -29,7 +29,6 @@ keybind = super+q=close_surface
 
 keybind = super+t=toggle_quick_terminal
 
-keybind = super+d=toggle_window_decorations
 keybind = super+o=toggle_tab_overview
 
 # Panes
@@ -64,8 +63,8 @@ keybind = super+[=previous_tab
 # Scrolling
 # keybind = ctrl+up=scroll_page_up
 # keybind = ctrl+down=scroll_page_down
-keybind = ctrl+up=scroll_page_fractional:-0.5
-keybind = ctrl+down=scroll_page_fractional:0.5
+keybind = super+u=scroll_page_fractional:-0.5
+keybind = super+d=scroll_page_fractional:0.5
 
 # Command palette
 keybind = super+p=toggle_command_palette
