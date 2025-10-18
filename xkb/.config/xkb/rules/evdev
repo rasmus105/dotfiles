@@ -1,8 +1,0 @@
-// My custom XKB rules
-
-! option = symbols
-  my_colemak_mods:switched_symbols = +my_colemak_mods(switched_symbols)
-  my_colemak_mods:caps_esc         = +my_colemak_mods(caps_esc)
-
-// IMPORTANT: Include the system's base rules at the end
-! include %S/evdev
