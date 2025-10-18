@@ -35,6 +35,7 @@ map("n", "<leader>/", ":noh<CR>")
 
 -- Remove
 map("n", "q:", "")
+map("v", "q:", "")
 
 -- Better indenting (stay in visual mode)
 map("v", "<", "<gv")
