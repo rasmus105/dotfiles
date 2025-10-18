@@ -1,15 +1,23 @@
 local map = vim.keymap.set
 
+-- Command shortcuts
+map({ "n", "v", "x" }, "<leader>n", ":norm<CR>", { desc = "enter norm command" })
+map({ "n", "v", "x" }, "<leader>s", ":update<CR>", { desc = "update" })
+map({ "n", "v", "x" }, "<leader>o", ":update<CR>:source %<CR>", { desc = "write and source current file" })
+map({ "n", "v", "x" }, "<leader>q", ":q<CR>", { desc = "quit" })
+map({ "n", "v", "x" }, "<leader>Q", ":wqa<CR>", { desc = "quit all" })
+map({ "n", "v", "x" }, "<leader>m", ":make<CR>", { desc = "make" })
+
 -- Change shortcuts for switching & resizing view
 map("n", "<C-h>", "<C-w>h")
 map("n", "<C-l>", "<C-w>l")
 map("n", "<C-j>", "<C-w>j")
 map("n", "<C-k>", "<C-w>k")
 
-map("n", "<C-w>h", "<C-w><")
-map("n", "<C-w>l", "<C-w>>")
-map("n", "<C-w>j", "<C-w>+")
-map("n", "<C-w>k", "<C-w>-")
+map("n", "<C-w>h", "5<C-w><")
+map("n", "<C-w>l", "5<C-w>>")
+map("n", "<C-w>j", "5<C-w>+")
+map("n", "<C-w>k", "5<C-w>-")
 
 map("n", "<C-w>H", "<C-w>Hzz")
 map("n", "<C-w>L", "<C-w>Lzz")
@@ -21,21 +29,19 @@ map("n", "<C-d>", "<C-d>zz")
 map("n", "<C-u>", "<C-u>zz")
 
 -- Copying
-map("n", "<leader>y", '"+y')
-map("v", "<leader>y", '"+y')
+map({ "n", "v" }, "<leader>y", '"+y')
 map("n", "<leader>Y", '"+Y')
-map("n", "<leader>p", '"+P')
-
+map("n", "<leader>p", '"+p')
+map("n", "<leader>d", '"+d')
 
 -- Select all
-map("n", "<C-a>", "gg<S-v>G")
+map("n", "<leader>a", "gg<S-v>G")
 
 -- clear highlights
 map("n", "<leader>/", ":noh<CR>")
 
--- Remove
-map("n", "q:", "")
-map("v", "q:", "")
+-- Remove command history list
+map({ "n", "v" }, "q:", "")
 
 -- Better indenting (stay in visual mode)
 map("v", "<", "<gv")
@@ -78,7 +84,7 @@ map("v", "J", ":m '>+1<CR>gv=gv")
 map("v", "K", ":m '>-2<CR>gv=gv")
 
 -- Change all strings matching this string
-map("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
+map("n", "<leader>w", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
 
 -- Tip: Use ]q/[q for moving in quickfix list.
 -- useful in combination with Fzf-lua:
