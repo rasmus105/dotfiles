@@ -46,3 +46,53 @@ end, { desc = 'LSP References (fzf-lua)' })
 map('n', 'gd', function()
     require('fzf-lua').lsp_definitions()
 end, { desc = 'LSP Definitions (fzf-lua)' })
+
+-- Make integration (simple, non-persistent)
+local standard_makeprg_commands = {
+    "make",
+    "make clean",
+    "make build",
+    "make test",
+    "cargo check",
+    "cargo build",
+    "cargo test",
+    "cargo run",
+    "zig build-exe %",
+    "zig build",
+    "zig build check",
+    "zig build test",
+}
+
+local function select_makeprg_task()
+    local current_makeprg = vim.opt.makeprg:get()
+    local options = vim.deepcopy(standard_makeprg_commands)
+
+    -- Add current makeprg to top if it's not in the standard list and not empty
+    if current_makeprg and current_makeprg ~= "" and current_makeprg ~= "make" then
+        local found = false
+        for _, cmd in ipairs(options) do
+            if cmd == current_makeprg then
+                found = true
+                break
+            end
+        end
+        if not found then
+            table.insert(options, 1, current_makeprg .. " (current)")
+        end
+    end
+
+    require('fzf-lua').fzf_exec(options, {
+        prompt = 'Select makeprg: ',
+        actions = {
+            ['default'] = function(selected)
+                if #selected > 0 then
+                    local makeprg = selected[1]:gsub(" %(current%)", "")
+                    vim.opt.makeprg = makeprg
+                    vim.notify('Set makeprg: ' .. makeprg, vim.log.levels.INFO)
+                end
+            end
+        },
+    })
+end
+
+map('n', '\\t', select_makeprg_task, { desc = "Select makeprg task" })
