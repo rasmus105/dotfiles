@@ -5,10 +5,6 @@
       "src": "https://github.com/Saghen/blink.cmp",
       "version": "1.0.0 - 2.0.0"
     },
-    "fff.nvim": {
-      "rev": "550a905",
-      "src": "https://github.com/dmtrKovalenko/fff.nvim"
-    },
     "fzf-lua": {
       "rev": "c887688",
       "src": "https://github.com/ibhagwan/fzf-lua"
@@ -16,10 +12,6 @@
     "grug-far.nvim": {
       "rev": "48f9afb",
       "src": "https://github.com/MagicDuck/grug-far.nvim"
-    },
-    "gruvbox-material.nvim": {
-      "rev": "f68f346",
-      "src": "https://github.com/f4z3r/gruvbox-material.nvim"
     },
     "gruvbox.nvim": {
       "rev": "5e0a460",
@@ -86,14 +78,6 @@
     "nvim-treesitter": {
       "rev": "42fc28ba",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
-    },
-    "nvim-web-devicons": {
-      "rev": "b8221e4",
-      "src": "https://github.com/nvim-tree/nvim-web-devicons"
-    },
-    "oil.nvim": {
-      "rev": "919e155",
-      "src": "https://github.com/stevearc/oil.nvim"
     },
     "plenary.nvim": {
       "rev": "b9fd522",

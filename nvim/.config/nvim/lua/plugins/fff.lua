@@ -8,4 +8,3 @@ vim.g.fff = {
         show_scores = true,
     },
 }
-
