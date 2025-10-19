@@ -89,48 +89,66 @@ local standard_makeprg_commands = {
     "zig build test",
 }
 
-local function select_makeprg_task()
+local function makeprg_picker(subdirectory)
+    if subdirectory == "" then
+        subdirectory = nil
+    end
+
+    local subdirectory_prompt = "🔧 Run in subdirectory..."
     local current_makeprg = vim.opt_global.makeprg:get()
     local options = vim.deepcopy(standard_makeprg_commands)
 
     -- Add current makeprg to top if it's not in the standard list and not empty
-    if current_makeprg and current_makeprg ~= "" and current_makeprg ~= "make" then
-        local found = false
-        for _, cmd in ipairs(options) do
-            if cmd == current_makeprg then
-                found = true
+    if current_makeprg and current_makeprg ~= "" then
+        table.insert(options, 1, current_makeprg .. " (current)")
+
+        -- remove the standard current makeprg
+        for i = #options, 1, -1 do -- Iterate backwards to avoid index issues
+            if options[i] == current_makeprg then
+                table.remove(options, i)
                 break
             end
         end
-        if not found then
-            table.insert(options, 1, current_makeprg .. " (current)")
-        end
+    end
+
+
+    if not subdirectory then
+        table.insert(options, subdirectory_prompt)
     end
 
     require('fzf-lua').fzf_exec(options, {
-        prompt = '> ',
+        prompt = subdirectory and string.format("in \"%s\"> ", subdirectory) or '> ',
         actions = {
             ['default'] = function(selected)
                 -- Use vim.schedule to defer execution until after fzf closes
                 vim.schedule(function()
-                    vim.notify("selected makeprg!", vim.log.levels.INFO)
-
                     if #selected > 0 then
-                        local makeprg = selected[1]:gsub(" %(current%)", "")
+                        if selected[1] == subdirectory_prompt then
+                            vim.ui.input({ prompt = "Subdirectory: " }, function(subdir)
+                                if subdir and subdir ~= "" then
+                                    makeprg_picker(subdir)
+                                end
+                            end)
+                        else
+                            local selected_option = selected[1]:gsub(" %(current%)", "")
+                            local makeprg
+                            if subdirectory then
+                                makeprg = string.format("cd %s && %s", vim.fn.shellescape(subdirectory), selected_option)
+                            else
+                                makeprg = selected_option
+                            end
 
-                        -- Try using vim.cmd instead of vim.opt_global
-                        vim.cmd('set makeprg=' .. vim.fn.escape(makeprg, ' \\|"'))
-
-                        -- Alternative: print to messages
-                        vim.notify('Makeprg set to: ' .. makeprg, vim.log.levels.INFO)
+                            vim.cmd('set makeprg=' .. vim.fn.escape(makeprg, ' \\|"'))
+                            vim.notify('Makeprg set to: ' .. makeprg, vim.log.levels.INFO)
+                        end
                     else
                         vim.notify("No selection made", vim.log.levels.WARN)
                     end
                 end)
-            end
+            end,
         },
         winopts = small_window,
     })
 end
 
-map('n', '\\t', select_makeprg_task, { desc = "Select makeprg task" })
+map('n', '\\t', function() makeprg_picker(nil) end, { desc = "Select makeprg task" })
