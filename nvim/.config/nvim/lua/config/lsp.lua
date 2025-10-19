@@ -100,22 +100,25 @@ require('blink.cmp').setup({
     signature = { enabled = true },
     keymap = {
         preset = 'default',
-        ['<C-Tab>'] = { 'select_prev', 'fallback' },
-        ['<Tab>'] = { 'select_next', 'fallback' },
+        --
+        ['<C-k>'] = { 'select_prev', 'fallback' },
+        ['<C-j>'] = { 'select_next', 'fallback' },
 
-        ['<C-l>'] = { 'snippet_forward', 'fallback' },
-        ['<C-h>'] = { 'snippet_backward', 'fallback' },
+        -- ['<C-l>'] = { 'snippet_forward', 'fallback' },
+        -- ['<C-h>'] = { 'snippet_backward', 'fallback' },
 
-        ['<C-Enter>'] = { 'accept', 'fallback' },
+        ['<C-l>'] = { 'accept', 'fallback' },
+        ['<C-c>'] = { 'cancel', 'fallback' },
 
         ['<C-b>'] = { 'scroll_documentation_down', 'fallback' },
         ['<C-f>'] = { 'scroll_documentation_up', 'fallback' },
-        ['<C-y>'] = { 'show', 'show_documentation', 'hide_documentation' },
+        ['<C-Space>'] = { 'show', 'show_documentation', 'hide_documentation' },
+
     },
 
     appearance = {
         use_nvim_cmp_as_default = true,
-        nerd_font_variant = 'normal',
+        nerd_font_variant = 'mono',
     },
 
     completion = {
@@ -125,7 +128,20 @@ require('blink.cmp').setup({
         }
     },
 
-    sources = { default = { 'lsp' } }
+    sources = { default = { 'lsp' } },
+
+    cmdline = {
+        enabled = true,
+        completion = { menu = { auto_show = false } },
+        keymap = {
+            ['<C-k>'] = { 'select_prev', 'fallback' },
+            ['<C-j>'] = { 'select_next', 'fallback' },
+
+            ['<C-l>'] = { 'accept', 'fallback' },
+            ['<C-c>'] = { 'cancel', 'fallback' },
+            ['<C-Space>'] = { 'show', 'fallback' },
+        },
+    }
 })
 
 ---- Language specific configurations ---
