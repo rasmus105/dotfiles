@@ -104,10 +104,10 @@ require('blink.cmp').setup({
         ['<C-k>'] = { 'select_prev', 'fallback' },
         ['<C-j>'] = { 'select_next', 'fallback' },
 
-        -- ['<C-l>'] = { 'snippet_forward', 'fallback' },
-        -- ['<C-h>'] = { 'snippet_backward', 'fallback' },
+        ['<C-l>'] = { 'snippet_forward', 'fallback' },
+        ['<C-h>'] = { 'snippet_backward', 'fallback' },
 
-        ['<C-l>'] = { 'accept', 'fallback' },
+        ['<C-g>'] = { 'accept', 'fallback' },
         ['<C-c>'] = { 'cancel', 'fallback' },
 
         ['<C-b>'] = { 'scroll_documentation_down', 'fallback' },
