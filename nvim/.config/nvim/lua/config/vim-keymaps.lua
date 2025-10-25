@@ -1,7 +1,7 @@
 local map = vim.keymap.set
 
 -- Command shortcuts
-map({ "n", "v", "x" }, "<leader>n", ":norm<CR>", { desc = "enter norm command" })
+map({ "n", "v", "x" }, "<leader>n", ":norm ", { desc = "enter norm command" })
 map({ "n", "v", "x" }, "<leader>s", ":update<CR>", { desc = "update" })
 map({ "n", "v", "x" }, "<leader>o", ":update<CR>:source %<CR>", { desc = "write and source current file" })
 map({ "n", "v", "x" }, "<leader>q", ":q<CR>", { desc = "quit" })
