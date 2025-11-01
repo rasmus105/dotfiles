@@ -4,7 +4,9 @@ font-family = Hack
 theme = GruvboxDark
 mouse-hide-while-typing = true
 # 0.5 GB
-scrollback-limit = 536870912 
+# scrollback-limit = 536870912 
+# 31.25 MB
+scrollback-limit = 33554432
 
 ## General Options 
 # Misc
