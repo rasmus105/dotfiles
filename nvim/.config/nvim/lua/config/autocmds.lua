@@ -63,3 +63,53 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
         vim.cmd("let tobedeleted = bufnr('%') | b# | exe \"bd! \" . tobedeleted")
     end
 })
+
+-- Auto-jump to first quickfix item, close the quickfix window, and notify
+local group = vim.api.nvim_create_augroup("QfAutoJumpClose", { clear = true })
+
+vim.api.nvim_create_autocmd("FileType", {
+    group = group,
+    pattern = "qf",
+    callback = function()
+        -- Only act on the global quickfix list, not location lists
+        if vim.fn.win_gettype(0) ~= "quickfix" then
+            return
+        end
+
+        -- Defer so the window is fully created before we operate on it
+        vim.schedule(function()
+            local info = vim.fn.getqflist({ size = 1, items = 1, title = 1 })
+            local size = info.size or 0
+
+            if size > 0 then
+                pcall(vim.cmd, "silent! cfirst") -- jump to the first entry
+            end
+
+            pcall(vim.cmd, "silent! cclose") -- close the quickfix window
+
+            -- Build a helpful notification
+            local title = info.title or "Quickfix"
+            if size > 0 then
+                local first = info.items and info.items[1] or nil
+                local file, lnum, col, text = "", 1, 1, ""
+                if first then
+                    if first.bufnr and first.bufnr > 0 then
+                        file = vim.api.nvim_buf_get_name(first.bufnr)
+                    end
+                    file = file ~= "" and file or (first.filename or "")
+                    lnum = first.lnum or 1
+                    col = first.col or 1
+                    text = first.text or ""
+                end
+                vim.notify(
+                    string.format("%s: %d items. Jumped to %s:%d:%d %s", title, size, file, lnum, col, text),
+                    vim.log.levels.INFO,
+                    { title = "Quickfix" }
+                )
+            else
+                vim.notify(string.format("%s is empty. Closed the list.", title), vim.log.levels.INFO,
+                    { title = "Quickfix" })
+            end
+        end)
+    end,
+})
