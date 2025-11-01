@@ -93,6 +93,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
     end,
 })
 
+
 -- Autocompletion
 require('blink.cmp').setup({
     fuzzy = { implementation = 'prefer_rust_with_warning' },
@@ -113,11 +114,10 @@ require('blink.cmp').setup({
         ['<C-b>'] = { 'scroll_documentation_down', 'fallback' },
         ['<C-f>'] = { 'scroll_documentation_up', 'fallback' },
         ['<C-Space>'] = { 'show', 'show_documentation', 'hide_documentation' },
-
     },
 
     appearance = {
-        use_nvim_cmp_as_default = true,
+        use_nvim_cmp_as_default = false,
         nerd_font_variant = 'mono',
     },
 
@@ -125,7 +125,15 @@ require('blink.cmp').setup({
         documentation = {
             auto_show = true,
             auto_show_delay_ms = 0,
-        }
+            window = {
+                border = "single",
+            },
+        },
+        menu = {
+            window = {
+                border = "single",
+            },
+        },
     },
 
     sources = { default = { 'lsp' } },
