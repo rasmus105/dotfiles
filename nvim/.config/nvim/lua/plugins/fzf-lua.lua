@@ -87,6 +87,7 @@ local standard_makeprg_commands = {
     "zig build",
     "zig build check",
     "zig build test",
+    "zig build run",
 }
 
 local function makeprg_picker(subdirectory)
