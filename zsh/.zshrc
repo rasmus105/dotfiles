@@ -32,6 +32,17 @@ ls() { # better ls command
     command eza "$@" 
 }
 
+# Change cursor shape in Neovim terminal
+if [ -n "$NVIM_LOG_FILE" ]; then
+  # Use escape codes to set cursor style
+  # 1 or 0 for blinking block
+  # 2 for steady block
+  # 3 for blinking underline
+  # 4 for steady underline
+  # 5 for blinking bar (I-beam)
+  # 6 for steady bar (I-beam)
+  printf '\033[5 q'
+fi
 # ===============================
 # Keybindings & Zoxide Integration
 # ===============================
