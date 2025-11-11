@@ -47,6 +47,10 @@
       "rev": "ad7146a",
       "src": "https://github.com/mason-org/mason.nvim"
     },
+    "mini.cursorword": {
+      "rev": "d843392",
+      "src": "https://github.com/nvim-mini/mini.cursorword"
+    },
     "mini.icons": {
       "rev": "2847986",
       "src": "https://github.com/nvim-mini/mini.icons"
@@ -75,6 +79,10 @@
       "rev": "e688b48",
       "src": "https://github.com/neovim/nvim-lspconfig"
     },
+    "nvim-notify": {
+      "rev": "8701bec",
+      "src": "https://github.com/rcarriga/nvim-notify"
+    },
     "nvim-spectre": {
       "rev": "72f56f7",
       "src": "https://github.com/nvim-pack/nvim-spectre"
@@ -86,6 +94,10 @@
     "plenary.nvim": {
       "rev": "b9fd522",
       "src": "https://github.com/nvim-lua/plenary.nvim"
+    },
+    "render-markdown.nvim": {
+      "rev": "bfd67f1",
+      "src": "https://github.com/MeanderingProgrammer/render-markdown.nvim"
     },
     "rustaceanvim": {
       "rev": "25de223",
