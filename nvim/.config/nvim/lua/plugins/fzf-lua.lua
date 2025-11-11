@@ -42,6 +42,10 @@ map('n', '\\w', function() require('fzf-lua').live_grep() end,
 map('n', '\\d', function() require('fzf-lua').diagnostics_workspace() end,
     { desc = 'Diagnostics' })
 
+-- Search through open buffers
+map('n', '\\b', function() require('fzf-lua').buffers() end,
+    { desc = 'Diagnostics' })
+
 -- Fuzzy find quick fix list
 map('n', '\\q', function() require('fzf-lua').quickfix() end,
     { desc = 'Quickfix list' })
@@ -50,8 +54,8 @@ map('n', '\\q', function() require('fzf-lua').quickfix() end,
 map('n', '\\g', function() require('fzf-lua').git_diff() end,
     { desc = 'Current git diff' })
 
--- Fuzzy find buffer git commits
-map('n', '\\b', function() require('fzf-lua').git_bcommits() end,
+-- Fuzzy find buffer git commits (file history)
+map('n', '\\h', function() require('fzf-lua').git_bcommits() end,
     { desc = 'Commit history for buffer' })
 
 -- Fuzzy find colorschemes
