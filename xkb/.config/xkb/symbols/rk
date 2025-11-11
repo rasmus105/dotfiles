@@ -30,10 +30,7 @@ xkb_symbols "basic" {
     key <AD08>	{[	 i,	 I		]};
     key <AD09>	{[	 o,	 O		]};
     key <AD10>	{[	 p,	 P		]};
-    key <AD11>  {
-        type= "EIGHT_LEVEL_BY_CTRL",
-        [ bracketleft, braceleft, NoSymbol, NoSymbol, Escape ]
-    };
+    key <AD11>	{[ bracketleft,	 braceleft	]};
     key <AD12>	{[ bracketright, braceright	]};
 
     key <AC01>	{[	 a,	 A		]};
@@ -62,11 +59,6 @@ xkb_symbols "basic" {
 
     key <LSGT> { [            ae,           oslash,      aring ] };
     key <SPCE> { [        space,        space,           space,     nobreakspace ] };
-
-    key <CAPS> { [ Control_L ] };     // Caps Lock → Control
-    key <LCTL> { [          Super_L ] };      // Left Ctrl → Super
-    modifier_map Control { <CAPS> };          // Caps Lock acts as Control modifier
-    modifier_map Mod4    { <LCTL> };          // Left Control acts as Super modifier
 
     key <SUPR> { [          Hyper_L ] };      // Super_L → Hyper_L
     modifier_map Mod3    { <SUPR> };          // Super key acts as Mod3 modifier
