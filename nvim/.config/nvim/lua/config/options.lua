@@ -59,24 +59,25 @@ opt.errorbells = false             -- No error bells
 opt.backspace = 'indent,eol,start' -- Better backspace behavior
 opt.autochdir = false              -- Don't auto change directory
 opt.path:append('**')              -- include subdirectories in search
-opt.mouse = 'a'                    -- Enable mouse support
-opt.mousescroll = 'ver:1,hor:1'
+opt.mouse         = 'a'            -- Enable mouse support
+opt.mousescroll   = 'ver:1,hor:1'
 -- opt.clipboard = vim.env.SSH_TTY and '' or 'unnamedplus' -- Sync with system clipboard
-opt.modifiable = true  -- Allow buffer modifications
-opt.encoding = 'UTF-8' -- Set encoding
+opt.modifiable    = true    -- Allow buffer modifications
+opt.encoding      = 'UTF-8' -- Set encoding
 
 -- Folding settings
-opt.smoothscroll = true
-vim.wo.foldmethod = 'expr'
-opt.foldlevel = 99             -- Start with all folds open
-opt.formatoptions = 'jcroqlnt' -- default: tcqj
-opt.grepformat = '%f:%l:%c:%m'
-opt.grepprg = 'rg --vimgrep'   -- use ripgrep instead of standard grep
+opt.smoothscroll  = true
+opt.foldlevel     = 99 -- Start with all folds open
+vim.wo.foldmethod = "expr"
+vim.wo.foldexpr   = "v:lua.vim.treesitter.foldexpr()"
+opt.formatoptions = 'jcroqlnt'     -- default: tcqj
+opt.grepformat    = '%f:%l:%c:%m'
+opt.grepprg       = 'rg --vimgrep' -- use ripgrep instead of standard grep
 
 -- Split behavior
-opt.splitbelow = true -- Horizontal splits go below
-opt.splitright = true -- Vertical splits go right
-opt.splitkeep = 'screen'
+opt.splitbelow    = true -- Horizontal splits go below
+opt.splitright    = true -- Vertical splits go right
+opt.splitkeep     = 'screen'
 
 
 -- Command-line completion
