@@ -16,15 +16,16 @@ wmname LG3D  # Needed for Ghidra, Maple, and other Java-based software
 export PATH=$PATH:~/.npm/bin:home/rasmus105/.platformio/penv/bin
 export MANPAGER="nvim +Man!" # use neovim for man pages.
 # export TERM=xterm-256color
+export TERM=xterm-256color
 
 # ===============================
 # Aliases
 # ===============================
-# alias ls='ls --color=auto'  # Enable color output for ls
 alias grep='grep --color=auto'  # Enable color output for grep
 alias cd='z'  # Use zoxide for quick directory navigation
-alias cat='bat' # better 'cat'.
+alias cat='batcat' # better 'cat'.
 alias g='lazygit'
+alias n='nvim'
 alias clear_outputs='for i in {0..10}; do hyprctl output remove HEADLESS-$i; done'
 # alias cat='bat --paging=never'
 ls() { # better ls command
@@ -35,8 +36,7 @@ ls() { # better ls command
 # Keybindings & Zoxide Integration
 # ===============================
 eval "$(zoxide init zsh)"
-bindkey -v  # Enable vi mode
-KEYTIMEOUT=1  # Set key timeout for vi mode
+KEYTIMEOUT=1
 
 # ===============================
 # Plugin Management (Antidote)
@@ -45,31 +45,8 @@ source ~/.antidote/antidote.zsh  # Load Antidote
 antidote load ${ZDOTDIR:-$HOME}/.zsh_plugins.txt  # Load plugins from file
 
 # ===============================
-# Vim Mode Cursor Styles
-# ===============================
-
-# Change cursor shape for different vi modes
-function zle-keymap-select {
-  if [[ ${KEYMAP} == vicmd ]] || [[ $1 = 'block' ]]; then
-    echo -ne '\e[1 q'  # Block cursor for command mode
-  elif [[ ${KEYMAP} == main ]] || [[ ${KEYMAP} == viins ]] || [[ ${KEYMAP} = '' ]] || [[ $1 = 'beam' ]]; then
-    echo -ne '\e[5 q'  # Beam cursor for insert mode
-  fi
-}
-zle -N zle-keymap-select
-
-zle-line-init() {
-    zle -K viins  # Start in vi insert mode
-    echo -ne "\e[5 q"
-}
-zle -N zle-line-init
-echo -ne '\e[5 q'  # Set beam cursor on startup
-preexec() { echo -ne '\e[5 q' ;}  # Reset cursor to beam on new prompt
-
-# ===============================
 # Prompt Configuration
 # ===============================
-
 # Load version control information
 autoload -Uz vcs_info
 precmd() { vcs_info }
@@ -127,20 +104,6 @@ function man dman debman {
   colored $0 "$@"
 }
 
-# ===============================
-# Tmux
-# ===============================
-function dev() {
-    DIR=${1:-.} # directory should be either first argument or `.`, i.e. current directory
-    DIR_NAME=$(basename "$DIR") 
-    SESSION_NAME="dev-$DIR_NAME"
-
-    tmux new-session -d -s "$SESSION_NAME" -c "$DIR" -n "neovim" "nvim"
-    tmux new-window -t "$SESSION_NAME":2 -c "$DIR" -n "terminal"
-    tmux select-window -t "$SESSION_NAME":1
-    tmux attach-session -t "$SESSION_NAME"
-}
-
 # Yazi (File manager)
 function y() {
     local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
@@ -149,3 +112,4 @@ function y() {
     [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
     rm -f -- "$tmp"
 }
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
