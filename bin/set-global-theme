@@ -1,0 +1,46 @@
+#!/bin/bash
+
+if [[ -z $1 && $1 != "CNCLD" ]]; then
+  echo "Usage: set-global-theme <theme-name>"
+  exit 1
+fi
+
+_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+THEMES_DIR="$_SCRIPT_DIR/../themes"
+CURRENT_THEME_DIR="$HOME/.config/theme"
+
+THEME_NAME=$(echo "$1" | sed -E 's/<[^>]+>//g' | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+THEME_PATH="$THEMES_DIR/$THEME_NAME"
+
+# Check if the theme entered exists
+if [[ ! -d "$THEME_PATH" ]]; then
+  echo "Theme '$THEME_NAME' does not exist in $THEMES_DIR"
+  exit 1
+fi
+
+# Update theme symlinks
+ln -nsf "$THEME_PATH" "$CURRENT_THEME_DIR"
+
+# Update hyprpaper background
+if [[ -x "$_SCRIPT_DIR/update-hyprpaper-background" ]]; then
+  "$_SCRIPT_DIR/update-hyprpaper-background"
+fi
+
+# Restart components to apply new theme
+# TODO restart waybar if running
+# TODO restart swayosd
+if command -v hyprctl &>/dev/null; then
+  hyprctl reload 2>/dev/null || true
+fi
+pkill -SIGUSR2 btop 2>/dev/null || true
+if command -v makoctl &>/dev/null; then
+  makoctl reload 2>/dev/null || true
+fi
+
+# Update terminal and GNOME theme
+if [[ -x "$_SCRIPT_DIR/update-terminal-theme" ]]; then
+  "$_SCRIPT_DIR/update-terminal-theme"
+fi
+if [[ -x "$_SCRIPT_DIR/update-gnome-theme" ]]; then
+  "$_SCRIPT_DIR/update-gnome-theme"
+fi
