@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=WireMix
+Comment=WireMix (audio TUI)
+Exec=ghostty --class=TUI.float -e wiremix
+Terminal=false
+Type=Application
+Icon=/home/rasmus105/.local/share/applications/icons/audio.png
+StartupNotify=true
