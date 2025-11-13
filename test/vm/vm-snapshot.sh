@@ -6,7 +6,8 @@ set -e
 
 # Source gum utilities
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-source "$SCRIPT_DIR/../common.sh"
+DOTFILES_DIR=$(dirname $(dirname $SCRIPT_DIR))
+source "$DOTFILES_DIR/common.sh"
 
 VM_DIR=".vm"
 DISK_IMG="$VM_DIR/arch-test.qcow2"
@@ -16,7 +17,7 @@ SNAPSHOT_NAME="${2:-clean-install}"
 
 if [ ! -f "$DISK_IMG" ]; then
     gum_error "VM disk image not found at $DISK_IMG"
-    gum_info "Create a VM first with: ./run-vm-test.sh"
+    gum_info "Create a VM first with: ./vm.sh"
     exit 1
 fi
 
@@ -31,7 +32,7 @@ case "$ACTION" in
         gum_info "Restoring snapshot: $SNAPSHOT_NAME"
         qemu-img snapshot -a "$SNAPSHOT_NAME" "$DISK_IMG"
         gum_success "Snapshot '$SNAPSHOT_NAME' restored!"
-        gum_muted "You can now run: ./run-vm-test.sh"
+        gum_muted "You can now run: ./vm.sh"
         ;;
     
     list|ls)

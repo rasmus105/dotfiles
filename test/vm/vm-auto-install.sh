@@ -47,7 +47,7 @@ pad_line() {
     # Strip ANSI color codes for length calculation
     local clean_content=$(echo -e "$content" | sed 's/\x1b\[[0-9;]*m//g')
     local content_len=${#clean_content}
-    local padding=$((width - content_len - 1))
+    local padding=$((width - content_len - 2))
     
     # Print content with padding
     printf "%s%*s" "$content" "$padding" ""
@@ -57,8 +57,8 @@ pad_line() {
 DISK="/dev/vda"
 HOSTNAME="archtest"
 USERNAME="testuser"
-PASSWORD="test123"
-ROOT_PASSWORD="test123"
+PASSWORD="1234"
+ROOT_PASSWORD="${PASSWORD}"
 TIMEZONE="UTC"
 
 # Check if running in Arch ISO
@@ -108,13 +108,6 @@ mount "${DISK}2" /mnt
 mkdir -p /mnt/boot
 mount "${DISK}1" /mnt/boot
 print_success "Filesystems mounted"
-
-# Step 3.5: Configure faster mirrors
-print_step "Step 3.5/10: Configuring faster mirrors..."
-# Use reflector to find fastest mirrors, or set a known fast one
-echo 'Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch' > /etc/pacman.d/mirrorlist
-echo 'Server = https://mirror.rackspace.com/archlinux/$repo/os/$arch' >> /etc/pacman.d/mirrorlist
-print_success "Mirrors configured"
 
 # Step 4: Install base system
 print_step "Step 4/10: Installing base system (this may take a while)..."
@@ -206,7 +199,7 @@ print_success "Additional packages installed"
 
 # Step 9: Configure shared folder auto-mount
 print_step "Step 9/10: Configuring shared folder auto-mount..."
-arch-chroot /mnt /bin/bash << 'CHROOT_SCRIPT'
+arch-chroot /mnt /bin/bash << CHROOT_SCRIPT
 set -e
 
 # Create mount point
@@ -216,7 +209,7 @@ mkdir -p /mnt/shared
 echo "shared /mnt/shared 9p trans=virtio,version=9p2000.L,rw,_netdev 0 0" >> /etc/fstab
 
 # Create a helpful script in user's home
-cat > /home/testuser/setup-dotfiles.sh << 'EOF'
+cat > /home/$USERNAME/setup-dotfiles.sh << 'EOF'
 #!/bin/bash
 # Quick script to setup dotfiles from shared folder
 
@@ -231,13 +224,13 @@ cp -r /mnt/shared/dotfiles ~/dotfiles
 
 echo "Running setup script..."
 cd ~/dotfiles
-bash setup.sh
+bash install/setup.sh
 
 echo "Done! Dotfiles installed."
 EOF
 
-chmod +x /home/testuser/setup-dotfiles.sh
-chown testuser:testuser /home/testuser/setup-dotfiles.sh
+chmod +x /home/$USERNAME/setup-dotfiles.sh
+chown $USERNAME:$USERNAME /home/$USERNAME/setup-dotfiles.sh
 
 echo "Shared folder configured"
 CHROOT_SCRIPT
@@ -246,37 +239,37 @@ print_success "Shared folder configured"
 
 # Step 10: Create helpful readme
 print_step "Step 10/10: Creating helpful documentation..."
-arch-chroot /mnt /bin/bash << 'CHROOT_SCRIPT'
-cat > /home/testuser/README.txt << 'EOF'
+arch-chroot /mnt /bin/bash << CHROOT_SCRIPT
+cat > /home/$USERNAME/README.txt << 'EOF'
 ╔═══════════════════════════════════════════════════════════╗
-║  Welcome to Arch Linux - Dotfiles Testing Environment    ║
+║  Welcome to Arch Linux - Dotfiles Testing Environment     ║
 ╠═══════════════════════════════════════════════════════════╣
 ║                                                           ║
 ║  Login credentials:                                       ║
-║    Username: testuser                                     ║
-║    Password: test123                                      ║
+║    Username: $USERNAME                                     ║
+║    Password: $PASSWORD                                     ║
 ║                                                           ║
-║  Your dotfiles are available in: /mnt/shared/dotfiles/   ║
+║  Your dotfiles are available in: /mnt/shared/dotfiles/    ║
 ║                                                           ║
 ║  Quick start:                                             ║
-║    1. Run: ./setup-dotfiles.sh                           ║
-║       (This copies dotfiles and runs your setup script)  ║
+║    1. Run: ./setup-dotfiles.sh                            ║
+║       (This copies dotfiles and runs your setup script)   ║
 ║                                                           ║
 ║    2. Or manually:                                        ║
-║       cp -r /mnt/shared/dotfiles ~/dotfiles              ║
-║       cd ~/dotfiles && bash setup.sh                     ║
+║       cp -r /mnt/shared/dotfiles ~/dotfiles               ║
+║       cd ~/dotfiles && bash setup.sh                      ║
 ║                                                           ║
 ║  SSH Access:                                              ║
-║    From host: ssh -p 2222 testuser@localhost            ║
+║    From host: ssh -p 2222 $USERNAME@localhost              ║
 ║                                                           ║
 ║  Useful commands:                                         ║
-║    • Check shared folder: ls /mnt/shared                 ║
-║    • Remount shared: sudo mount -a                       ║
+║    • Check shared folder: ls /mnt/shared                  ║
+║    • Remount shared: sudo mount -a                        ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 EOF
 
-chown testuser:testuser /home/testuser/README.txt
+chown $USERNAME:$USERNAME /home/$USERNAME/README.txt
 CHROOT_SCRIPT
 
 print_success "Documentation created"
@@ -289,12 +282,12 @@ print_success "Installation complete!"
 echo ""
 BOX_WIDTH=59
 echo -e "${GREEN}╔═══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║${NC}  $(pad_line "Installation Successful! 🎉" $BOX_WIDTH)${GREEN}║${NC}"
+echo -e "${GREEN}║${NC}  $(pad_line "Installation Successful!" $BOX_WIDTH)${GREEN}║${NC}"
 echo -e "${GREEN}╠═══════════════════════════════════════════════════════════╣${NC}"
 echo -e "${GREEN}║${NC}  $(pad_line "You can now reboot the VM" $BOX_WIDTH)${GREEN}║${NC}"
 echo -e "${GREEN}║${NC}  $(pad_line "" $BOX_WIDTH)${GREEN}║${NC}"
 echo -e "${GREEN}║${NC}  $(pad_line "After reboot:" $BOX_WIDTH)${GREEN}║${NC}"
-echo -e "${GREEN}║${NC}  $(pad_line "  • Login with: testuser / test123" $BOX_WIDTH)${GREEN}║${NC}"
+echo -e "${GREEN}║${NC}  $(pad_line "  • Login with: ${USERNAME} / ${PASSWORD}" $BOX_WIDTH)${GREEN}║${NC}"
 echo -e "${GREEN}║${NC}  $(pad_line "  • Run: ./setup-dotfiles.sh" $BOX_WIDTH)${GREEN}║${NC}"
 echo -e "${GREEN}║${NC}  $(pad_line "  • Or manually setup your dotfiles" $BOX_WIDTH)${GREEN}║${NC}"
 echo -e "${GREEN}║${NC}  $(pad_line "" $BOX_WIDTH)${GREEN}║${NC}"

@@ -6,10 +6,10 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOTFILES_DIR=$(dirname $SCRIPT_DIR)
+DOTFILES_DIR=$(dirname $(dirname $SCRIPT_DIR))
 
 # Source gum utilities
-source "$SCRIPT_DIR/../common/gum_utils.sh"
+source "$DOTFILES_DIR/common.sh"
 
 VM_DIR="$SCRIPT_DIR/.vm"
 DISK_SIZE="20G"
@@ -62,7 +62,7 @@ fi
 # Download Arch ISO if not present
 ARCH_ISO="$VM_DIR/archlinux.iso"
 if [ ! -f "$ARCH_ISO" ]; then
-    gum_info "Downloading Arch Linux ISO..."
+    gum_info "Downloading Arch Linux ISO... (in '$ARCH_ISO')"
     wget -O "$ARCH_ISO" "https://mirror.rackspace.com/archlinux/iso/latest/archlinux-x86_64.iso"
     gum_success "ISO downloaded"
 fi
@@ -86,8 +86,8 @@ mkdir -p "$SHARED_DIR"
 
 # Copy dotfiles to shared directory
 gum_info "Copying dotfiles to shared directory..."
-rsync -av --exclude='.git' --exclude='.vm' --exclude='*.qcow2' --exclude='*.iso' \
-    "$DOTFILES_DIR/" "$SHARED_DIR/dotfiles/" &> /dev/null
+rsync -av --exclude='.git' --exclude='**/.vm' --exclude='*.qcow2' --exclude='*.iso' \
+    "$DOTFILES_DIR/" "$SHARED_DIR/dotfiles/"
 
 # Copy auto-install script to shared directory if auto-install is requested
 if [ "$AUTO_INSTALL" = true ]; then
@@ -106,7 +106,6 @@ gum_section "VM Configuration:"
 gum_muted "  RAM: $RAM"
 gum_muted "  CPUs: $CPUS"
 gum_muted "  Disk: $DISK_SIZE"
-gum_muted "  SSH Port: 2222 (user: testuser, pass: test123)"
 echo ""
 
 if [ "$AUTO_INSTALL" = true ]; then
@@ -199,8 +198,8 @@ qemu-system-x86_64 \
     -cdrom "$ARCH_ISO" \
     -boot order=$BOOT_ORDER \
     -virtfs local,path="$SHARED_DIR",mount_tag=shared,security_model=passthrough,id=shared0 \
-    -vga virtio \
-    -display gtk,gl=on \
+    -device virtio-vga,xres=1280,yres=720 \
+    -display gtk,gl=on,zoom-to-fit=on \
     -device virtio-net-pci,netdev=net0 \
     -netdev user,id=net0,hostfwd=tcp::2222-:22 \
     -name "Arch Linux - Dotfiles Test" \
