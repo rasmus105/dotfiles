@@ -26,7 +26,7 @@ fi
 # install paru (AUR helper)
 gum_info "Cloning paru from AUR..."
 rm -rf /tmp/paru
-git clone https://aur.archlinux.org/paru.git /tmp/paru
+git clone https://aur.archlinux.org/paru-bin.git /tmp/paru
 cd /tmp/paru
 gum_info "Building and installing paru..."
 makepkg -si --noconfirm
