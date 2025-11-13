@@ -1,0 +1,110 @@
+# Security & Authentication
+# TODO hypr polkit
+
+# Browser
+firefox
+helium-browser-bin
+zen-browser-bin
+
+# Development
+git
+lazygit
+neovim
+visual-studio-code-bin
+
+# Terminal & Shell
+ghostty
+zsh
+eza
+bat
+btop
+fastfetch
+fd
+fzf
+ripgrep
+zoxide
+
+# Hyprland Ecosystem
+hyprland
+hyprland-guiutils
+hyprland-qt-support
+hyprpaper
+hyprpicker
+hypridle
+hyprlock
+hyprsunset
+hyprcursor
+hyprshot
+xdg-desktop-portal-hyprland
+
+# Wayland Tools & UI
+waybar
+mako
+walker
+swayosd
+grim
+slurp
+satty
+kooha
+zenity
+uwsm
+gjs
+waypaper
+matugen-bin
+impala
+loupe
+
+# Audio (pipewire)
+wiremix
+
+# Bluetooth & Network
+bluez
+bluez-libs
+bluez-utils
+bluetui
+openssh
+
+# File Management
+nautilus
+nautilus-open-any-terminal
+rsync
+gvfs-dnssd
+unzip
+
+# System Utilities
+plocate
+pacman-contrib
+power-profiles-daemon
+
+# Fonts, themes & icons
+ttf-hack-nerd
+noto-fonts
+noto-fonts-emoji
+otf-font-awesome
+gnome-themes-extra
+
+# Applications
+localsend-bin
+mpv
+
+# Elephant Suite
+elephant
+elephant-desktopapplications
+elephant-providerlist
+elephant-clipboard
+elephant-menus
+elephant-calc
+elephant-files
+elephant-todo
+elephant-symbols
+
+# Image & Video Processing
+ffmpeg
+
+# Desktop Portals
+xdg-desktop-portal-gtk
+xdg-utils
+
+# Utilities
+wget
+jq
