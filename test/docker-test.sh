@@ -127,7 +127,8 @@ echo ""
 if [ "$USE_LOCAL" = true ]; then
     # Test the local installation (dotfiles were copied during build)
     gum_info "Testing with local dotfiles (already copied to container)"
-    docker exec -u testuser "$CONTAINER_NAME" bash -c "
+    # Run without -t to avoid terminal query escape codes being sent back
+    docker exec -i -t -u testuser "$CONTAINER_NAME" bash -c "
         cd /home/testuser/dotfiles
         export USE_DEFAULT_OPTIONS=1
         # Skip install.sh and run setup.sh directly since dotfiles are already present
@@ -142,7 +143,7 @@ if [ "$USE_LOCAL" = true ]; then
 else
     # Test by cloning from GitHub (simulates real installation)
     gum_info "Testing with GitHub clone (simulates real installation)"
-    docker exec -u testuser "$CONTAINER_NAME" bash -c "
+    docker exec -i -t -u testuser "$CONTAINER_NAME" bash -c "
         export USE_DEFAULT_OPTIONS=1
         curl -fsSL https://raw.githubusercontent.com/rasmus105/dotfiles/main/install.sh | bash
     " || {
@@ -160,7 +161,7 @@ gum_success "Installation completed successfully!"
 echo ""
 gum_section "Verifying installation..."
 
-docker exec -u testuser "$CONTAINER_NAME" bash -c "
+docker exec -i -t -u testuser "$CONTAINER_NAME" bash -c "
     set -e
     
     # Check that dotfiles directory exists
