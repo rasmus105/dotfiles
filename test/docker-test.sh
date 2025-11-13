@@ -20,19 +20,29 @@ CONTAINER_NAME="dotfiles-test-container"
 # - Base image (dotfiles-test-base): Arch Linux + packages (cached, rarely changes)
 # - Test image (dotfiles-test): Base + dotfiles repo (rebuilt every test)
 # - .dockerignore excludes test/ directory to avoid copying large VM images
+#
+# Test modes:
+# - Default: Clones from GitHub (simulates real user installation)
+# - --local: Uses local dotfiles copied during build (faster, tests local changes)
 
 # Parse arguments
 REBUILD_BASE=false
+USE_LOCAL=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         --rebuild-base)
             REBUILD_BASE=true
             shift
             ;;
+        --local)
+            USE_LOCAL=true
+            shift
+            ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--rebuild-base]"
+            echo "Usage: $0 [--rebuild-base] [--local]"
             echo "  --rebuild-base: Force rebuild of base image (Arch packages)"
+            echo "  --local:        Use local dotfiles instead of cloning from GitHub"
             exit 1
             ;;
     esac
@@ -114,18 +124,35 @@ echo ""
 gum_section "Running installation test..."
 echo ""
 
-# Test the local installation (since we copied the repo)
-docker exec -u testuser "$CONTAINER_NAME" bash -c "
-    cd /home/testuser/dotfiles
-    export USE_DEFAULT_OPTIONS=1
-    bash install.sh
-" || {
-    gum_error "Installation test failed!"
-    echo ""
-    gum_info "Container logs:"
-    docker logs "$CONTAINER_NAME"
-    exit 1
-}
+if [ "$USE_LOCAL" = true ]; then
+    # Test the local installation (dotfiles were copied during build)
+    gum_info "Testing with local dotfiles (already copied to container)"
+    docker exec -u testuser "$CONTAINER_NAME" bash -c "
+        cd /home/testuser/dotfiles
+        export USE_DEFAULT_OPTIONS=1
+        # Skip install.sh and run setup.sh directly since dotfiles are already present
+        bash install/setup.sh
+    " || {
+        gum_error "Installation test failed!"
+        echo ""
+        gum_info "Container logs:"
+        docker logs "$CONTAINER_NAME"
+        exit 1
+    }
+else
+    # Test by cloning from GitHub (simulates real installation)
+    gum_info "Testing with GitHub clone (simulates real installation)"
+    docker exec -u testuser "$CONTAINER_NAME" bash -c "
+        export USE_DEFAULT_OPTIONS=1
+        curl -fsSL https://raw.githubusercontent.com/rasmus105/dotfiles/main/install.sh | bash
+    " || {
+        gum_error "Installation test failed!"
+        echo ""
+        gum_info "Container logs:"
+        docker logs "$CONTAINER_NAME"
+        exit 1
+    }
+fi
 
 gum_success "Installation completed successfully!"
 
@@ -167,6 +194,4 @@ if [[ "${KEEP_CONTAINER:-}" == "true" ]]; then
     gum_muted "  docker exec -it $CONTAINER_NAME bash"
     gum_muted "  docker rm -f $CONTAINER_NAME  # when done"
     trap - EXIT  # Remove cleanup trap
-else
-    cleanup
 fi

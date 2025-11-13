@@ -34,8 +34,6 @@ COPY --chown=testuser:testuser . /home/testuser/dotfiles
 USER testuser
 
 # Set environment variables for non-interactive installation
-ENV DOTFILES_AUTO_YES=1
-ENV DOTFILES_SKIP_INTERACTIVE=1
 ENV USE_DEFAULT_OPTIONS=1
 
 # The test will be run by the test script, not in the build
