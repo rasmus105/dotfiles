@@ -35,7 +35,7 @@ gum_warning() {
 }
 
 gum_info() {
-    gum style --foreground "$GUM_COLOR_INFO" "ℹ $*"
+    gum style --foreground "$GUM_COLOR_INFO" "→ $*"
 }
 
 gum_muted() {
@@ -55,7 +55,7 @@ gum_header() {
             --align center \
             --width 50 \
             --margin "1 2" \
-            --padding "2 4" \
+            --padding "1 2" \
             "$title" "$subtitle"
     else
         gum style \
@@ -65,7 +65,7 @@ gum_header() {
             --align center \
             --width 50 \
             --margin "1 2" \
-            --padding "2 4" \
+            --padding "1 2" \
             "$title"
     fi
 }
@@ -214,7 +214,3 @@ gum_ask_no() {
     local prompt="$1"
     gum confirm "$prompt" --default=false
 }
-
-# Ensure gum is available when library is sourced
-gum_check
-```
