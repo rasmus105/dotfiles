@@ -9,7 +9,7 @@ if ! $(command -v "gum" &> /dev/null); then
     sudo pacman -S --noconfirm gum
 fi
 
-INSTALL_LOG_DIR=$SCRIPT_DIR
+INSTALL_LOG_DIR=$SCRIPT_DIR/log
 source "$DOTFILES_DIR/common.sh"
 
 # Initialize logging

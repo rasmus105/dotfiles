@@ -35,6 +35,8 @@ USER testuser
 
 # Set environment variables for non-interactive installation
 ENV USE_DEFAULT_OPTIONS=1
+# Set a clean terminal environment
+ENV TERM=xterm-256color
 
 # The test will be run by the test script, not in the build
 CMD ["/bin/bash"]

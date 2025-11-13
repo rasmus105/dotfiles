@@ -8,7 +8,41 @@ sudo pacman -S stow
 stow .
 ```
 
+## Testing
+
+Test the installation in a clean Docker environment:
+
+```bash
+# Quick test (uses cached base image)
+./test/docker-test.sh
+
+# Full rebuild including Arch packages
+./test/docker-test.sh --rebuild-base
+
+# Keep container running for debugging
+KEEP_CONTAINER=true ./test/docker-test.sh
+```
+
+The test uses a multi-stage Docker build for fast iteration:
+- Base image is cached (Arch Linux + packages)
+- Only dotfiles are copied on each test run
+- Large files in `test/` directory are excluded via `.dockerignore`
+
+
 # TODO
+
+- Ensure disk is encrypted.
+- Clipboard manager??
+
+# TODO
+
+- [x] pacman configuration: colors, (maybe other options?)
+- [ ] use omarchy themes and backgrounds?
+- [ ] add .desktop applications (bluetui, wiremix, pamala)
+- [ ] default applications
+- [ ] switch to networkmanager and add vpn support
+- [ ] CLEAN README.md history from git and write new (think it contains sensitive information)
+- [ ] Clean git configuration history (contains sensitive information)
 
 - [ ] Ubuntu-like menu in top bar:
     - [ ] Select WiFi
@@ -27,10 +61,6 @@ stow .
     - Text editor: Neovim
     - Zathura: Pdf viewer
     - Terminal: Ghostty
-
-- [ ] Hyprland:
-    - Hyprexpo plugin (maybe others?)
-    - Enable certain animations to make popus less "buggy"
 
 - [ ] Menus
     - [ ] Basic calculator and hex converter
@@ -80,4 +110,25 @@ Neovim theme modifications:
 - Add neovim persistance
 
 - Timer (visual, maybe in top bar?
+- [x] Use white for hyprland
+
+- [x] Fix zsh: Root user can't use alias'? (Maybe use functions instead of alias)
+
+- [ ] Menu for colors (hex, rgb,...)
+
+- [ ] Neovim: colors displayed in editor (new nigthly feature??)
+- [x] Neovim: noice.nvim or notification thing 
+- [x] Use makoctl notification manager instead of dunst
+    - [x] keybind for dismissing notification
+
+- [ ] Nightlight
+- [x] Colorscheme (neovim, ghostty, hyprland)
+    - Background: #292522
+    - Red: #FB4934
+
+- [ ] Figure out better default: file manager, 
+- [x] Hyprexpo
+
+
+- [ ] Write README.md for setup, and create automatic installation scripts.
 
