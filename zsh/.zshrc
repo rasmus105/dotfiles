@@ -5,6 +5,11 @@ HISTFILE=~/.histfile  # Location of history file
 HISTSIZE=50000         # Number of commands to keep in memory
 SAVEHIST=50000         # Number of commands to save to HISTFILE
 
+setopt HIST_IGNORE_DUPS      # Don't record duplicate commands
+setopt HIST_IGNORE_SPACE     # Don't record commands starting with space
+setopt SHARE_HISTORY         # Share history between sessions
+setopt HIST_VERIFY           # Show command before executing from history
+
 # ===============================
 # Path Configuration
 # ===============================
@@ -48,6 +53,7 @@ fi
 # ===============================
 eval "$(zoxide init zsh)"
 KEYTIMEOUT=1
+bindkey -e # force emacs mode (i.e. <C-w> = delete word, <C-e> = end of line, <C-p> = prev command)
 
 # ===============================
 # Plugin Management (Antidote)
@@ -67,7 +73,7 @@ zstyle ':vcs_info:git:*' formats '%b'
 
 # Set up the prompt (with git branch name)
 setopt PROMPT_SUBST
-PROMPT='%F{blue}%~ %(?.%F{green}.%F{red})%f%F{green}(${vcs_info_msg_0_}) %F{white}$ '
+PROMPT='%F{blue}%~ %(?.%F{green}✓.%F{red}✗ %?)%f %F{green}(${vcs_info_msg_0_})%f %F{white}$ '
 
 # ===============================
 # Completion System (compinit)
