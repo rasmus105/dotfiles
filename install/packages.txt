@@ -1,5 +1,5 @@
 # Security & Authentication
-# TODO hypr polkit
+hyprpolkitagent
 
 # Browser
 firefox
@@ -14,6 +14,7 @@ visual-studio-code-bin
 
 # Terminal & Shell
 ghostty
+alacritty
 zsh
 eza
 bat
@@ -100,6 +101,7 @@ elephant-symbols
 
 # Image & Video Processing
 ffmpeg
+imv
 
 # Desktop Portals
 xdg-desktop-portal-gtk
