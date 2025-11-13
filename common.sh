@@ -1,6 +1,9 @@
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-DOTFILES_DIR=$(dirname "$SCRIPT_DIR")
+_COMMON_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+_COMMON_DOTFILES_DIR=$(dirname "$_COMMON_SCRIPT_DIR")
 
-source "$SCRIPT_DIR/common/gum_utils.sh"
+source "$_COMMON_SCRIPT_DIR/common/gum_utils.sh"
 
+is_installed() {
+    command -v "$1" &> /dev/null
+}
 
