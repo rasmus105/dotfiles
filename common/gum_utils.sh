@@ -327,13 +327,20 @@ gum_run() {
         echo "---"
     } >> "$INSTALL_LOG_FILE"
     
-    # Create a temporary wrapper script that redirects to log
+    # Create temporary script
     local temp_script=$(mktemp)
-    cat > "$temp_script" << EOF
+    
+    # Disable TTY detection so commands output plain text without progress bars
+    # This prevents ANSI escape codes and carriage returns in logs
+    cat > "$temp_script" << 'SCRIPT_EOF'
 #!/bin/bash
+# Force non-interactive mode for common tools
+export TERM=dumb
+export GIT_TERMINAL_PROMPT=0
+# Redirect output to log file
 exec >> "$INSTALL_LOG_FILE" 2>&1
-$cmd
-EOF
+SCRIPT_EOF
+    echo "$cmd" >> "$temp_script"
     chmod +x "$temp_script"
     
     # Run command with spinner
@@ -378,7 +385,8 @@ gum_run_quiet() {
         echo "---"
     } >> "$INSTALL_LOG_FILE"
     
-    bash -c "$cmd" >> "$INSTALL_LOG_FILE" 2>&1
+    # Disable TTY detection for plain text output
+    TERM=dumb GIT_TERMINAL_PROMPT=0 bash -c "$cmd" >> "$INSTALL_LOG_FILE" 2>&1
     local exit_code=$?
     
     {
