@@ -4,6 +4,8 @@
 # Source this file in your scripts: source ./gum-utils.sh
 #
 
+GUM_UTILS_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
 # Check if gum is installed
 gum_check() {
     if ! command -v gum &> /dev/null; then
@@ -53,7 +55,7 @@ gum_header() {
             --border double \
             --border-foreground "$GUM_COLOR_ACCENT" \
             --align center \
-            --width 50 \
+            --width 80 \
             --margin "1 2" \
             --padding "1 2" \
             "$title" "$subtitle"
@@ -63,7 +65,7 @@ gum_header() {
             --border double \
             --border-foreground "$GUM_COLOR_ACCENT" \
             --align center \
-            --width 50 \
+            --width 80 \
             --margin "1 2" \
             --padding "1 2" \
             "$title"
@@ -295,7 +297,7 @@ gum_input_default() {
 }
 
 # Setup logging directory
-INSTALL_LOG_DIR="${INSTALL_LOG_DIR:-$HOME/.dotfiles/install/logs}"
+INSTALL_LOG_DIR="${INSTALL_LOG_DIR:-$GUM_UTILS_DIR/../install/log}"
 INSTALL_LOG_FILE="${INSTALL_LOG_FILE:-$INSTALL_LOG_DIR/install-$(date +%Y%m%d_%H%M%S).log}"
 
 # Initialize logging
