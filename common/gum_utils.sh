@@ -293,3 +293,98 @@ gum_input_default() {
     result=$(gum_input_prompt "$prompt" "$default")
     echo "${result:-$default}"
 }
+
+# Setup logging directory
+INSTALL_LOG_DIR="${INSTALL_LOG_DIR:-$HOME/.dotfiles/install/logs}"
+INSTALL_LOG_FILE="${INSTALL_LOG_FILE:-$INSTALL_LOG_DIR/install-$(date +%Y%m%d_%H%M%S).log}"
+
+# Initialize logging
+gum_log_init() {
+    mkdir -p "$INSTALL_LOG_DIR"
+    echo "Installation started at $(date)" > "$INSTALL_LOG_FILE"
+    echo "======================================" >> "$INSTALL_LOG_FILE"
+    echo "" >> "$INSTALL_LOG_FILE"
+}
+
+# Run command with spinner and redirect output to log
+# Usage: gum_run "Installing package..." "pacman -S package"
+# Returns the exit code of the command
+gum_run() {
+    local title="$1"
+    local cmd="$2"
+    
+    # Ensure log file exists
+    if [[ ! -f "$INSTALL_LOG_FILE" ]]; then
+        gum_log_init
+    fi
+    
+    # Log the command being run
+    {
+        echo ""
+        echo ">>> Running: $title"
+        echo ">>> Command: $cmd"
+        echo ">>> Time: $(date)"
+        echo "---"
+    } >> "$INSTALL_LOG_FILE"
+    
+    # Create a temporary wrapper script that redirects to log
+    local temp_script=$(mktemp)
+    cat > "$temp_script" << EOF
+#!/bin/bash
+exec >> "$INSTALL_LOG_FILE" 2>&1
+$cmd
+EOF
+    chmod +x "$temp_script"
+    
+    # Run command with spinner
+    local exit_code=0
+    if gum spin --spinner dot --title "$title" -- "$temp_script"; then
+        gum_success "$title"
+    else
+        exit_code=$?
+        gum_error "$title (failed - check $INSTALL_LOG_FILE)"
+        {
+            echo ">>> Exit code: $exit_code"
+            echo ">>> FAILED"
+            echo ""
+        } >> "$INSTALL_LOG_FILE"
+        rm -f "$temp_script"
+        return $exit_code
+    fi
+    
+    {
+        echo ">>> Success"
+        echo ""
+    } >> "$INSTALL_LOG_FILE"
+    
+    rm -f "$temp_script"
+    return 0
+}
+
+# Run command quietly (no spinner, just log)
+# Usage: gum_run_quiet "command to run"
+gum_run_quiet() {
+    local cmd="$1"
+    
+    # Ensure log file exists
+    if [[ ! -f "$INSTALL_LOG_FILE" ]]; then
+        gum_log_init
+    fi
+    
+    {
+        echo ""
+        echo ">>> Running (quiet): $cmd"
+        echo ">>> Time: $(date)"
+        echo "---"
+    } >> "$INSTALL_LOG_FILE"
+    
+    bash -c "$cmd" >> "$INSTALL_LOG_FILE" 2>&1
+    local exit_code=$?
+    
+    {
+        echo ">>> Exit code: $exit_code"
+        echo ""
+    } >> "$INSTALL_LOG_FILE"
+    
+    return $exit_code
+}
