@@ -1,0 +1,16 @@
+# Exclude test directory (contains large VM images)
+test/
+
+# Exclude git history
+.git/
+.gitignore
+
+# Exclude logs
+install/logs/
+
+# Exclude any backups
+*.backup
+.dotfiles.backup*
+
+# Exclude private data
+git/

@@ -13,7 +13,30 @@ source "$SCRIPT_DIR/../common/gum_utils.sh"
 
 # Test configuration
 IMAGE_NAME="dotfiles-test"
+BASE_IMAGE_NAME="dotfiles-test-base"
 CONTAINER_NAME="dotfiles-test-container"
+
+# Note: Multi-stage build strategy for fast iteration:
+# - Base image (dotfiles-test-base): Arch Linux + packages (cached, rarely changes)
+# - Test image (dotfiles-test): Base + dotfiles repo (rebuilt every test)
+# - .dockerignore excludes test/ directory to avoid copying large VM images
+
+# Parse arguments
+REBUILD_BASE=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --rebuild-base)
+            REBUILD_BASE=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--rebuild-base]"
+            echo "  --rebuild-base: Force rebuild of base image (Arch packages)"
+            exit 1
+            ;;
+    esac
+done
 
 # Cleanup function
 cleanup() {
@@ -45,14 +68,37 @@ fi
 gum_header "Docker Installation Test" "Testing dotfiles installation in clean Arch container"
 echo ""
 
-# Build Docker image
-gum_section "Building Docker image..."
+# Build base image if needed
+if ! docker image inspect "$BASE_IMAGE_NAME" &>/dev/null || [ "$REBUILD_BASE" = true ]; then
+    gum_section "Building base image (this will be cached)..."
+    cd "$DOTFILES_DIR"
+    
+    # Use BuildKit for better caching
+    DOCKER_BUILDKIT=1 docker build \
+        --target base \
+        -t "$BASE_IMAGE_NAME" \
+        -f test/Dockerfile . || {
+        gum_error "Failed to build base image"
+        exit 1
+    }
+    gum_success "Base image built and cached"
+else
+    gum_success "Using cached base image"
+fi
+
+# Build full Docker image (only copies dotfiles, very fast)
+echo ""
+gum_section "Building test image with dotfiles..."
 cd "$DOTFILES_DIR"
-docker build -t "$IMAGE_NAME" -f test/Dockerfile . || {
+
+DOCKER_BUILDKIT=1 docker build \
+    --build-arg BUILDKIT_INLINE_CACHE=1 \
+    -t "$IMAGE_NAME" \
+    -f test/Dockerfile . || {
     gum_error "Failed to build Docker image"
     exit 1
 }
-gum_success "Docker image built"
+gum_success "Test image built"
 
 # Run container
 echo ""
