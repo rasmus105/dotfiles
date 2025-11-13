@@ -7,7 +7,6 @@ mouse-hide-while-typing = true
 # scrollback-limit = 536870912 
 # 31.25 MB
 scrollback-limit = 33554432
-copy-on-select = clipboard
 
 ## General Options 
 # Misc
