@@ -1,6 +1,0 @@
-git:
-  paging:
-    colorArg: always
-    pager: delta --side-by-side --dark --paging=never
-gui:
-  nerdFontsVersion: "3"
