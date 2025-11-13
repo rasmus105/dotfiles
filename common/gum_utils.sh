@@ -214,3 +214,82 @@ gum_ask_no() {
     local prompt="$1"
     gum confirm "$prompt" --default=false
 }
+
+# Non-interactive mode wrappers
+# These functions support USE_DEFAULT_OPTIONS for automated testing
+# Note: defaults are MANDATORY to force callers to think about test behavior
+
+# Wrapper for gum confirm with mandatory default
+# Usage: gum_confirm_default "prompt" <default_yes_or_no>
+gum_confirm_default() {
+    local prompt="$1"
+    local default="$2"
+    
+    if [[ -z "$default" ]]; then
+        gum_error "gum_confirm_default requires a default value (true/false)"
+        exit 1
+    fi
+    
+    if [[ "$USE_DEFAULT_OPTIONS" == "1" ]]; then
+        if [[ "$default" == "true" ]]; then
+            gum_info "$prompt (auto: yes)"
+            return 0
+        else
+            gum_info "$prompt (auto: no)"
+            return 1
+        fi
+    fi
+    
+    if [[ "$default" == "true" ]]; then
+        gum_ask_yes "$prompt"
+    else
+        gum_ask_no "$prompt"
+    fi
+}
+
+# Wrapper for gum choose with mandatory default
+# Usage: gum_choose_default "prompt" <default_index> option1 option2 ...
+gum_choose_default() {
+    local prompt="$1"
+    local default_index="$2"
+    
+    if [[ -z "$default_index" ]]; then
+        gum_error "gum_choose_default requires a default index"
+        exit 1
+    fi
+    
+    shift 2
+    local options=("$@")
+    
+    if [[ "$USE_DEFAULT_OPTIONS" == "1" ]]; then
+        local selected="${options[$default_index]}"
+        gum_info "$prompt (auto: $selected)"
+        echo "$selected"
+        return 0
+    fi
+    
+    gum_section "$prompt"
+    gum_choose "${options[@]}"
+}
+
+# Wrapper for gum input with mandatory default
+# Usage: gum_input_default "prompt" "<default_value>"
+gum_input_default() {
+    local prompt="$1"
+    local default="$2"
+    
+    if [[ -z "$default" ]]; then
+        gum_error "gum_input_default requires a default value"
+        exit 1
+    fi
+    
+    if [[ "$USE_DEFAULT_OPTIONS" == "1" ]]; then
+        gum_info "$prompt (auto: $default)"
+        echo "$default"
+        return 0
+    fi
+    
+    local result
+    result=$(gum_input_prompt "$prompt" "$default")
+    echo "${result:-$default}"
+}
