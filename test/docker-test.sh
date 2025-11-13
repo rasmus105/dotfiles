@@ -38,11 +38,16 @@ while [[ $# -gt 0 ]]; do
             USE_LOCAL=true
             shift
             ;;
+        --keep-container)
+            KEEP_CONTAINER=true
+            shift
+            ;;
         *)
             echo "Unknown option: $1"
             echo "Usage: $0 [--rebuild-base] [--local]"
-            echo "  --rebuild-base: Force rebuild of base image (Arch packages)"
-            echo "  --local:        Use local dotfiles instead of cloning from GitHub"
+            echo "  --rebuild-base:     Force rebuild of base image (Arch packages)"
+            echo "  --local:            Use local dotfiles instead of cloning from GitHub"
+            echo "  --keep-container:   Keep container after test"
             exit 1
             ;;
     esac
@@ -126,7 +131,7 @@ echo ""
 
 if [ "$USE_LOCAL" = true ]; then
     # Test the local installation (dotfiles were copied during build)
-    gum_info "Testing with local dotfiles (already copied to container)"
+    gum_header "Testing with local dotfiles (already copied to container)"
     # Run without -t to avoid terminal query escape codes being sent back
     docker exec -i -t -u testuser "$CONTAINER_NAME" bash -c "
         cd /home/testuser/dotfiles
@@ -142,7 +147,7 @@ if [ "$USE_LOCAL" = true ]; then
     }
 else
     # Test by cloning from GitHub (simulates real installation)
-    gum_info "Testing with GitHub clone (simulates real installation)"
+    gum_header "Testing with GitHub clone (simulates real installation)"
     docker exec -i -t -u testuser "$CONTAINER_NAME" bash -c "
         export USE_DEFAULT_OPTIONS=1
         curl -fsSL https://raw.githubusercontent.com/rasmus105/dotfiles/main/install.sh | bash
@@ -155,7 +160,7 @@ else
     }
 fi
 
-gum_success "Installation completed successfully!"
+gum_header "Installation completed successfully!"
 
 # Verify key files were installed
 echo ""
@@ -183,11 +188,7 @@ docker exec -i -t -u testuser "$CONTAINER_NAME" bash -c "
     exit 1
 }
 
-gum_success "Verification passed"
-
-echo ""
-gum_header "All Tests Passed! ✓"
-echo ""
+gum_success "All Tests Passed! ✓"
 
 # Optional: keep container running for inspection
 if [[ "${KEEP_CONTAINER:-}" == "true" ]]; then
