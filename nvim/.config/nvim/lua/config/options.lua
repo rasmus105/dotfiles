@@ -6,6 +6,7 @@ opt.wrap = false          -- don't wrap by default
 opt.number = true         -- show line numbers
 opt.relativenumber = true -- show relative line numbers
 opt.cursorline = false    -- don't highlight current line
+vim.scrolloff = 8
 
 -- Search
 opt.ignorecase = true
