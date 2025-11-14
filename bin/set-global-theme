@@ -6,6 +6,8 @@ if [[ -z $1 && $1 != "CNCLD" ]]; then
 fi
 
 _SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+export PATH="$_SCRIPT_DIR:$PATH"
+
 THEMES_DIR="$_SCRIPT_DIR/../themes"
 CURRENT_THEME_DIR="$HOME/.config/theme"
 
@@ -21,26 +23,16 @@ fi
 # Update theme symlinks
 ln -nsf "$THEME_PATH" "$CURRENT_THEME_DIR"
 
-# Update hyprpaper background
-if [[ -x "$_SCRIPT_DIR/update-hyprpaper-background" ]]; then
-  "$_SCRIPT_DIR/update-hyprpaper-background"
-fi
+"$_SCRIPT_DIR/update-hyprpaper-background"
 
 # Restart components to apply new theme
 # TODO restart waybar if running
 # TODO restart swayosd
-if command -v hyprctl &>/dev/null; then
-  hyprctl reload 2>/dev/null || true
-fi
-pkill -SIGUSR2 btop 2>/dev/null || true
-if command -v makoctl &>/dev/null; then
-  makoctl reload 2>/dev/null || true
-fi
+hyprctl reload 2>/dev/null
+pkill -SIGUSR2 btop 2>/dev/null
+makoctl reload 2>/dev/null
 
-# Update terminal and GNOME theme
-if [[ -x "$_SCRIPT_DIR/update-terminal-theme" ]]; then
-  "$_SCRIPT_DIR/update-terminal-theme"
-fi
-if [[ -x "$_SCRIPT_DIR/update-gnome-theme" ]]; then
-  "$_SCRIPT_DIR/update-gnome-theme"
-fi
+# Update terminal, GNOME, and neovim themes
+$_SCRIPT_DIR/update-terminal-theme
+$_SCRIPT_DIR/update-gnome-theme
+$_SCRIPT_DIR/update-nvim-theme

@@ -139,7 +139,7 @@ if [ "$USE_LOCAL" = true ]; then
         # Skip install.sh and run setup.sh directly since dotfiles are already present
         bash install/setup.sh
     " || {
-        gum_error "Installation test failed!"
+        gum_header "Installation test failed!"
         echo ""
         gum_info "Container logs:"
         docker logs "$CONTAINER_NAME"
@@ -152,7 +152,7 @@ else
         export USE_DEFAULT_OPTIONS=1
         curl -fsSL https://raw.githubusercontent.com/rasmus105/dotfiles/main/install.sh | bash
     " || {
-        gum_error "Installation test failed!"
+        gum_header "Installation test failed!"
         echo ""
         gum_info "Container logs:"
         docker logs "$CONTAINER_NAME"
