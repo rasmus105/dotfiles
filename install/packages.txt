@@ -83,6 +83,7 @@ noto-fonts
 noto-fonts-emoji
 otf-font-awesome
 gnome-themes-extra
+yaru-icon-theme
 
 # Applications
 localsend-bin
