@@ -29,3 +29,5 @@ source "$SCRIPT_DIR/setup_zsh.sh"
 
 # ==== Stow Configuration Files ====
 source "$SCRIPT_DIR/stow.sh"
+
+source "$SCRIPT_DIR/config/mimetypes.sh"

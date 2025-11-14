@@ -18,15 +18,14 @@ if [[ ! -e "$HOME/.config/theme" ]]; then
   ln -sf "$DOTFILES_DIR/themes/gruvbox" "$HOME/.config/theme"
 fi
 
+# Link all system themes to ~/.config/themes
+ln -sf "$DOTFILES_DIR/themes" "$HOME/.config/themes"
+
 # Set up hyprpaper background from current theme
-if [[ -x "$DOTFILES_DIR/bin/update-hyprpaper-background" ]]; then
-  "$DOTFILES_DIR/bin/update-hyprpaper-background"
-fi
+"$DOTFILES_DIR/bin/update-hyprpaper-background"
 
 # Set up neovim theme from current theme
-if [[ -x "$DOTFILES_DIR/bin/update-nvim-theme" ]]; then
-  "$DOTFILES_DIR/bin/update-nvim-theme"
-fi
+"$DOTFILES_DIR/bin/update-nvim-theme"
 
 mkdir -p ~/.config/btop/themes
 ln -snf ~/.config/theme/btop.theme ~/.config/btop/themes/current.theme
