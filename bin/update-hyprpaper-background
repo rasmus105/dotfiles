@@ -54,7 +54,12 @@ ln -sf "$SELECTED_BG" "$HYPR_BACKGROUND"
 if command -v hyprctl &>/dev/null && pgrep -x hyprpaper >/dev/null; then
   hyprctl hyprpaper unload all 2>/dev/null || true
   hyprctl hyprpaper preload "$HYPR_BACKGROUND" 2>/dev/null || true
-  hyprctl hyprpaper wallpaper ",$HYPR_BACKGROUND" 2>/dev/null || true
+  
+  # Set wallpaper for each monitor individually to avoid cutting issues
+  mapfile -t MONITORS < <(hyprctl monitors -j | jq -r '.[].name')
+  for monitor in "${MONITORS[@]}"; do
+    hyprctl hyprpaper wallpaper "$monitor,$HYPR_BACKGROUND" 2>/dev/null || true
+  done
 fi
 
 echo "Background updated to: $(basename "$SELECTED_BG")"

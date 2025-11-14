@@ -2,7 +2,7 @@
 Version=1.0
 Name=Impala
 Comment=Impala (network TUI)
-Exec=ghostty --class=TUI.float -e impala
+Exec=alacritty --class=TUI.float -e impala
 Terminal=false
 Type=Application
 Icon=/home/rasmus105/.local/share/applications/icons/wi-fi.png
