@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z $1 && $1 != "CNCLD" ]]; then
-  echo "Usage: set-global-theme <theme-name>"
+  echo "Usage: system-set-theme<theme-name>"
   exit 1
 fi
 
@@ -26,13 +26,12 @@ ln -nsf "$THEME_PATH" "$CURRENT_THEME_DIR"
 "$_SCRIPT_DIR/update-hyprpaper-background"
 
 # Restart components to apply new theme
-# TODO restart waybar if running
 # TODO restart swayosd
 hyprctl reload 2>/dev/null
 pkill -SIGUSR2 btop 2>/dev/null
 makoctl reload 2>/dev/null
 
-# Update terminal, GNOME, and neovim themes
 $_SCRIPT_DIR/update-terminal-theme
 $_SCRIPT_DIR/update-gnome-theme
 $_SCRIPT_DIR/update-nvim-theme
+$_SCRIPT_DIR/update-browser-theme

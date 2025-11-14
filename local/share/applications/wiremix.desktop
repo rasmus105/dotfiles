@@ -2,8 +2,8 @@
 Version=1.0
 Name=WireMix
 Comment=WireMix (audio TUI)
-Exec=alacritty --class=TUI.float -e wiremix
+Exec=ghostty --class=TUI.float -e wiremix
 Terminal=false
 Type=Application
-Icon=/home/rasmus105/.local/share/applications/icons/audio.png
+Icon=/home/rasmus105/.local/share/applications/icons/volume.png
 StartupNotify=true
