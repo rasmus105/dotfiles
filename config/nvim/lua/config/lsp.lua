@@ -21,6 +21,8 @@ require("mason").setup()
 require("mason-lspconfig").setup({
     automatic_enable = {
         exclude = {
+            -- using neovim plugin to extend rust LSP capabilities, and it will
+            -- handle starting rust analyzer.
             "rust_analyzer",
         },
     },
