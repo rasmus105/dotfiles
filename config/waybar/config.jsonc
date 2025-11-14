@@ -1,118 +1,25 @@
 {
+    "include": [
+        "~/.config/waybar/modules.jsonc"
+    ],
     "layer": "top",
     "position": "top",
-    "height": 24,
     "spacing": 5,
-
-    "modules-left": ["hyprland/workspaces"],
-    "modules-center": ["clock"],
-    "modules-right": ["memory", "cpu", "disk", "wireplumber", "group/bat", "group/net", "tray"],
-
-    "group/bat": {
-        "orientation": "horizontal",
-        "modules": ["battery", "backlight"]
-    },
-
-    "group/net": {
-        "orientation": "horizontal",
-        "modules": ["hyprland/language", "network"]
-        // "modules": ["hyprland/language", "network", "bluetooth"]
-    },
-
-    "hyprland/workspaces": {
-        "format": "{icon}",
-        "on-click": "activate",
-        "icon-size": 15,
-        "sort-by-number": true,
-    },
-
-    "clock": {
-        "format": "{:%d.%m.%Y | %H:%M}"
-    },
-
-    "wireplumber": {
-        "format": "\udb81\udd7e  {volume}%",
-        "max-volume": 100,
-        "scroll-step": 5
-    },
-
-	"pulseaudio": {
-        "format": "\udb81\udd7e  {volume}%",
-		"format-muted": "MUTE",
-		"format-icons": {
-			"headphones": "",
-			"default": [
-				"",
-				""
-			]
-		},
-		"scroll-step": 5,
-		"on-click": "pamixer -t",
-		"on-click-right": "pavucontrol"
-	},
-    "battery": {
-        "states": {
-            "good": 95,
-            "warning": 30,
-            "critical": 15
-        },
-		"format": "{icon} {capacity}%",
-		"format-icons": [
-			"",
-			"",
-			"",
-			"",
-			""
-		],
-        "interval": 60
-    },
-
-    "backlight": {
-        "format": "\udb80\udcdf {percent}%"
-    },
-
-    "memory": {
-        "interval": 30,
-        "format": "{used:0.1f}G / {total:0.1f}G " // 
-    },
-
-    "cpu": {
-        "interval": 1,
-        "format": "{usage:>2}% \uf4bc",
-    },
-
-	"disk": {
-		"interval": 60,
-		"format": "󰋊 {percentage_used:2}%",
-		"path": "/"
-	},
-
-    "network": {
-        "format": "",
-        "format-ethernet": "\udb83\udc9d ",
-        "format-wifi": "{icon}",
-        "format-disconnected": "\udb83\udc9c ",
-        "format-icons": ["\udb82\udd2f", "\udb82\udd1f", "\udb82\udd22", "\udb82\udd25", "\udb82\udd28"],
-        "tooltip-format-wifi": "{essid} ({signalStrength}%)",
-        "tooltip-format-ethernet": "{ifname}",
-        "tooltip-format-disconnected": "Disconnected",
-    },
-
-    // "bluetooth": {
-    //     "format": "\udb80\udcaf",
-    //     "format-disabled": "\udb80\udcb2",
-    //     "format-connected": "\udb80\udcb1",
-    //     "tooltip-format": "{controller_alias}\t{controller_address}",
-    //     "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{device_enumerate}",
-    //     "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}"
-    // },
-
-    "hyprland/language": {
-        "format": "{short}"
-    },
-
-    "tray": {
-        "icon-size": 16,
-        "spacing": 16
-    }
+    "height": 26,
+    "modules-left": [
+        "hyprland/workspaces"
+    ],
+    "modules-center": [
+        "clock"
+    ],
+    "modules-right": [
+        "custom/updates",
+        "backlight",
+        "battery",
+        "cpu",
+        "pulseaudio",
+        "bluetooth",
+        "network",
+        "custom/wlogout"
+    ]
 }
