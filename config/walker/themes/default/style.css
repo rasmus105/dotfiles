@@ -1,0 +1,182 @@
+
+/* ~ is not available in css. 
+ * this file goes in ~/.config/walker/themes/style.css */
+@import "../../../theme/walker.css";
+
+* {
+  all: unset;
+}
+
+* {
+  font-family: monospace;
+  font-size: 18px;
+  color: @text;
+}
+
+scrollbar {
+  opacity: 0;
+}
+
+.normal-icons {
+  -gtk-icon-size: 16px;
+}
+
+.large-icons {
+  -gtk-icon-size: 32px;
+}
+
+.box-wrapper {
+  background: alpha(@base, 0.55); /* More opaque to hide background text - GTK doesn't support backdrop blur */
+  padding: 10px;
+  border: 2px solid @border;
+  border-radius: 0px; /* Rectangular shape */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.preview-box {
+  border-radius: 0px; /* Rectangular shape */
+}
+
+.box {
+  border-radius: 0px; /* Rectangular shape */
+}
+
+.search-container {
+  background: @background;
+  padding: 12px;
+  border: 1px solid @border;
+  border-radius: 0px; /* Rectangular shape */
+  margin-bottom: 8px;
+}
+
+.input placeholder {
+  opacity: 0.5;
+}
+
+.input {
+  padding: 4px 8px;
+}
+
+.input:focus,
+.input:active {
+  box-shadow: none;
+  outline: none;
+}
+
+.content-container {
+  border-radius: 0px; /* Rectangular shape */
+}
+
+.placeholder {
+  padding: 20px;
+}
+
+.scroll {
+  background: alpha(@background, 0.5);
+  border: 1px solid @border;
+  border-radius: 0px; /* Rectangular shape */
+  padding: 4px;
+}
+
+.list {
+  background: transparent;
+}
+
+child,
+child > * {
+}
+
+child:hover .item-box {
+  background: alpha(@border, 0.3);
+  border-radius: 0px; /* Rectangular shape */
+}
+
+child:selected .item-box {
+  background: alpha(@selected-text, 0.2);
+  border-left: 3px solid @selected-text;
+  border-radius: 0px; /* Rectangular shape */
+}
+
+child:selected .item-box * {
+  color: @selected-text;
+}
+
+.item-box {
+  padding-left: 14px;
+  padding-right: 14px;
+  margin: 2px 0;
+  border-radius: 0px; /* Rectangular shape */
+}
+
+.item-text-box {
+  all: unset;
+  padding: 14px 0;
+}
+
+.item-text {
+}
+
+.item-subtext {
+  font-size: 0px;
+  min-height: 0px;
+  margin: 0px;
+  padding: 0px;
+}
+
+.item-image {
+  margin-right: 14px;
+  -gtk-icon-transform: scale(0.9);
+}
+
+.current {
+  font-style: italic;
+}
+
+.keybind-hints {
+  background: @background;
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid @border;
+  border-radius: 0px; /* Rectangular shape */
+}
+
+.preview {
+  background: @background;
+  border: 1px solid @border;
+  border-radius: 0px; /* Rectangular shape */
+  padding: 12px;
+  margin-left: 8px;
+}
+
+/* Additional enhancements for better visual hierarchy */
+.elephant-hint {
+  padding: 20px;
+  background: alpha(@background, 0.5);
+  border: 1px solid @border;
+  border-radius: 0px;
+  margin: 4px;
+}
+
+.error {
+  color: #ff5555;
+  background: alpha(#ff5555, 0.1);
+  padding: 10px;
+  border: 1px solid #ff5555;
+  border-radius: 0px;
+  margin-top: 8px;
+}
+
+/* Improved transitions for smooth interactions */
+child .item-box {
+  transition: all 25ms ease-in-out;
+}
+
+/* Better spacing for content container */
+.content-container {
+  min-height: 100px;
+}
+
+/* Enhanced window styling */
+.window {
+  border-radius: 0px;
+}
