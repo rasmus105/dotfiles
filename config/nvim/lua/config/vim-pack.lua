@@ -31,5 +31,16 @@ vim.pack.add({
 	{ src = "https://github.com/rcarriga/nvim-notify" },
 	{ src = "https://github.com/nvim-mini/mini.cursorword" },
 
+	-- Colorschemes
 	{ src = "https://github.com/ellisonleao/gruvbox.nvim" },
+	{ src = "https://github.com/catppuccin/nvim" },
+	{ src = "https://github.com/neanias/everforest-nvim" },
+	{ src = "https://github.com/rebelot/kanagawa.nvim" },
+	{ src = "https://github.com/folke/tokyonight.nvim" },
+	{ src = "https://github.com/kepano/flexoki-neovim" },
+	{ src = "https://github.com/EdenEast/nightfox.nvim" },
+	{ src = "https://github.com/rose-pine/neovim" },
+	{ src = "https://github.com/gthelding/monokai-pro.nvim" },
+	{ src = "https://github.com/tahayvr/matteblack.nvim" },
+	{ src = "https://github.com/ribru17/bamboo.nvim" },
 })

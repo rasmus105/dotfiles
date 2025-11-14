@@ -46,7 +46,7 @@ vim.api.nvim_create_autocmd('FileType', {
     end,
 })
 
----- Plugin Related ----
+-- Plugin related
 -- vim.api.nvim_create_autocmd('PackChanged', {
 --     callback = function(event)
 --         if event.data.updated then
@@ -55,6 +55,7 @@ vim.api.nvim_create_autocmd('FileType', {
 --     end,
 -- })
 
+-- Images → zathura
 vim.api.nvim_create_autocmd("BufReadCmd", {
     pattern = "*.pdf",
     callback = function()
@@ -62,6 +63,50 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
         vim.cmd("silent !zathura " .. filename .. " &")
         vim.cmd("let tobedeleted = bufnr('%') | b# | exe \"bd! \" . tobedeleted")
     end
+})
+
+-- Images → imv
+vim.api.nvim_create_autocmd("BufReadCmd", {
+    pattern = {
+        "*.png",
+        "*.jpg",
+        "*.jpeg",
+        "*.gif",
+        "*.webp",
+        "*.bmp",
+        "*.tif",
+        "*.tiff",
+    },
+    callback = function()
+        local filename = vim.fn.shellescape(vim.api.nvim_buf_get_name(0))
+        vim.cmd("silent !imv " .. filename .. " &")
+        vim.cmd([[let tobedeleted = bufnr('%') | b# | exe "bd! " . tobedeleted]])
+    end,
+})
+
+-- Videos → mpv
+vim.api.nvim_create_autocmd("BufReadCmd", {
+    pattern = {
+        "*.mp4",
+        "*.avi", -- video/x-msvideo
+        "*.mkv", -- video/x-matroska
+        "*.flv", -- video/x-flv
+        "*.wmv", -- video/x-ms-wmv
+        "*.mpeg", -- video/mpeg
+        "*.mpg", -- often video/mpeg
+        "*.ogv", -- video/ogg
+        "*.webm", -- video/webm
+        "*.mov", -- video/quicktime
+        "*.3gp", -- video/3gpp
+        "*.3g2", -- video/3gpp2
+        "*.asf", -- video/x-ms-asf
+        "*.ogm", -- video/x-ogm+ogg
+    },
+    callback = function()
+        local filename = vim.fn.shellescape(vim.api.nvim_buf_get_name(0))
+        vim.cmd("silent !mpv " .. filename .. " &")
+        vim.cmd([[let tobedeleted = bufnr('%') | b# | exe "bd! " . tobedeleted]])
+    end,
 })
 
 -- Auto-jump to first quickfix item, close the quickfix window, and notify

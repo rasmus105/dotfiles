@@ -23,3 +23,13 @@ if [[ -x "$DOTFILES_DIR/bin/update-hyprpaper-background" ]]; then
   "$DOTFILES_DIR/bin/update-hyprpaper-background"
 fi
 
+# Set up neovim theme from current theme
+if [[ -x "$DOTFILES_DIR/bin/update-nvim-theme" ]]; then
+  "$DOTFILES_DIR/bin/update-nvim-theme"
+fi
+
+mkdir -p ~/.config/btop/themes
+ln -snf ~/.config/theme/btop.theme ~/.config/btop/themes/current.theme
+
+mkdir -p ~/.config/mako
+ln -snf ~/.config/theme/mako.ini ~/.config/mako/config

@@ -1,9 +1,21 @@
 {
   "plugins": {
+    "bamboo.nvim": {
+      "rev": "e74ac25",
+      "src": "https://github.com/ribru17/bamboo.nvim"
+    },
     "blink.cmp": {
       "rev": "327fff9",
       "src": "https://github.com/Saghen/blink.cmp",
       "version": "1.0.0 - 2.0.0"
+    },
+    "everforest-nvim": {
+      "rev": "557bce9",
+      "src": "https://github.com/neanias/everforest-nvim"
+    },
+    "flexoki-neovim": {
+      "rev": "c3e2251",
+      "src": "https://github.com/kepano/flexoki-neovim"
     },
     "fzf-lua": {
       "rev": "c887688",
@@ -47,6 +59,10 @@
       "rev": "ad7146a",
       "src": "https://github.com/mason-org/mason.nvim"
     },
+    "matteblack.nvim": {
+      "rev": "a8a039f",
+      "src": "https://github.com/tahayvr/matteblack.nvim"
+    },
     "mini.cursorword": {
       "rev": "d843392",
       "src": "https://github.com/nvim-mini/mini.cursorword"
@@ -67,9 +83,17 @@
       "rev": "22d837b",
       "src": "https://github.com/Yazeed1s/minimal.nvim"
     },
+    "monokai-pro.nvim": {
+      "rev": "5b06ae0",
+      "src": "https://github.com/gthelding/monokai-pro.nvim"
+    },
     "neovim": {
       "rev": "72a04c4",
       "src": "https://github.com/rose-pine/neovim"
+    },
+    "nightfox.nvim": {
+      "rev": "ba47d4b",
+      "src": "https://github.com/EdenEast/nightfox.nvim"
     },
     "nvim": {
       "rev": "e79d09f",
@@ -107,6 +131,10 @@
     "tabby.nvim": {
       "rev": "b3affa6",
       "src": "https://github.com/nanozuki/tabby.nvim"
+    },
+    "tokyonight.nvim": {
+      "rev": "5da1b76",
+      "src": "https://github.com/folke/tokyonight.nvim"
     },
     "vague.nvim": {
       "rev": "25107de",
