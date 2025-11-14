@@ -1,0 +1,151 @@
+{
+    // Hyprland Workspaces
+    "hyprland/workspaces": {
+        "on-scroll-up": "hyprctl dispatch workspace r-1",
+        "on-scroll-down": "hyprctl dispatch workspace r+1",
+        "on-click": "activate",
+        "active-only": false,
+        "all-outputs": true,
+        "format": "{icon}",
+        "format-icons": {
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9",
+            "10": "10"
+        },
+        "persistent-workspaces": {
+            "*": 1
+        }
+    },
+    // Clock
+    "clock": {
+        "format": "{:%A %H:%M}",
+        "format-alt": "{:%d %B %Y}",
+        "tooltip": false
+    },
+    // Packages with Updates
+    "custom/updates": {
+        "format": " {}",
+        "escape": true,
+        "return-type": "json",
+        "exec": "system-update-check",
+        "interval": 1800,
+        "signal": 1,
+        "hide-empty-text": true,
+        "on-click": "ghostty --class=TUI.float -e system-update-perform"
+    },
+    // Wlogout
+    "custom/wlogout": {
+        "format": "",
+        "tooltip-format": "Open wlogout",
+        "on-click": "wlogout -m 500"
+    },
+    // Pipewire (audio)
+    "pulseaudio": {
+        "scroll-step": 1,
+        "format": "{icon}",
+        "on-click": "ghostty --class=TUI.float -e wiremix",
+        "on-click-right": "pamixer -t",
+        "tooltip-format": "Playing at {volume}%",
+        "format-muted": "",
+        "format-icons": {
+            "default": [
+                "",
+                "",
+                " "
+            ]
+        }
+    },
+    // Bluetooth
+    "bluetooth": {
+        "format": "",
+        "format-disabled": "󰂲",
+        "format-connected": "",
+        "tooltip-format": "Devices connected: {num_connections}",
+        "on-click": "ghostty --class=TUI.float -e bluetui"
+    },
+    // CPU
+    "cpu": {
+        "interval": 10,
+        "format": "",
+        "on-click": "ghostty --class=TUI.float -e btop"
+    },
+    // Battery (only laptop)
+    "battery": {
+        "format": "{capacity}% {icon}",
+        "format-discharging": "{icon}",
+        "format-charging": "{icon}",
+        "format-plugged": "",
+        "format-icons": {
+            "charging": [
+                "󰢜",
+                "󰂆",
+                "󰂇",
+                "󰂈",
+                "󰢝",
+                "󰂉",
+                "󰢞",
+                "󰂊",
+                "󰂋",
+                "󰂅"
+            ],
+            "default": [
+                "󰁺",
+                "󰁻",
+                "󰁼",
+                "󰁽",
+                "󰁾",
+                "󰁿",
+                "󰂀",
+                "󰂁",
+                "󰂂",
+                "󰁹"
+            ]
+        },
+        "format-full": "󰂅",
+        "tooltip-format-discharging": "{power:>1.0f}W↓ {capacity}%",
+        "tooltip-format-charging": "{power:>1.0f}W↑ {capacity}%",
+        "on-click": "power-profile --select",
+        "interval": 5,
+        "states": {
+            "warning": 20,
+            "critical": 10
+        }
+    },
+    // Network
+    "network": {
+        "format": "{ifname}",
+        "format-wifi": " {signalStrength}%",
+        "format-ethernet": "",
+        "format-disconnected": "  Disconnected ⚠",
+        "tooltip-format": " {ifname} via {gwaddri}",
+        "tooltip-format-wifi": "  {ifname} @ {essid}\nIP: {ipaddr}\nStrength: {signalStrength}%\nFreq: {frequency}MHz\nUp: {bandwidthUpBits} Down: {bandwidthDownBits}",
+        "tooltip-format-ethernet": " {ifname}\nIP: {ipaddr}\n up: {bandwidthUpBits} down: {bandwidthDownBits}",
+        "tooltip-format-disconnected": "Disconnected",
+        "max-length": 50,
+        "on-click": "ghostty --class=TUI.float -e impala"
+    },
+    // Backlight (only laptop!)
+    "backlight": {
+        // "device": "acpi_video1",
+        "format": "{percent}% {icon}",
+        "format-icons": [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+        "on-click": "walker -m menus:brightness"
+    }
+}
