@@ -29,6 +29,3 @@ ln -sf "$DOTFILES_DIR/themes" "$HOME/.config/themes"
 
 mkdir -p ~/.config/btop/themes
 ln -snf ~/.config/theme/btop.theme ~/.config/btop/themes/current.theme
-
-mkdir -p ~/.config/mako
-ln -snf ~/.config/theme/mako.ini ~/.config/mako/config

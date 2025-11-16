@@ -44,7 +44,7 @@
     "custom/wlogout": {
         "format": "",
         "tooltip-format": "Open wlogout",
-        "on-click": "wlogout -m 500"
+        "on-click": "wlogout -m 300"
     },
     // Pipewire (audio)
     "pulseaudio": {
