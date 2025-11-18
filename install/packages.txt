@@ -1,31 +1,6 @@
-# Security & Authentication
-hyprpolkitagent
-
-# Browser
-firefox
-helium-browser-bin
-zen-browser-bin
-
-# Development
-git
-lazygit
-neovim
-visual-studio-code-bin
-
-# Terminal & Shell
-ghostty
-alacritty
-zsh
-eza
-bat
-btop
-fastfetch
-fd
-fzf
-ripgrep
-zoxide
-
-# Hyprland Ecosystem
+# ============================================================
+# HYPRLAND WINDOW MANAGER
+# ============================================================
 hyprland
 hyprland-guiutils
 hyprland-qt-support
@@ -36,9 +11,12 @@ hyprlock
 hyprsunset
 hyprcursor
 hyprshot
+hyprpolkitagent
 xdg-desktop-portal-hyprland
 
-# Wayland Tools & UI
+# ============================================================
+# WAYLAND UTILITIES
+# ============================================================
 waybar
 mako
 walker
@@ -53,31 +31,78 @@ gjs
 waypaper
 matugen-bin
 impala
-loupe
+xdg-desktop-portal-gtk
+xdg-utils
+xdg-user-dirs
+wl-clipboard
+cliphist
+wlogout
+playerctl
+qt5-wayland
+qt6-wayland
+xorg-xwayland
 
-# Audio (pipewire)
-wiremix
+# ============================================================
+# BROWSERS
+# ============================================================
+firefox
+helium-browser-bin
+zen-browser-bin
 
-# Bluetooth & Network
-bluez
-bluez-libs
-bluez-utils
-bluetui
-openssh
+# ============================================================
+# DEVELOPMENT TOOLS
+# ============================================================
+git
+github-cli
+lazygit
+neovim
+visual-studio-code-bin
+cargo
+base-devel
 
-# File Management
+# ============================================================
+# TERMINAL & CLI UTILITIES
+# ============================================================
+ghostty
+alacritty
+zsh
+eza
+bat
+btop
+fastfetch
+fd
+fzf
+ripgrep
+zoxide
+wget
+jq
+man-db
+man-pages
+
+# ============================================================
+# FILE MANAGEMENT
+# ============================================================
 nautilus
 nautilus-open-any-terminal
 rsync
 gvfs-dnssd
 unzip
-
-# System Utilities
 plocate
-pacman-contrib
-power-profiles-daemon
 
-# Fonts, themes & icons
+# ============================================================
+# MEDIA
+# ============================================================
+mpv
+ffmpeg
+imv
+wiremix
+loupe
+zathura
+zathura-pdf-mupdf
+
+# ============================================================
+# FONTS & THEMES
+# ============================================================
 ttf-hack-nerd
 noto-fonts
 noto-fonts-emoji
@@ -85,11 +110,34 @@ otf-font-awesome
 gnome-themes-extra
 yaru-icon-theme
 
-# Applications
-localsend-bin
-mpv
+# ============================================================
+# CONNECTIVITY (BLUETOOTH, NETWORK & SSH)
+# ============================================================
+bluez
+bluez-libs
+bluez-utils
+bluetui
+blueman
+networkmanager
+network-manager-applet
+openssh
 
-# Elephant Suite
+# ============================================================
+# SYSTEM UTILITIES
+# ============================================================
+pacman-contrib
+power-profiles-daemon
+polkit
+reflector
+brightnessctl
+keyd
+pipewire
+pipewire-pulse
+wireplumber
+
+# ============================================================
+# ELEPHANT LAUNCHER & PLUGINS
+# ============================================================
 elephant
 elephant-desktopapplications
 elephant-providerlist
@@ -100,14 +148,7 @@ elephant-files
 elephant-todo
 elephant-symbols
 
-# Image & Video Processing
-ffmpeg
-imv
-
-# Desktop Portals
-xdg-desktop-portal-gtk
-xdg-utils
-
-# Utilities
-wget
-jq
+# ============================================================
+# OTHER APPLICATIONS
+# ============================================================
+localsend-bin
