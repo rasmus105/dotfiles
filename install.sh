@@ -26,7 +26,7 @@ prompt_confirm() {
         return $?
     fi
     
-    read -p "$(echo -e "${BLUE}$prompt [Y/n]${NC} ")" answer
+    read -r -p "$(echo -e "${BLUE}$prompt [Y/n]${NC} ")" answer
     answer=${answer:-$default}
     [[ $answer =~ ^[Yy] ]]
 }
@@ -73,7 +73,7 @@ if [ -d "$DOTFILES_DIR" ]; then
                     break
                     ;;
                 "Choose different directory")
-                    read -p "$(echo -e "${BLUE}Enter new directory path: ${NC}")" DOTFILES_DIR
+                    read -r -p "$(echo -e "${BLUE}Enter new directory path: ${NC}")" DOTFILES_DIR
                     DOTFILES_DIR="${DOTFILES_DIR/#\~/$HOME}"
                     echo -e "${GREEN}✓${NC} New directory: $DOTFILES_DIR"
                     break
@@ -93,7 +93,7 @@ if ! command -v git &> /dev/null; then
 fi
 
 echo "Cloning dotfiles directory..."
-git clone $REPO_URL $DOTFILES_DIR
+git clone "$REPO_URL" "$DOTFILES_DIR"
 
 echo 
 echo -e "${GREEN}✓${NC} Repository has been cloned succesfully!"

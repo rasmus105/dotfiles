@@ -3,4 +3,4 @@ git/
 test/vm/.vm
 
 # Installation logs
-install/logs/
+install/log/

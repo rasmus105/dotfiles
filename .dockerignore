@@ -6,7 +6,7 @@ test/
 .gitignore
 
 # Exclude logs
-install/logs/
+install/log/
 
 # Exclude any backups
 *.backup
