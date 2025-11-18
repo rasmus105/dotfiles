@@ -121,7 +121,7 @@
     // Network
     "network": {
         "format": "{ifname}",
-        "format-wifi": " {signalStrength}%",
+        "format-wifi": " ",
         "format-ethernet": "",
         "format-disconnected": "  Disconnected ⚠",
         "tooltip-format": " {ifname} via {gwaddri}",
