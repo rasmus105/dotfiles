@@ -1,8 +1,12 @@
+#!/bin/bash
+# Common setup and utilities
+# This file is meant to be sourced by other scripts
+
 _COMMON_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 _COMMON_DOTFILES_DIR=$(dirname "$_COMMON_SCRIPT_DIR")
 
 # make sure gum is installed when this is sourced.
-if ! $(command -v "gum" &> /dev/null); then
+if ! command -v "gum" &> /dev/null; then
     echo "Installing gum for cleaner UI..."
     sudo pacman -S --noconfirm gum
 fi

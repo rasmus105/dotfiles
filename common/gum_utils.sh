@@ -330,7 +330,8 @@ gum_run() {
     } >> "$INSTALL_LOG_FILE"
     
     # Create temporary script
-    local temp_script=$(mktemp)
+    local temp_script
+    temp_script=$(mktemp)
     
     # Disable TTY detection so commands output plain text without progress bars
     # This prevents ANSI escape codes and carriage returns in logs

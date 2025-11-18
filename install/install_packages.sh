@@ -15,9 +15,9 @@ install_paru() {
 
     # install paru (AUR helper)
     gum_run "Cloning paru from AUR" "rm -rf /tmp/paru && git clone https://aur.archlinux.org/paru-bin.git /tmp/paru"
-    cd /tmp/paru
+    cd /tmp/paru || { gum_error "Failed to cd to /tmp/paru"; return 1; }
     gum_run "Building and installing paru" "makepkg -si --noconfirm"
-    cd ~
+    cd ~ || { gum_error "Failed to cd to home"; return 1; }
     gum_run_quiet "rm -rf /tmp/paru"
     gum_success "Paru installed successfully"
     echo ""
