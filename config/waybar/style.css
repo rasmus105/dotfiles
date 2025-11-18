@@ -2,7 +2,7 @@
 /* Color agnostic - uses system colors */
 
 /* Variables for easy customization - GTK CSS syntax */
-@define-color bg-base rgba(0, 0, 0, 0.55);
+@define-color bg-base rgba(0, 0, 0, 0.00);
 @define-color fg-primary rgba(255, 255, 255, 0.9);
 @define-color fg-secondary rgba(255, 255, 255, 0.5);
 @define-color fg-muted rgba(255, 255, 255, 0.4);
@@ -20,7 +20,7 @@
 
 /* Main bar - transparent where empty */
 window#waybar {
-    background-color: rgba(0, 0, 0, 0.40);
+    background-color: rgba(0, 0, 0, 0.55);
 }
 
 /* Required to avoid strange behavior when hovering */
