@@ -16,12 +16,14 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Simple prompt function that respects USE_DEFAULT_OPTIONS
+# - $1: Prompt
+# - $2: Default selection (if USE_DEFAULT_OPTIONS == 1)
 prompt_confirm() {
     local prompt="$1"
     local default="${2:-y}"
     
     if [[ "$USE_DEFAULT_OPTIONS" == "1" ]]; then
-        echo -e "${BLUE}$prompt${NC} (auto: $default)"
+        echo -e "${BLUE}$prompt${NC} (auto-selected: $default)"
         [[ "$default" =~ ^[Yy] ]]
         return $?
     fi
@@ -31,16 +33,11 @@ prompt_confirm() {
     [[ $answer =~ ^[Yy] ]]
 }
 
-echo "Starting installation..."
-echo
-
-if [ -d "$DOTFILES_DIR" ]; then
-    echo -e "${YELLOW}Warning:${NC} '$DOTFILES_DIR' already exists!"
-    
+backup_installation() {
     if [[ "$USE_DEFAULT_OPTIONS" == "1" ]]; then
         # Non-interactive: create backup and continue
-        BACKUP_PATH="$HOME/.dotfiles.backup.$(date +%Y%m%d_%H%M%S)"
-        echo -e "${YELLOW}Creating backup (auto)...${NC}"
+        DOTFILES_DIR_NAME=$(basename $DOTFILES_DIR)
+        BACKUP_PATH="$HOME/$DOTFILES_DIR_NAME.backup.$(date +%Y%m%d_%H%M%S)"
         mv "$DOTFILES_DIR" "$BACKUP_PATH"
         echo -e "${GREEN}✓${NC} Backup created at: $BACKUP_PATH"
     else
@@ -50,7 +47,7 @@ if [ -d "$DOTFILES_DIR" ]; then
             "Choose different directory"
         )
         
-        # Add color to prompt - note the trailing space before closing quote
+        # change select command prompt
         PS3="$(echo -e "${BLUE}Select an option (1-${#options[@]}): ${NC}")"
         
         COLUMNS=12 # show options on seperate lines
@@ -61,29 +58,52 @@ if [ -d "$DOTFILES_DIR" ]; then
             fi
             
             case $choice in
-                "Abort")
+                "${options[0]}")
                     echo -e "${RED}Installation aborted.${NC}"
                     exit 1
                     ;;
-                "Overwrite (creates backup at ~/.dotfiles.backup)")
+                "${options[1]}")
                     BACKUP_PATH="$HOME/.dotfiles.backup.$(date +%Y%m%d_%H%M%S)"
                     echo -e "${YELLOW}Creating backup...${NC}"
                     mv "$DOTFILES_DIR" "$BACKUP_PATH"
                     echo -e "${GREEN}✓${NC} Backup created at: $BACKUP_PATH"
                     break
                     ;;
-                "Choose different directory")
+                "${options[2]}")
                     read -p "$(echo -e "${BLUE}Enter new directory path: ${NC}")" DOTFILES_DIR
                     DOTFILES_DIR="${DOTFILES_DIR/#\~/$HOME}"
                     echo -e "${GREEN}✓${NC} New directory: $DOTFILES_DIR"
                     break
                     ;;
+                *)
+                    echo -e "${RED}ERROR:${NC} Invalid option ("$choice")! Try again"
+                    continue 
+                    ;;
             esac
         done
     fi
+}
+
+if ! prompt_confirm "Install dotfiles in ~/.dotfiles?" "y"; then
+    while :; do
+        read -r -p "Enter dotfiles directory (full path): " DOTFILES_DIR
+        if [[ -z "$DOTFILES_DIR" ]]; then
+            echo -e "${RED}✗${NC} Input is empty, try again."
+            continue
+        fi
+        DOTFILES_DIR="${DOTFILES_DIR/#\~/$HOME}"
+        echo -e "${GREEN}✓${NC} Dotfiles directory: $DOTFILES_DIR"
+        break
+    done
 fi
 
-echo "Selected dotfiles directory: '$DOTFILES_DIR'"
+if [ -d "$DOTFILES_DIR" ]; then
+    echo -e "${YELLOW}Warning:${NC} '$DOTFILES_DIR' already exists!"
+    backup_installation    
+fi
+
+echo "Starting installation..."
+echo
 
 # Check if git is installed
 if ! command -v git &> /dev/null; then
