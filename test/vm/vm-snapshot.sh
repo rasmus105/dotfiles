@@ -4,12 +4,15 @@
 
 set -e
 
-# Source gum utilities
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-DOTFILES_DIR=$(dirname $(dirname $SCRIPT_DIR))
-source "$DOTFILES_DIR/common.sh"
+DOTFILES_DIR=$(dirname $(dirname "$SCRIPT_DIR"))
 
-VM_DIR=".vm"
+# Source helpers and initialize gum / PATH
+source "$DOTFILES_DIR/common.sh"
+ensure_gum
+add_dotfiles_bin_to_path
+
+VM_DIR="$SCRIPT_DIR/.vm"
 DISK_IMG="$VM_DIR/arch-test.qcow2"
 
 ACTION="${1:-list}"
@@ -27,25 +30,25 @@ case "$ACTION" in
         qemu-img snapshot -c "$SNAPSHOT_NAME" "$DISK_IMG"
         gum_success "Snapshot '$SNAPSHOT_NAME' created!"
         ;;
-    
+
     restore|apply)
         gum_info "Restoring snapshot: $SNAPSHOT_NAME"
         qemu-img snapshot -a "$SNAPSHOT_NAME" "$DISK_IMG"
         gum_success "Snapshot '$SNAPSHOT_NAME' restored!"
         gum_muted "You can now run: ./vm.sh"
         ;;
-    
+
     list|ls)
         gum_section "Available snapshots for VM:"
         qemu-img snapshot -l "$DISK_IMG"
         ;;
-    
+
     delete|rm)
         gum_info "Deleting snapshot: $SNAPSHOT_NAME"
         qemu-img snapshot -d "$SNAPSHOT_NAME" "$DISK_IMG"
         gum_success "Snapshot '$SNAPSHOT_NAME' deleted!"
         ;;
-    
+
     help|--help|-h)
         gum_bold "Usage: $0 <action> [snapshot-name]"
         echo ""
@@ -61,7 +64,7 @@ case "$ACTION" in
         gum_muted "  $0 restore fresh-arch       # Restore to 'fresh-arch'"
         gum_muted "  $0 list                     # Show all snapshots"
         ;;
-    
+
     *)
         gum_error "Unknown action: $ACTION"
         gum_info "Use '$0 help' for usage information"

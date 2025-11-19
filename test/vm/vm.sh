@@ -6,10 +6,12 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOTFILES_DIR=$(dirname $(dirname $SCRIPT_DIR))
+DOTFILES_DIR=$(dirname $(dirname "$SCRIPT_DIR"))
 
-# Source gum utilities
+# Source helpers and initialize gum / PATH
 source "$DOTFILES_DIR/common.sh"
+ensure_gum
+add_dotfiles_bin_to_path
 
 VM_DIR="$SCRIPT_DIR/.vm"
 DISK_SIZE="20G"
@@ -140,7 +142,7 @@ else
     gum_info "Booting from Arch ISO..."
 fi
 
-read -p "Press Enter to launch VM (or Ctrl+C to cancel)..."
+read -p "Press Enter to launch VM (or Ctrl+C to cancel)..." _
 
 # Detect KVM support
 KVM_OPTS=""
@@ -206,6 +208,4 @@ qemu-system-x86_64 \
     # uncomment below for audio on VM (though may degrade audio on system)
     # -device intel-hda \
     # -device hda-duplex
-
-# Note: If the above fails, try without KVM:
-# Remove -enable-kvm and change -cpu host to -cpu qemu64
+    -name "Arch Linux - Dotfiles Test"
