@@ -59,6 +59,7 @@ neovim
 visual-studio-code-bin
 cargo
 base-devel
+usbutils
 
 # ============================================================
 # TERMINAL & CLI UTILITIES

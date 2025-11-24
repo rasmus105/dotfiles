@@ -30,6 +30,7 @@ setup_zsh_main() {
     git clone --depth=1 https://github.com/mattmc3/antidote.git "${ZDOTDIR:-~}/.antidote"
 }
 
+# only run setup is called as `bash setup_zsh.sh` (not when sourced)
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     setup_zsh_main "$@"
 fi

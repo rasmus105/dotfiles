@@ -25,15 +25,20 @@ source "$SCRIPT_DIR/setup_zsh.sh"
 source "$SCRIPT_DIR/stow.sh"
 source "$SCRIPT_DIR/config/mimetypes.sh"
 
-# ==== Proceed with Setup ====
+# ==== Install Packages ====
 if ! is_installed "paru"; then
     install_paru
 fi
 
 install_packages "$SCRIPT_DIR/packages.txt"
 
-setup_zsh_main
+# ==== Configuration ====
+stow_dotfiles       # symlink config/ to ~/.config/
+configure_mimetypes # set default applications
+setup_zsh_main      # set shell
 
-# ==== Stow Configuration Files ====
-stow_dotfiles
-configure_mimetypes
+#
+# systemctl --user enable elephant
+# systemctl --user enable walker
+# systemctl --user start elephant
+# systemctl --user start walker
