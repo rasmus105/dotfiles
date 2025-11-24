@@ -49,14 +49,22 @@ require("monokai-pro").setup({
 
 local uv = vim.uv or vim.loop
 local theme_file = vim.fn.expand("~/.config/nvim/theme.lua")
+local light_mode_file = vim.fn.expand("~/.config/theme/light.mode")
 
 local function apply_theme()
+    -- Set Vim background based on presence of light.mode marker file
+    if vim.fn.filereadable(light_mode_file) == 1 then
+        vim.o.background = "light"
+    else
+        vim.o.background = "dark"
+    end
+
     local ok, theme = pcall(dofile, theme_file)
     if ok and type(theme) == "table" and theme.colorscheme then
-        local cs = theme.colorscheme
-        local ok_cs, err = pcall(vim.cmd.colorscheme, cs)
+        local colorscheme = theme.colorscheme
+        local ok_cs, err = pcall(vim.cmd.colorscheme, colorscheme)
         if not ok_cs then
-            vim.notify("Failed to set colorscheme '" .. cs .. "': " .. err, vim.log.levels.ERROR)
+            vim.notify("Failed to set colorscheme '" .. colorscheme .. "': " .. err, vim.log.levels.ERROR)
         end
     else
         vim.notify("Failed to load theme.lua", vim.log.levels.ERROR)
@@ -68,7 +76,7 @@ apply_theme()
 
 -- Watch for external changes by polling the symlink target
 -- fs_event doesn't work well with symlinks, so we poll instead
--- Using 1000ms (1 second) interval - very low overhead
+-- Using 2500 ms interval - very low overhead
 local last_target = vim.fn.resolve(theme_file)
 local timer = uv.new_timer()
 timer:start(2500, 2500, vim.schedule_wrap(function()
