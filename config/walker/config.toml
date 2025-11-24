@@ -24,8 +24,8 @@ anchor_right = true
 close = ["Escape", "ctrl bracketleft"]  # Ctrl+[ to close (doesn't register keyd remap correctly)
 next = ["Down", "ctrl j"]     
 previous = ["Up", "ctrl k"]    
-toggle_exact = ["ctrl e"]
-resume_last_query = ["ctrl r"]
+toggle_exact = []
+resume_last_query = []
 quick_activate = []
 page_down = ["Page_Down"]
 page_up = ["Page_Up"]
@@ -34,29 +34,14 @@ page_up = ["Page_Up"]
 default = [
   "desktopapplications",
   "calc",
-  "runner",
 ] # providers to be queried by default
 empty = ["desktopapplications"] # providers to be queried when query is empty
 ignore_preview = [] # providers that should not show previews
 max_results = 50 # global max results
 
-[providers.argument_delimiter] # define the argument delimiter per provider
-runner = " "
-
-[providers.sets] # define your own defaults/empty sets of providers
-[providers.sets.menu]
-default = [
-    "menus:menu",
-    "menus:system-theme",
-    "menus:brightness",
-]
-empty = ["menus:menu"]
-max_results = 50
-[providers.max_results_provider] # define max results per provider in here
-
 [[providers.prefixes]]
-prefix = ">"
-provider = "runner"
+prefix = "?"
+provider = "providerlist"
 
 [[providers.prefixes]]
 prefix = "/"
@@ -71,10 +56,6 @@ prefix = "!"
 provider = "todo"
 
 [[providers.prefixes]]
-prefix = "%"
-provider = "bookmarks"
-
-[[providers.prefixes]]
 prefix = "="
 provider = "calc"
 
@@ -85,10 +66,6 @@ provider = "websearch"
 [[providers.prefixes]]
 prefix = ":"
 provider = "clipboard"
-
-[[providers.prefixes]]
-prefix = "$"
-provider = "windows"
 
 [[providers.prefixes]]
 prefix = ";"
@@ -104,8 +81,6 @@ fallback = [
   { action = "menus:parent", label = "back", bind = "Escape", after = "Nothing" },
   { action = "erase_history", label = "clear hist", bind = "ctrl h", after = "AsyncReload" },
 ]
-
-dmenu = [{ action = "select", default = true, bind = "Return" }]
 
 providerlist = [
   { action = "activate", default = true, bind = "Return", after = "ClearReload" },
@@ -156,12 +131,6 @@ files = [
   { action = "copyfile", label = "copy file", bind = "ctrl c" },
 ]
 
-1password = [
-  { action = "copy_password", label = "copy password", default = true, bind = "Return" },
-  { action = "copy_username", label = "copy username", bind = "shift Return" },
-  { action = "copy_2fa", label = "copy 2fa", bind = "ctrl Return" },
-]
-
 todo = [
   { action = "save", default = true, bind = "Return", after = "AsyncClearReload" },
   { action = "save_next", label = "save & new", bind = "shift Return", after = "AsyncClearReload" },
@@ -175,16 +144,7 @@ todo = [
   { action = "search", bind = "ctrl a", after = "AsyncClearReload" },
 ]
 
-runner = [
-  { action = "run", default = true, bind = "Return" },
-  { action = "runterminal", label = "run in terminal", bind = "shift Return" },
-]
-
 symbols = [
-  { action = "run_cmd", label = "select", default = true, bind = "Return" },
-]
-
-unicode = [
   { action = "run_cmd", label = "select", default = true, bind = "Return" },
 ]
 
@@ -198,15 +158,4 @@ clipboard = [
   { action = "pause", bind = "ctrl p" },
   { action = "unpause", bind = "ctrl p" },
   { action = "edit", bind = "ctrl o" },
-]
-
-bookmarks = [
-  { action = "save", bind = "Return", after = "AsyncClearReload" },
-  { action = "open", default = true, bind = "Return" },
-  { action = "delete", bind = "ctrl d", after = "AsyncClearReload" },
-  { action = "change_category", label = "Change category", bind = "ctrl y", after = "Nothing" },
-  { action = "change_browser", label = "Change browser", bind = "ctrl b", after = "Nothing" },
-  { action = "import", label = "Import", bind = "ctrl i", after = "AsyncClearReload" },
-  { action = "create", bind = "ctrl a", after = "AsyncClearReload" },
-  { action = "search", bind = "ctrl a", after = "AsyncClearReload" },
 ]
