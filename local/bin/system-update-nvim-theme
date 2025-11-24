@@ -6,14 +6,13 @@ THEME_NEOVIM="$HOME/.config/theme/neovim.lua"
 NVIM_THEME_FILE="$HOME/.config/nvim/theme.lua"
 
 if [[ ! -f "$THEME_NEOVIM" ]]; then
-  echo "No neovim.lua found in current theme" >&2
-  exit 1
+    notify-send "Error: No neovim.lua found in current theme. Unable to update neovim theme." >&2
+    exit 1
 fi
 
 # Simply symlink the theme's neovim.lua to ~/.config/nvim/theme.lua
 ln -sf "$THEME_NEOVIM" "$NVIM_THEME_FILE"
 
 # Extract colorscheme name for display purposes
-COLORSCHEME=$(grep -oP 'colorscheme\s*=\s*"\K[^"]+' "$THEME_NEOVIM" | head -n 1)
-
-echo "Neovim theme updated to: ${COLORSCHEME:-unknown}"
+# COLORSCHEME=$(grep -oP 'colorscheme\s*=\s*"\K[^"]+' "$THEME_NEOVIM" | head -n 1)
+# echo "Neovim theme updated to: ${COLORSCHEME:-unknown}"

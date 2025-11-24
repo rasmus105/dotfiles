@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+# Trap errors to provide debugging info
+trap 'notify-send "System refresh failed: Command '\''$BASH_COMMAND'\'' exited with code $?"; exit 1' ERR
+
+system-restart-walker
+
+notify-send "System has been refreshed!"
