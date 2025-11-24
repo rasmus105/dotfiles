@@ -1,5 +1,5 @@
 # configuration file for xdg-terminal-exec, listing the order of terminal to be picked.
 
-ghostty.desktop
+com.mitchellh.ghostty.desktop
 Alacritty.desktop
 kitty.desktop
