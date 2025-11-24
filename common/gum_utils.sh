@@ -8,7 +8,7 @@ GUM_UTILS_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 # Check if gum is installed
 gum_check() {
-    if ! command -v gum &> /dev/null; then
+    if ! command -v gum &>/dev/null; then
         echo "Error: 'gum' is not installed."
         echo "Install it from: https://github.com/charmbracelet/gum"
         exit 1
@@ -19,9 +19,9 @@ gum_check() {
 GUM_COLOR_SUCCESS=2
 GUM_COLOR_ERROR=196
 GUM_COLOR_WARNING=214
-GUM_COLOR_INFO=39
+GUM_COLOR_INFO=250
 GUM_COLOR_ACCENT=212
-GUM_COLOR_MUTED=246
+GUM_COLOR_MUTED=240
 
 # Styled messages
 gum_success() {
@@ -48,7 +48,7 @@ gum_muted() {
 gum_header() {
     local title="$1"
     local subtitle="$2"
-    
+
     if [ -n "$subtitle" ]; then
         gum style \
             --foreground "$GUM_COLOR_ACCENT" \
@@ -124,26 +124,13 @@ gum_input_password() {
 gum_spin() {
     local title="${1:-Processing...}"
     local cmd="$2"
-    
+
     if [ -z "$cmd" ]; then
         # Just show spinner for 1 second
         gum spin --spinner dot --title "$title" -- sleep 1
     else
         gum spin --spinner dot --title "$title" -- bash -c "$cmd"
     fi
-}
-
-# Different spinner styles
-gum_spin_line() {
-    local title="$1"
-    local cmd="$2"
-    gum spin --spinner line --title "$title" -- bash -c "$cmd"
-}
-
-gum_spin_dots() {
-    local title="$1"
-    local cmd="$2"
-    gum spin --spinner dots --title "$title" -- bash -c "$cmd"
 }
 
 # Fuzzy filter
@@ -172,29 +159,12 @@ gum_box_colored() {
         "$content"
 }
 
-# Progress bar (manual stepping)
-gum_progress() {
-    local current="$1"
-    local total="$2"
-    local message="$3"
-    
-    local percent=$((current * 100 / total))
-    gum style --foreground "$GUM_COLOR_INFO" "[$current/$total] $message ($percent%)"
-}
-
-# Format text with optional color
-gum_format() {
-    local text="$1"
-    local color="${2:-$GUM_COLOR_INFO}"
-    gum style --foreground "$color" "$text"
-}
-
 # Bold text
 gum_bold() {
     gum style --bold "$*"
 }
 
-# Italic text  
+# Italic text
 gum_italic() {
     gum style --italic "$*"
 }
@@ -226,12 +196,12 @@ gum_ask_no() {
 gum_confirm_default() {
     local prompt="$1"
     local default="$2"
-    
+
     if [[ -z "$default" ]]; then
         gum_error "gum_confirm_default requires a default value (true/false)"
         exit 1
     fi
-    
+
     if [[ "$USE_DEFAULT_OPTIONS" == "1" ]]; then
         if [[ "$default" == "true" ]]; then
             gum_info "$prompt (auto: yes)"
@@ -241,7 +211,7 @@ gum_confirm_default() {
             return 1
         fi
     fi
-    
+
     if [[ "$default" == "true" ]]; then
         gum_ask_yes "$prompt"
     else
@@ -249,48 +219,23 @@ gum_confirm_default() {
     fi
 }
 
-# Wrapper for gum choose with mandatory default
-# Usage: gum_choose_default "prompt" <default_index> option1 option2 ...
-gum_choose_default() {
-    local prompt="$1"
-    local default_index="$2"
-    
-    if [[ -z "$default_index" ]]; then
-        gum_error "gum_choose_default requires a default index"
-        exit 1
-    fi
-    
-    shift 2
-    local options=("$@")
-    
-    if [[ "$USE_DEFAULT_OPTIONS" == "1" ]]; then
-        local selected="${options[$default_index]}"
-        gum_info "$prompt (auto: $selected)"
-        echo "$selected"
-        return 0
-    fi
-    
-    gum_section "$prompt"
-    gum_choose "${options[@]}"
-}
-
 # Wrapper for gum input with mandatory default
 # Usage: gum_input_default "prompt" "<default_value>"
 gum_input_default() {
     local prompt="$1"
     local default="$2"
-    
+
     if [[ -z "$default" ]]; then
         gum_error "gum_input_default requires a default value"
         exit 1
     fi
-    
+
     if [[ "$USE_DEFAULT_OPTIONS" == "1" ]]; then
         gum_info "$prompt (auto: $default)"
         echo "$default"
         return 0
     fi
-    
+
     local result
     result=$(gum_input_prompt "$prompt" "$default")
     echo "${result:-$default}"
@@ -303,9 +248,9 @@ INSTALL_LOG_FILE="${INSTALL_LOG_FILE:-$INSTALL_LOG_DIR/install-$(date +%Y%m%d_%H
 # Initialize logging
 gum_log_init() {
     mkdir -p "$INSTALL_LOG_DIR"
-    echo "Installation started at $(date)" > "$INSTALL_LOG_FILE"
-    echo "======================================" >> "$INSTALL_LOG_FILE"
-    echo "" >> "$INSTALL_LOG_FILE"
+    echo "Installation started at $(date)" >"$INSTALL_LOG_FILE"
+    echo "======================================" >>"$INSTALL_LOG_FILE"
+    echo "" >>"$INSTALL_LOG_FILE"
 }
 
 # Run command with spinner and redirect output to log
@@ -314,12 +259,12 @@ gum_log_init() {
 gum_run() {
     local title="$1"
     local cmd="$2"
-    
+
     # Ensure log file exists
     if [[ ! -f "$INSTALL_LOG_FILE" ]]; then
         gum_log_init
     fi
-    
+
     # Log the command being run
     {
         echo ""
@@ -327,14 +272,14 @@ gum_run() {
         echo ">>> Command: $cmd"
         echo ">>> Time: $(date)"
         echo "---"
-    } >> "$INSTALL_LOG_FILE"
-    
+    } >>"$INSTALL_LOG_FILE"
+
     # Create temporary script
     local temp_script=$(mktemp)
-    
+
     # Disable TTY detection so commands output plain text without progress bars
     # This prevents ANSI escape codes and carriage returns in logs
-    cat > "$temp_script" << 'SCRIPT_EOF'
+    cat >"$temp_script" <<'SCRIPT_EOF'
 #!/bin/bash
 # Force non-interactive mode for common tools
 export TERM=dumb
@@ -342,9 +287,9 @@ export GIT_TERMINAL_PROMPT=0
 # Redirect output to log file
 exec >> "$INSTALL_LOG_FILE" 2>&1
 SCRIPT_EOF
-    echo "$cmd" >> "$temp_script"
+    echo "$cmd" >>"$temp_script"
     chmod +x "$temp_script"
-    
+
     # Run command with spinner
     local exit_code=0
     if gum spin --spinner dot --title "$title" -- "$temp_script"; then
@@ -356,16 +301,16 @@ SCRIPT_EOF
             echo ">>> Exit code: $exit_code"
             echo ">>> FAILED"
             echo ""
-        } >> "$INSTALL_LOG_FILE"
+        } >>"$INSTALL_LOG_FILE"
         rm -f "$temp_script"
         return $exit_code
     fi
-    
+
     {
         echo ">>> Success"
         echo ""
-    } >> "$INSTALL_LOG_FILE"
-    
+    } >>"$INSTALL_LOG_FILE"
+
     rm -f "$temp_script"
     return 0
 }
@@ -374,27 +319,32 @@ SCRIPT_EOF
 # Usage: gum_run_quiet "command to run"
 gum_run_quiet() {
     local cmd="$1"
-    
+
     # Ensure log file exists
     if [[ ! -f "$INSTALL_LOG_FILE" ]]; then
         gum_log_init
     fi
-    
+
     {
         echo ""
         echo ">>> Running (quiet): $cmd"
         echo ">>> Time: $(date)"
         echo "---"
-    } >> "$INSTALL_LOG_FILE"
-    
+    } >>"$INSTALL_LOG_FILE"
+
     # Disable TTY detection for plain text output
-    TERM=dumb GIT_TERMINAL_PROMPT=0 bash -c "$cmd" >> "$INSTALL_LOG_FILE" 2>&1
+    TERM=dumb GIT_TERMINAL_PROMPT=0 bash -c "$cmd" >>"$INSTALL_LOG_FILE" 2>&1
     local exit_code=$?
-    
+
     {
         echo ">>> Exit code: $exit_code"
         echo ""
-    } >> "$INSTALL_LOG_FILE"
-    
+    } >>"$INSTALL_LOG_FILE"
+
     return $exit_code
+}
+
+show_done() {
+    echo
+    gum spin --spinner "dot" --title "Done! Press any key to close..." -- bash -c 'read -n 1 -s'
 }
