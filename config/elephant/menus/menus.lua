@@ -8,38 +8,46 @@ function GetEntries()
     return {
         {
             Text = "Set System Theme",
-            Icon = "󰸌", -- colored icon: 
+            Icon = "",
             Actions = {
                 ["set-system-theme"] = "walker -m menus:system-theme",
             },
         },
         {
             Text = "Set Brightness",
-            Icon = "", -- colored icon: 
+            Icon = "",
             Actions = {
                 ["set-brightness"] = "walker -m menus:brightness",
+            },
+        },
+        {
+            Text = "System Refresh",
+            Icon = "",
+            Actions = {
+                ["system-refresh"] =
+                "systemd-run --user --collect bash -lc ~/.local/bin/system-refresh",
+            },
+        },
+        {
+            Text = "Install package",
+            Icon = "󰣇",
+            Actions = {
+                ["install-package"] = "ghostty --class=TUI.float -e ~/.local/bin/package-install",
+            },
+        },
+        {
+            Text = "Remove package",
+            Icon = "󰭌",
+            Actions = {
+                ["remove-package"] = "ghostty --class=TUI.float -e ~/.local/bin/package-remove",
             },
         },
 
         -- {
         --     Text = "Update",
-        --     Icon = "",
+        --     Icon = "",
         --     Actions = {
         --         ["update"] = "ghostty --class=local.floating -e update-perform",
-        --     },
-        -- },
-        -- {
-        --     Text = "Install package",
-        --     Icon = "󰣇",
-        --     Actions = {
-        --         ["manage-pkg"] = "ghostty --class=local.floating -e pkg-install",
-        --     },
-        -- },
-        -- {
-        --     Text = "Remove package",
-        --     Icon = "󰭌",
-        --     Actions = {
-        --         ["manage-pkg"] = "ghostty --class=local.floating -e pkg-remove",
         --     },
         -- },
         -- {
@@ -51,7 +59,7 @@ function GetEntries()
         -- },
         -- {
         --     Text = "Capture",
-        --     Icon = "",
+        --     Icon = "",
         --     Actions = {
         --         ["capture"] = "walker -t menus -m menus:capture",
         --     },
@@ -65,14 +73,14 @@ function GetEntries()
         -- },
         -- {
         --     Text = "Tools",
-        --     Icon = "",
+        --     Icon = "",
         --     Actions = {
         --         ["tools"] = "walker -t menus -m menus:tools",
         --     },
         -- },
         -- {
         --     Text = "Keybindings",
-        --     Icon = "",
+        --     Icon = "",
         --     Actions = {
         --         ["keybindings"] = "walker -t menus -m menus:keybindings",
         --     },
