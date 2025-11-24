@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# Update hyprpaper background from current theme
+# If called again with multiple backgrounds, picks a random different one
+
+THEME_BACKGROUNDS="$HOME/.config/theme/backgrounds"
+HYPR_BACKGROUND="$HOME/.config/hypr/background.jpg"
+
+if [[ ! -d "$THEME_BACKGROUNDS" ]]; then
+    echo "No backgrounds directory found in current theme" >&2
+    exit 1
+fi
+
+# Get all available background images
+mapfile -t BG_FILES < <(find "$THEME_BACKGROUNDS" -type f \( -name "*.jpg" -o -name "*.png" -o -name "*.jpeg" \) | sort)
+
+if [[ ${#BG_FILES[@]} -eq 0 ]]; then
+    echo "No background images found in theme" >&2
+    exit 1
+fi
+
+# If only one background, use it
+if [[ ${#BG_FILES[@]} -eq 1 ]]; then
+    SELECTED_BG="${BG_FILES[0]}"
+else
+    # Get current background basename (if it exists and is a symlink)
+    if [[ -L "$HYPR_BACKGROUND" ]]; then
+        CURRENT_BG_BASENAME=$(basename "$(readlink "$HYPR_BACKGROUND")")
+    else
+        CURRENT_BG_BASENAME=""
+    fi
+
+    # Filter out current background and pick random from remaining
+    AVAILABLE_BGS=()
+    for bg in "${BG_FILES[@]}"; do
+        if [[ "$(basename "$bg")" != "$CURRENT_BG_BASENAME" ]]; then
+            AVAILABLE_BGS+=("$bg")
+        fi
+    done
+
+    # If we filtered out the current one, pick from available, otherwise use all
+    if [[ ${#AVAILABLE_BGS[@]} -gt 0 ]]; then
+        SELECTED_BG="${AVAILABLE_BGS[RANDOM % ${#AVAILABLE_BGS[@]}]}"
+    else
+        # Fallback: just pick any random one
+        SELECTED_BG="${BG_FILES[RANDOM % ${#BG_FILES[@]}]}"
+    fi
+fi
+
+# Update symlink
+ln -sf "$SELECTED_BG" "$HYPR_BACKGROUND"
+
+# Reload hyprpaper if it's running
+if command -v hyprctl &>/dev/null && pgrep -x hyprpaper >/dev/null; then
+    hyprctl hyprpaper unload all 2>/dev/null || true
+    hyprctl hyprpaper preload "$HYPR_BACKGROUND" 2>/dev/null || true
+
+    # Set wallpaper for each monitor individually to avoid cutting issues
+    mapfile -t MONITORS < <(hyprctl monitors -j | jq -r '.[].name')
+    for monitor in "${MONITORS[@]}"; do
+        hyprctl hyprpaper wallpaper "$monitor,$HYPR_BACKGROUND" 2>/dev/null || true
+    done
+fi
+
+echo "Background updated to: $(basename "$SELECTED_BG")"

@@ -1,14 +1,15 @@
 #!/bin/bash
 
+export PATH=$PATH:~/.local/bin
+
+notify-send "Setting system theme to ${1}"
+
 if [[ -z $1 && $1 != "CNCLD" ]]; then
-  echo "Usage: system-set-theme<theme-name>"
-  exit 1
+    echo "Usage: system-set-theme<theme-name>"
+    exit 1
 fi
 
-_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-export PATH="$_SCRIPT_DIR:$PATH"
-
-THEMES_DIR="$_SCRIPT_DIR/../themes"
+THEMES_DIR="$HOME/.config/themes"
 CURRENT_THEME_DIR="$HOME/.config/theme"
 
 THEME_NAME=$(echo "$1" | sed -E 's/<[^>]+>//g' | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
@@ -16,22 +17,22 @@ THEME_PATH="$THEMES_DIR/$THEME_NAME"
 
 # Check if the theme entered exists
 if [[ ! -d "$THEME_PATH" ]]; then
-  echo "Theme '$THEME_NAME' does not exist in $THEMES_DIR"
-  exit 1
+    echo "Theme '$THEME_NAME' does not exist in $THEMES_DIR"
+    exit 1
 fi
 
 # Update theme symlinks
 ln -nsf "$THEME_PATH" "$CURRENT_THEME_DIR"
 
-"$_SCRIPT_DIR/update-hyprpaper-background"
+system-update-hyprpaper
 
 # Restart components to apply new theme
-# TODO restart swayosd
+system-restart-app swayosd-server
 hyprctl reload 2>/dev/null
 pkill -SIGUSR2 btop 2>/dev/null
 makoctl reload 2>/dev/null
 
-$_SCRIPT_DIR/update-terminal-theme
-$_SCRIPT_DIR/update-gnome-theme
-$_SCRIPT_DIR/update-nvim-theme
-$_SCRIPT_DIR/update-browser-theme
+system-update-terminal-theme
+system-update-gnome-theme
+system-update-nvim-theme
+# system-update-browser-theme
