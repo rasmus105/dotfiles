@@ -5,7 +5,7 @@ stow_dotfiles() {
     local DOTFILES_DIR
 
     SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd) # Get script directory
-    DOTFILES_DIR=$(dirname "$SCRIPT_DIR") # Get dotfiles directory (parent of script directory)
+    DOTFILES_DIR=$(dirname "$SCRIPT_DIR")                          # Get dotfiles directory (parent of script directory)
 
     cd "$DOTFILES_DIR" # Change to dotfiles directory (required for stow)
 
@@ -17,22 +17,13 @@ stow_dotfiles() {
     mkdir -p "$HOME/.local/share/applications/icons"
     stow -t "$HOME/.local" local
 
+    # Link all system themes to ~/.config/themes
+    ln -sf themes "$HOME/.config/themes"
+
     # Set default theme (gruvbox) if theme symlink doesn't exist
     if [[ ! -e "$HOME/.config/theme" ]]; then
-      ln -sf "$DOTFILES_DIR/themes/gruvbox" "$HOME/.config/theme"
+        system-set-theme gruvbox
     fi
-
-    # Link all system themes to ~/.config/themes
-    ln -sf "$DOTFILES_DIR/themes" "$HOME/.config/themes"
-
-    # Set up hyprpaper background from current theme
-    "$DOTFILES_DIR/bin/update-hyprpaper-background"
-
-    # Set up neovim theme from current theme
-    "$DOTFILES_DIR/bin/update-nvim-theme"
-
-    mkdir -p ~/.config/btop/themes
-    ln -snf ~/.config/theme/btop.theme ~/.config/btop/themes/current.theme
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
