@@ -57,6 +57,14 @@ _log_check_keypress() {
 # Show log in fullscreen pager
 # Uses alternate screen buffer to preserve terminal history
 _log_show_pager() {
+    local spinner_pid="$1"
+    
+    # Kill the spinner if running
+    if [[ -n "$spinner_pid" ]] && kill -0 "$spinner_pid" 2>/dev/null; then
+        kill "$spinner_pid" 2>/dev/null || true
+        wait "$spinner_pid" 2>/dev/null || true
+    fi
+    
     # Restore terminal to normal mode for pager
     _log_restore_terminal
     
@@ -71,6 +79,28 @@ _log_show_pager() {
     
     # Re-setup terminal for key detection
     _log_setup_terminal
+}
+
+# Custom spinner implementation that allows keypress detection
+# Runs in background and can be killed when needed
+_log_spinner() {
+    local title="$1"
+    local spinner_chars="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+    local delay=0.1
+    local i=0
+    
+    # Hide cursor
+    tput civis 2>/dev/null || true
+    
+    while true; do
+        local char="${spinner_chars:$i:1}"
+        printf "\r%s %s (Press 'l' to view logs)" "$char" "$title"
+        i=$(( (i + 1) % ${#spinner_chars} ))
+        sleep "$delay"
+    done
+    
+    # Show cursor (cleanup)
+    tput cnorm 2>/dev/null || true
 }
 
 # Test function - runs a command with a dummy spinner
@@ -93,14 +123,16 @@ log_run() {
         echo "---"
     } >>"$LOG_FILE"
 
-    echo "🔄 $title"
-    echo "   (Press 'l' to view logs)"
-    
     # Setup terminal for key detection
     _log_setup_terminal
     
     # Disable job control messages
     set +m
+    
+    # Start custom spinner in background
+    _log_spinner "$title" &
+    local spinner_pid=$!
+    disown "$spinner_pid" 2>/dev/null || true
     
     # Run the command in background and capture output to log
     eval "$cmd" >>"$LOG_FILE" 2>&1 &
@@ -115,13 +147,26 @@ log_run() {
         local key=$(_log_check_keypress)
         
         if [[ "$key" == "l" ]]; then
-            # Show log in pager
-            _log_show_pager
-            # No need to redraw - alternate screen buffer preserves everything
+            # Show log in pager (will kill spinner temporarily)
+            _log_show_pager "$spinner_pid"
+            
+            # Restart spinner after pager closes
+            _log_spinner "$title" &
+            spinner_pid=$!
+            disown "$spinner_pid" 2>/dev/null || true
         fi
         
         sleep 0.1
     done
+    
+    # Kill the spinner
+    if kill -0 "$spinner_pid" 2>/dev/null; then
+        kill "$spinner_pid" 2>/dev/null || true
+        wait "$spinner_pid" 2>/dev/null || true
+    fi
+    
+    # Clear the spinner line
+    printf "\r%*s\r" "80" ""
     
     # Get command exit code
     wait "$cmd_pid" 2>/dev/null
@@ -130,8 +175,9 @@ log_run() {
     # Re-enable job control
     set -m
     
-    # Restore terminal
+    # Restore terminal and show cursor
     _log_restore_terminal
+    tput cnorm 2>/dev/null || true
     
     # Show result
     if [[ $exit_code -eq 0 ]]; then
