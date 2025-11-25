@@ -1,0 +1,157 @@
+#!/bin/bash
+set -euo pipefail
+
+source "$HOME/.local/lib/shell/common.sh"
+
+# Graceful shutdown handler
+graceful_shutdown() {
+    local action="$1"
+    
+    gum_warning "Preparing for $action..."
+    echo
+    
+    # Check for running neovim instances
+    if pgrep -x nvim >/dev/null 2>&1 || pgrep -x nvim-qt >/dev/null 2>&1; then
+        gum_warning "Neovim instances are currently running!"
+        gum_info "Please save your work in all Neovim sessions."
+        echo
+        if ! gum_confirm "Have you saved all your work in Neovim?"; then
+            gum_info "$action canceled."
+            return 1
+        fi
+    fi
+    
+    # Check for other critical processes (optional - can be expanded)
+    if pgrep -x "code" >/dev/null 2>&1; then
+        gum_warning "VS Code is running. Make sure your work is saved."
+        echo
+    fi
+    
+    # Give user a final chance to abort
+    gum_warning "System will $action in 5 seconds..."
+    gum_info "Press Ctrl+C to cancel"
+    sleep 5 || return 1
+    
+    return 0
+}
+
+# Main update function
+main() {
+    clear
+    gum_header "System Update"
+
+    if gum_confirm "Update now?"; then
+        gum_info "Update started..."
+    elif [ $? -eq 130 ]; then
+        # User pressed Ctrl+C
+        exit 130
+    else
+        gum_info "Update canceled."
+        exit 0
+    fi
+
+    # Cache sudo credentials for entire update process
+    sudo -v || {
+        gum_error "Failed to obtain sudo credentials"
+        exit 1
+    }
+
+    # Update dotfiles
+    gum_info "Checking for dotfiles update..."
+    if command -v system-dotfiles-update &>/dev/null; then
+        system-dotfiles-update || gum_warning "Dotfiles update failed or had no changes"
+    else
+        gum_warning "system-dotfiles-update binary not found! Dotfiles setup may be incomplete."
+    fi
+    echo
+
+    # System package update
+    if command -v pacman &>/dev/null; then
+        if command -v paru &>/dev/null; then
+            gum_info "Updating system packages with paru..."
+            paru -Syu --noconfirm || {
+                gum_error "System update failed"
+                exit 1
+            }
+        else
+            gum_info "Updating system packages with pacman..."
+            sudo pacman -Syu --noconfirm || {
+                gum_error "System update failed"
+                exit 1
+            }
+        fi
+    else
+        gum_error "Platform not supported (pacman not found)"
+        exit 1
+    fi
+    echo
+
+    # Flatpak updates
+    if command -v flatpak &>/dev/null; then
+        gum_info "Searching for Flatpak updates..."
+        flatpak update -y || gum_warning "Flatpak update had issues"
+        echo
+    fi
+
+    # Remove orphaned packages
+    gum_info "Checking for orphaned packages..."
+    local orphans
+    orphans=$(pacman -Qtdq 2>/dev/null || true)
+    
+    if [[ -n "$orphans" ]]; then
+        local orphan_count
+        orphan_count=$(echo "$orphans" | wc -l)
+        gum_info "Found $orphan_count orphan package(s)"
+        
+        if gum_confirm "Remove orphaned packages?"; then
+            while IFS= read -r pkg; do
+                sudo pacman -Rs --noconfirm "$pkg" || gum_warning "Failed to remove $pkg"
+            done <<< "$orphans"
+            gum_success "Orphan packages removed"
+        else
+            gum_info "Skipped orphan removal"
+        fi
+    else
+        gum_info "No orphan packages found"
+    fi
+    echo
+
+    # Check for kernel update
+    local running_kernel installed_kernel
+    running_kernel=$(uname -r)
+    installed_kernel=$(pacman -Q linux 2>/dev/null | awk '{print $2}' || echo "unknown")
+    
+    # More robust kernel version comparison
+    # Remove '-arch' suffix and convert to comparable format
+    running_kernel_clean="${running_kernel%-arch*}"
+    installed_kernel_clean="${installed_kernel%-*}"
+    
+    if [[ "$running_kernel_clean" != "$installed_kernel_clean" ]]; then
+        echo
+        gum_warning "Linux kernel has been updated!"
+        gum_info "Running kernel: $running_kernel"
+        gum_info "Installed kernel: $installed_kernel"
+        echo
+        gum_warning "A reboot is recommended to use the new kernel."
+        
+        if gum_confirm "Do you want to reboot now?"; then
+            # Graceful shutdown with checks
+            if graceful_shutdown "reboot"; then
+                sudo systemctl reboot
+            else
+                gum_info "Reboot canceled. Please reboot manually when ready."
+            fi
+        else
+            gum_info "Reboot skipped. Please reboot manually when ready."
+        fi
+    fi
+
+    # Finishing
+    echo
+    gum_success "System update completed successfully!"
+    gum_show
+    exit 0
+}
+
+# Run main function
+main

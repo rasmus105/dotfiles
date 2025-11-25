@@ -1,0 +1,230 @@
+#!/bin/bash
+#
+# Helper script to create a new migration
+# Usage: system-create-migration v1.2.0 "Description of changes"
+#
+
+set -e
+
+# Check arguments
+if [[ $# -lt 1 ]]; then
+    echo "Usage: system-create-migration <tag> [description]"
+    echo ""
+    echo "Examples:"
+    echo "  system-create-migration v1.2.0"
+    echo "  system-create-migration v1.2.0 'Add new feature X'"
+    exit 1
+fi
+
+TAG="$1"
+DESCRIPTION="${2:-Version $TAG}"
+
+# Validate tag format (should be vX.Y.Z)
+if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "Error: Tag must be in format vX.Y.Z (e.g., v1.2.0)"
+    exit 1
+fi
+
+# Ensure DOTFILES_DIR is set
+if [[ -z "$DOTFILES_DIR" ]]; then
+    SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+    DOTFILES_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
+fi
+
+cd "$DOTFILES_DIR"
+
+# Source helper functions
+source "$DOTFILES_DIR/local/lib/shell/common.sh"
+
+gum_header "Create Migration for $TAG"
+echo
+
+# Check if tag already exists
+if git tag -l | grep -q "^${TAG}$"; then
+    gum_error "Tag $TAG already exists!"
+    echo
+    gum_info "Existing tags:"
+    git tag -l | tail -5
+    exit 1
+fi
+
+# Check for uncommitted changes
+if [[ -n $(git status --porcelain) ]]; then
+    gum_warning "You have uncommitted changes"
+    git status --short
+    echo
+    
+    if ! gum_confirm "Do you want to commit these changes first?"; then
+        gum_error "Please commit or stash your changes first"
+        exit 1
+    fi
+    
+    # Prompt for commit message
+    echo
+    COMMIT_MSG=$(gum_input_prompt "Commit message:" "$DESCRIPTION")
+    
+    if [[ -z "$COMMIT_MSG" ]]; then
+        gum_error "Commit message cannot be empty"
+        exit 1
+    fi
+    
+    git add .
+    git commit -m "$COMMIT_MSG"
+    gum_success "Changes committed"
+    echo
+fi
+
+# Create the git tag
+gum_section "Creating git tag: $TAG"
+if git tag -a "$TAG" -m "$DESCRIPTION"; then
+    gum_success "Tag created successfully"
+else
+    gum_error "Failed to create tag"
+    exit 1
+fi
+echo
+
+# Ask if migration script is needed
+if gum_confirm "Does this release need a migration script?"; then
+    echo
+    MIGRATION_FILE="$DOTFILES_DIR/install/migrations/${TAG}.sh"
+    
+    if [[ -f "$MIGRATION_FILE" ]]; then
+        gum_warning "Migration file already exists: $MIGRATION_FILE"
+    else
+        gum_info "Creating migration script..."
+        
+        # Create migration from template
+        cat > "$MIGRATION_FILE" << 'TEMPLATE_EOF'
+#!/bin/bash
+#
+# Migration for TAG_PLACEHOLDER: DESCRIPTION_PLACEHOLDER
+#
+
+set -e
+
+# ==== Verify and Source common.sh ====
+
+COMMON_SH="$HOME/.local/lib/shell/common.sh"
+if [[ ! -f "$COMMON_SH" ]]; then
+    echo "✗ Error: Required file not found: $COMMON_SH"
+    echo ""
+    echo "This indicates your dotfiles are not properly installed."
+    echo "The common.sh file should be symlinked during dotfiles installation."
+    echo ""
+    echo "Please run dotfiles installation/stow:"
+    echo "  cd \$DOTFILES_DIR"
+    echo "  bash install/stow.sh"
+    echo ""
+    exit 1
+fi
+
+# Source helper functions (provides gum utilities and common functions)
+source "$COMMON_SH"
+
+# ==== DOTFILES_DIR Setup ====
+
+# Check if DOTFILES_DIR is set in environment
+if [[ -z "$DOTFILES_DIR" ]]; then
+    gum_warning "DOTFILES_DIR environment variable is not set"
+    gum_info "This could indicate incorrect setup (should be set in .bashrc/.zshrc)"
+    echo ""
+    
+    # Determine fallback path
+    SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+    FALLBACK_DOTFILES_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
+    
+    gum_info "What would you like to do?"
+    CHOICE=$(gum choose "Abort migration" "Add DOTFILES_DIR to shell configs" "Ignore and use fallback ($FALLBACK_DOTFILES_DIR)")
+    
+    case "$CHOICE" in
+        "Abort migration")
+            gum_info "Migration aborted by user"
+            exit 1
+            ;;
+        "Add DOTFILES_DIR to shell configs")
+            echo ""
+            gum_info "Adding DOTFILES_DIR to ~/.bashrc and ~/.zshrc..."
+            
+            # Add to .bashrc
+            if ! grep -q "export DOTFILES_DIR=" "$HOME/.bashrc" 2>/dev/null; then
+                echo "export DOTFILES_DIR=\"$FALLBACK_DOTFILES_DIR\"" >> "$HOME/.bashrc"
+                gum_success "Added to ~/.bashrc"
+            else
+                sed -i "s|export DOTFILES_DIR=.*|export DOTFILES_DIR=\"$FALLBACK_DOTFILES_DIR\"|" "$HOME/.bashrc"
+                gum_success "Updated in ~/.bashrc"
+            fi
+            
+            # Add to .zshrc
+            if ! grep -q "export DOTFILES_DIR=" "$HOME/.zshrc" 2>/dev/null; then
+                echo "export DOTFILES_DIR=\"$FALLBACK_DOTFILES_DIR\"" >> "$HOME/.zshrc"
+                gum_success "Added to ~/.zshrc"
+            else
+                sed -i "s|export DOTFILES_DIR=.*|export DOTFILES_DIR=\"$FALLBACK_DOTFILES_DIR\"|" "$HOME/.zshrc"
+                gum_success "Updated in ~/.zshrc"
+            fi
+            
+            # Use the fallback for this script
+            DOTFILES_DIR="$FALLBACK_DOTFILES_DIR"
+            export DOTFILES_DIR
+            echo ""
+            gum_success "DOTFILES_DIR set for this session and added to shell configs"
+            gum_info "Note: You may need to restart your shell for changes to take effect"
+            echo ""
+            ;;
+        "Ignore and use fallback ($FALLBACK_DOTFILES_DIR)")
+            DOTFILES_DIR="$FALLBACK_DOTFILES_DIR"
+            gum_info "Using fallback: $DOTFILES_DIR"
+            echo ""
+            ;;
+    esac
+fi
+
+# ==== Migration Logic ====
+
+gum_info "Running migration for TAG_PLACEHOLDER..."
+
+# TODO: Add your migration logic here
+# Examples:
+# - Install new packages with: paru -S --noconfirm package-name
+# - Check if package installed: if ! is_installed "package"; then ... fi
+# - Create directories with: mkdir -p "$HOME/.config/app"
+# - Move/backup old configs
+# - Enable systemd services: systemctl --user enable service.service
+# - Run one-time setup commands
+
+gum_warning "This migration is a template - please edit it!"
+
+gum_success "Migration complete!"
+TEMPLATE_EOF
+
+        # Replace placeholders
+        sed -i "s/TAG_PLACEHOLDER/$TAG/g" "$MIGRATION_FILE"
+        sed -i "s/DESCRIPTION_PLACEHOLDER/$DESCRIPTION/g" "$MIGRATION_FILE"
+        
+        chmod +x "$MIGRATION_FILE"
+        gum_success "Migration script created: $MIGRATION_FILE"
+        echo
+        
+        gum_info "Next steps:"
+        echo "  1. Edit the migration script: nvim $MIGRATION_FILE"
+        echo "  2. Test the migration: bash $MIGRATION_FILE"
+        echo "  3. Commit the migration: git add install/migrations/${TAG}.sh && git commit -m 'Add migration for $TAG'"
+        echo "  4. Push changes: git push && git push --tags"
+    fi
+else
+    gum_info "Skipping migration script creation"
+fi
+
+echo
+gum_section "Summary"
+gum_info "Tag: $TAG"
+gum_info "Description: $DESCRIPTION"
+gum_info "Commit: $(git rev-parse --short HEAD)"
+echo
+
+gum_success "Migration setup complete!"
+echo
+gum_info "Don't forget to push:"
+echo "  git push origin $(git rev-parse --abbrev-ref HEAD)"
+echo "  git push --tags"
