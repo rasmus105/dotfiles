@@ -1,5 +1,5 @@
 #!/bin/bash
-source "$HOME/.dotfiles/common.sh"
+source "$HOME/.local/lib/shell/common.sh"
 
 fzf_args=(
     --multi
@@ -29,5 +29,5 @@ pkg_names=$(paru -Sl | format_packages | fzf "${fzf_args[@]}" --ansi | awk '{pri
 if [[ -n "$pkg_names" ]]; then
     echo "$pkg_names" | tr '\n' ' ' | xargs paru -S --noconfirm
     sudo updatedb
-    show_done
+    gum_show 
 fi

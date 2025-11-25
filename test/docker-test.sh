@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Source gum utilities
-source "$SCRIPT_DIR/../common/gum_utils.sh"
+source "$HOME/.local/lib/shell/common.sh"
 
 # Test configuration
 IMAGE_NAME="dotfiles-test"
@@ -30,26 +30,26 @@ REBUILD_BASE=false
 USE_LOCAL=false
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --rebuild-base)
-            REBUILD_BASE=true
-            shift
-            ;;
-        --local)
-            USE_LOCAL=true
-            shift
-            ;;
-        --keep-container)
-            KEEP_CONTAINER=true
-            shift
-            ;;
-        *)
-            echo "Unknown option: $1"
-            echo "Usage: $0 [--rebuild-base] [--local]"
-            echo "  --rebuild-base:     Force rebuild of base image (Arch packages)"
-            echo "  --local:            Use local dotfiles instead of cloning from GitHub"
-            echo "  --keep-container:   Keep container after test"
-            exit 1
-            ;;
+    --rebuild-base)
+        REBUILD_BASE=true
+        shift
+        ;;
+    --local)
+        USE_LOCAL=true
+        shift
+        ;;
+    --keep-container)
+        KEEP_CONTAINER=true
+        shift
+        ;;
+    *)
+        echo "Unknown option: $1"
+        echo "Usage: $0 [--rebuild-base] [--local]"
+        echo "  --rebuild-base:     Force rebuild of base image (Arch packages)"
+        echo "  --local:            Use local dotfiles instead of cloning from GitHub"
+        echo "  --keep-container:   Keep container after test"
+        exit 1
+        ;;
     esac
 done
 
@@ -63,7 +63,7 @@ cleanup() {
 trap cleanup EXIT
 
 # Check if Docker is installed and running
-if ! command -v docker &> /dev/null; then
+if ! command -v docker &>/dev/null; then
     gum_error "Docker not found. Install with:"
     gum_muted "  Arch Linux: sudo pacman -S docker"
     gum_muted "  Ubuntu/Debian: sudo apt install docker.io"
@@ -74,7 +74,7 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! docker info &> /dev/null; then
+if ! docker info &>/dev/null; then
     gum_error "Docker daemon is not running"
     gum_info "Start it with: sudo systemctl start docker"
     exit 1
@@ -87,7 +87,7 @@ echo ""
 if ! docker image inspect "$BASE_IMAGE_NAME" &>/dev/null || [ "$REBUILD_BASE" = true ]; then
     gum_section "Building base image (this will be cached)..."
     cd "$DOTFILES_DIR"
-    
+
     # Use BuildKit for better caching
     DOCKER_BUILDKIT=1 docker build \
         --target base \
@@ -195,5 +195,5 @@ if [[ "${KEEP_CONTAINER:-}" == "true" ]]; then
     gum_info "Container kept running for inspection:"
     gum_muted "  docker exec -it $CONTAINER_NAME bash"
     gum_muted "  docker rm -f $CONTAINER_NAME  # when done"
-    trap - EXIT  # Remove cleanup trap
+    trap - EXIT # Remove cleanup trap
 fi

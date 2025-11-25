@@ -17,5 +17,5 @@ pkg_names=$(paru -Qqe | fzf "${fzf_args[@]}")
 
 if [[ -n "$pkg_names" ]]; then
     echo "$pkg_names" | tr '\n' ' ' | xargs sudo pacman -Rns --noconfirm
-    show_done
+    gum_show 
 fi

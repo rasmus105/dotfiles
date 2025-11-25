@@ -34,9 +34,7 @@ install_packages "$SCRIPT_DIR/packages.txt"
 
 # ==== Configuration ====
 # Export DOTFILES_DIR to shell configs
-gum_info "Setting DOTFILES_DIR in shell configurations..."
-sed -i "s|# export DOTFILES_DIR=.*|export DOTFILES_DIR=\"$DOTFILES_DIR\"|" "$HOME/.bashrc"
-sed -i "s|# export DOTFILES_DIR=.*|export DOTFILES_DIR=\"$DOTFILES_DIR\"|" "$HOME/.zshrc"
+echo "export DOTFILES_DIR=\"$DOTFILES_DIR\"" >"$HOME/.dotfiles_env"
 
 stow_dotfiles       # symlink config/ to ~/.config/
 configure_mimetypes # set default applications

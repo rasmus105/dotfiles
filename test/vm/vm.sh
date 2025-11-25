@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_DIR=$(dirname "$(dirname "$SCRIPT_DIR")")
 
 # Source helpers and initialize gum / PATH
-source "$DOTFILES_DIR/common.sh"
+source "$HOME/.local/lib/shell/common.sh"
 ensure_gum_is_installed
 add_dotfiles_bin_to_path
 
