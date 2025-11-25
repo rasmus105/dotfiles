@@ -1,0 +1,8 @@
+profile home {
+  output "Dell Inc. DELL G3223Q C73MF34" mode 3840x2160@60Hz position 0,0 scale 1.5
+  output "eDP-1" disable
+}
+
+profile undocked {
+  output "eDP-1" enable
+}
