@@ -1,2 +1,4 @@
 min_score = 50
+
+# look for lua or toml menus in ~/.config/elephant/menus/
 paths = ["~/.config/elephant/menus"]

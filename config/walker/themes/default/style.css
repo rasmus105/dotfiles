@@ -1,182 +1,164 @@
-
 /* ~ is not available in css. 
  * this file goes in ~/.config/walker/themes/style.css */
 @import "../../../theme/walker.css";
 
 * {
-  all: unset;
-}
-
-* {
-  font-family: monospace;
-  font-size: 18px;
-  color: @text;
-}
-
-scrollbar {
-  opacity: 0;
+    all: unset;
 }
 
 .normal-icons {
-  -gtk-icon-size: 16px;
+    -gtk-icon-size: 16px;
 }
 
 .large-icons {
-  -gtk-icon-size: 32px;
+    -gtk-icon-size: 32px;
+}
+
+scrollbar {
+    opacity: 0;
 }
 
 .box-wrapper {
-  background: alpha(@base, 0.55); /* More opaque to hide background text - GTK doesn't support backdrop blur */
-  padding: 10px;
-  border: 2px solid @border;
-  border-radius: 0px; /* Rectangular shape */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    /* box-shadow: */
+    /*     0 19px 38px rgba(0, 0, 0, 0.3), */
+    /*     0 15px 12px rgba(0, 0, 0, 0.22); */
+    background: alpha(@background, 0.50);
+    padding: 20px;
+    border-radius: 0px;
+    border: 1.5px solid @border;
 }
 
-.preview-box {
-  border-radius: 0px; /* Rectangular shape */
+.preview-box,
+.elephant-hint,
+.placeholder {
+    color: @text;
 }
 
-.box {
-  border-radius: 0px; /* Rectangular shape */
-}
+.box {}
 
 .search-container {
-  background: @background;
-  padding: 12px;
-  border: 1px solid @border;
-  border-radius: 0px; /* Rectangular shape */
-  margin-bottom: 8px;
+    border-radius: 0px;
 }
 
 .input placeholder {
-  opacity: 0.5;
+    opacity: 0.5;
 }
 
 .input {
-  padding: 4px 8px;
+    caret-color: @selected-text;
+    background: darker(alpha(@background, 0.5));
+    padding: 10px;
 }
 
 .input:focus,
-.input:active {
-  box-shadow: none;
-  outline: none;
-}
+.input:active {}
 
-.content-container {
-  border-radius: 0px; /* Rectangular shape */
-}
+.content-container {}
 
-.placeholder {
-  padding: 20px;
-}
+.placeholder {}
 
-.scroll {
-  background: alpha(@background, 0.5);
-  border: 1px solid @border;
-  border-radius: 0px; /* Rectangular shape */
-  padding: 4px;
-}
+.scroll {}
 
 .list {
-  background: transparent;
+    color: @text;
 }
 
-child,
-child > * {
-}
-
-child:hover .item-box {
-  background: alpha(@border, 0.3);
-  border-radius: 0px; /* Rectangular shape */
-}
-
-child:selected .item-box {
-  background: alpha(@selected-text, 0.2);
-  border-left: 3px solid @selected-text;
-  border-radius: 0px; /* Rectangular shape */
-}
-
-child:selected .item-box * {
-  color: @selected-text;
-}
+child {}
 
 .item-box {
-  padding-left: 14px;
-  padding-right: 14px;
-  margin: 2px 0;
-  border-radius: 0px; /* Rectangular shape */
+    border-radius: 0px;
+    padding: 10px;
 }
 
-.item-text-box {
-  all: unset;
-  padding: 14px 0;
+.item-quick-activation {
+    background: alpha(@background, 0.25);
+    border-radius: 0px;
+    padding: 10px;
 }
 
-.item-text {
+child:hover .item-box,
+child:selected .item-box {
+    background: darker(alpha(@background, 0.5));
 }
+
+.item-text-box {}
 
 .item-subtext {
-  font-size: 0px;
-  min-height: 0px;
-  margin: 0px;
-  padding: 0px;
+    font-size: 12px;
+    opacity: 0.5;
 }
 
-.item-image {
-  margin-right: 14px;
-  -gtk-icon-transform: scale(0.9);
+.providerlist .item-subtext {
+    font-size: unset;
+    opacity: 0.75;
 }
 
-.current {
-  font-style: italic;
-}
-
-.keybind-hints {
-  background: @background;
-  padding: 10px;
-  margin-top: 10px;
-  border: 1px solid @border;
-  border-radius: 0px; /* Rectangular shape */
+.item-image-text {
+    font-size: 28px;
 }
 
 .preview {
-  background: @background;
-  border: 1px solid @border;
-  border-radius: 0px; /* Rectangular shape */
-  padding: 12px;
-  margin-left: 8px;
+    border: 1px solid alpha(@background, 0.25);
+    padding: 10px;
+    border-radius: 0px;
+    color: @foreground;
 }
 
-/* Additional enhancements for better visual hierarchy */
-.elephant-hint {
-  padding: 20px;
-  background: alpha(@background, 0.5);
-  border: 1px solid @border;
-  border-radius: 0px;
-  margin: 4px;
+.calc .item-text {
+    font-size: 24px;
 }
+
+.calc .item-subtext {}
+
+.symbols .item-image {
+    font-size: 24px;
+}
+
+.todo.done .item-text-box {
+    opacity: 0.25;
+}
+
+.todo.urgent {
+    font-size: 24px;
+}
+
+.todo.active {
+    font-weight: bold;
+}
+
+.bluetooth.disconnected {
+    opacity: 0.5;
+}
+
+.preview .large-icons {
+    -gtk-icon-size: 64px;
+}
+
+.keybinds-wrapper {
+    border-top: 1px solid darker(@border);
+    font-size: 12px;
+    opacity: 0.5;
+    color: @foreground;
+}
+
+.keybinds {}
+
+.keybind {}
+
+.keybind-bind {
+    /* color: lighter(@window_bg_color); */
+    font-weight: bold;
+    text-transform: lowercase;
+}
+
+.keybind-label {}
 
 .error {
-  color: #ff5555;
-  background: alpha(#ff5555, 0.1);
-  padding: 10px;
-  border: 1px solid #ff5555;
-  border-radius: 0px;
-  margin-top: 8px;
+    padding: 10px;
+    background: @error_bg_color;
+    color: @error_fg_color;
 }
 
-/* Improved transitions for smooth interactions */
-child .item-box {
-  transition: all 25ms ease-in-out;
-}
-
-/* Better spacing for content container */
-.content-container {
-  min-height: 100px;
-}
-
-/* Enhanced window styling */
-.window {
-  border-radius: 0px;
+:not(.calc).current {
+    font-style: italic;
 }

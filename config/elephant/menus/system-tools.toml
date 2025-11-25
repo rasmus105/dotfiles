@@ -1,0 +1,28 @@
+name = "system-tools"
+name_pretty = "System Tools" 
+icon = " "
+
+[[entries]]
+text = "Set System Theme"
+icon = ""
+actions = { "set-system-theme" = "bash ~/.config/elephant/menus/set-system-theme.sh" }
+
+[[entries]]
+text = "Set Brightness"
+icon = ""
+actions = { "set-brightness" = "bash ~/.config/elephant/menus/brightness.sh" }
+
+[[entries]]
+text = "System Refresh"
+icon = ""
+actions = { "system-refresh" = "systemd-run --user --collect bash -lc ~/.local/bin/system-refresh" }
+
+[[entries]]
+text = "Install package"
+icon = "󰣇"
+actions = { "install-package" = "ghostty --class=TUI.float -e ~/.local/bin/package-install" }
+
+[[entries]]
+text = "Remove package"
+icon = "󰭌"
+actions = { "remove-package" = "ghostty --class=TUI.float -e ~/.local/bin/package-remove" }

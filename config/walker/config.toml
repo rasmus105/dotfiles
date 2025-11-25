@@ -69,7 +69,11 @@ provider = "clipboard"
 
 [[providers.prefixes]]
 prefix = ";"
-provider = "menus:menu"
+provider = "menus:system-tools"
+
+[[providers.prefixes]]
+prefix = "*"
+provider = "archlinuxpkgs"
 
 [providers.clipboard]
 time_format = "%d.%m. - %H:%M" # format for the clipboard item date
