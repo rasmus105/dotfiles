@@ -8,6 +8,11 @@ icon = ""
 actions = { "set-system-theme" = "bash ~/.config/elephant/menus/set-system-theme.sh" }
 
 [[entries]]
+text = "Set System Font"
+icon = ""
+actions = { "set-system-theme" = "bash ~/.config/elephant/menus/set-system-font.sh" }
+
+[[entries]]
 text = "Set Brightness"
 icon = ""
 actions = { "set-brightness" = "bash ~/.config/elephant/menus/brightness.sh" }
