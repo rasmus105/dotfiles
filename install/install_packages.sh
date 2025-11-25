@@ -4,19 +4,19 @@ install_paru() {
     gum_info "Installing paru (AUR helper)..."
 
     if ! is_installed "base-devel"; then
-        gum_run "Installing base-devel" "sudo pacman --noconfirm -S base-devel"
+        log_run "Installing base-devel" "sudo pacman --noconfirm -S base-devel"
     fi
 
     if ! is_installed "git"; then
-        gum_run "Installing git" "sudo pacman --noconfirm -S git"
+        log_run "Installing git" "sudo pacman --noconfirm -S git"
     fi
 
     # install paru (AUR helper)
-    gum_run "Cloning paru from AUR" "rm -rf /tmp/paru && git clone https://aur.archlinux.org/paru-bin.git /tmp/paru"
+    log_run "Cloning paru from AUR" "rm -rf /tmp/paru && git clone https://aur.archlinux.org/paru-bin.git /tmp/paru"
     cd /tmp/paru || exit
-    gum_run "Building and installing paru" "makepkg -si --noconfirm"
+    log_run "Building and installing paru" "makepkg -si --noconfirm"
     cd ~ || exit
-    gum_run_quiet "rm -rf /tmp/paru"
+    rm -rf /tmp/paru
     gum_success "Paru installed successfully"
     echo ""
 }
@@ -67,7 +67,7 @@ install_packages() {
                 gum_info "Package '$package' is already installed"
                 ((skipped++))
             else
-                gum_run "Installing $package" "paru -S --needed --noconfirm $package" || true
+                log_run "Installing $package" "paru -S --needed --noconfirm $package" || true
                 # Verify installation by checking if package is now installed
                 if paru -Q "$package" &>/dev/null; then
                     installed=$((installed + 1))
