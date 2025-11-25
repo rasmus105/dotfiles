@@ -236,8 +236,10 @@ _log_cleanup() {
     _log_restore_terminal
     tput cnorm 2>/dev/null || true
     
-    # Clear the spinner line
-    printf "\r%*s\r" "80" ""
+    # Clear the spinner line completely (use terminal width)
+    printf "\r"
+    tput el 2>/dev/null || printf "%*s" "$(tput cols 2>/dev/null || echo 120)" ""
+    printf "\r"
     echo
     
     # Re-enable job control
@@ -381,8 +383,10 @@ log_run() {
         _log_setup_terminal
     fi
     
-    # Clear the spinner line
-    printf "\r%*s\r" "80" ""
+    # Clear the spinner line completely (use terminal width)
+    printf "\r"
+    tput el 2>/dev/null || printf "%*s" "$(tput cols 2>/dev/null || echo 120)" ""
+    printf "\r"
     
     # Get command exit code
     wait "$cmd_pid" 2>/dev/null
