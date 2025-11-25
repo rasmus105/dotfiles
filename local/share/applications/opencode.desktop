@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Name=OpenCode
+Comment=Open source agent that helps you write and run code directly from the terminal.
+Exec=ghostty -e opencode
+Type=Application
+Icon=/home/rasmus105/.local/share/applications/icons/opencode.png
+StartupNotify=true
