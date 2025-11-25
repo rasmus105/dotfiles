@@ -109,11 +109,11 @@ button:hover {
 }
 
 /* Battery states */
-#battery.warning {
+#battery.warning:not(.charging) {
     color: @warning-color;
 }
 
-#battery.critical {
+#battery.critical:not(.charging) {
     color: @critical-color;
     animation: blink 1s linear infinite;
 }

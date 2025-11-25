@@ -78,7 +78,7 @@
     },
     // Battery (only laptop)
     "battery": {
-        "format": "{capacity}% {icon}",
+        "format": "{icon}",
         "format-discharging": "{icon}",
         "format-charging": "{icon}",
         "format-plugged": "",
@@ -114,8 +114,8 @@
         "on-click": "power-profile --select",
         "interval": 5,
         "states": {
-            "warning": 20,
-            "critical": 10
+            "warning": 30,
+            "critical": 20
         }
     },
     // Network
