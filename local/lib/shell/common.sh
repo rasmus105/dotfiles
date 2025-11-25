@@ -1,3 +1,10 @@
+# main file for shell helpers.
+# Import this to get all helpers.
+
+## Source all shell helpers
+# Gum UI utilities (no side effects on source)
+source "$HOME/.local/lib/shell/gum_utils.sh"
+
 _COMMON_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 _COMMON_DOTFILES_DIR=$(dirname "$_COMMON_SCRIPT_DIR")
 
@@ -17,9 +24,6 @@ add_dotfiles_bin_to_path() {
     esac
 }
 
-# Gum UI utilities (no side effects on source)
-source "$_COMMON_SCRIPT_DIR/common/gum_utils.sh"
-
 # Non-interactive mode support
 # Set USE_DEFAULT_OPTIONS=1 to skip all prompts and use defaults
 export USE_DEFAULT_OPTIONS="${USE_DEFAULT_OPTIONS:-0}"
@@ -28,4 +32,12 @@ export USE_DEFAULT_OPTIONS="${USE_DEFAULT_OPTIONS:-0}"
 is_installed() {
     # command -v "$1" &> /dev/null
     pacman -Q "$1" &>/dev/null
+}
+
+command_exists() {
+    if ! command -v "$1" >/dev/null; then
+        return 1
+    else
+        return 0
+    fi
 }
