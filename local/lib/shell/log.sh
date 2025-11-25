@@ -215,6 +215,35 @@ _log_spinner() {
     tput cnorm 2>/dev/null || true
 }
 
+# Cleanup function to kill background processes
+_log_cleanup() {
+    local spinner_pid="$1"
+    local cmd_pid="$2"
+    
+    # Kill spinner if it exists
+    if [[ -n "$spinner_pid" ]] && kill -0 "$spinner_pid" 2>/dev/null; then
+        kill -9 "$spinner_pid" 2>/dev/null || true
+        wait "$spinner_pid" 2>/dev/null || true
+    fi
+    
+    # Kill command if it exists
+    if [[ -n "$cmd_pid" ]] && kill -0 "$cmd_pid" 2>/dev/null; then
+        kill -9 "$cmd_pid" 2>/dev/null || true
+        wait "$cmd_pid" 2>/dev/null || true
+    fi
+    
+    # Restore terminal
+    _log_restore_terminal
+    tput cnorm 2>/dev/null || true
+    
+    # Clear the spinner line
+    printf "\r%*s\r" "80" ""
+    echo
+    
+    # Re-enable job control
+    set -m 2>/dev/null || true
+}
+
 # Test function - runs a command with a dummy spinner
 # Usage: log_run "Description" "command to run"
 log_run() {
@@ -253,6 +282,9 @@ log_run() {
     # Disown the job to prevent shell messages
     disown "$cmd_pid" 2>/dev/null || true
     
+    # Set up trap to cleanup on exit or interrupt (must be after PIDs are set)
+    trap "_log_cleanup '$spinner_pid' '$cmd_pid'; trap - INT TERM; return 130" INT TERM
+    
     # Track inline view state
     local inline_view_visible="false"
     
@@ -279,6 +311,9 @@ log_run() {
             spinner_pid=$!
             disown "$spinner_pid" 2>/dev/null || true
             
+            # Update trap with new spinner PID
+            trap "_log_cleanup '$spinner_pid' '$cmd_pid'; trap - INT TERM; return 130" INT TERM
+            
         elif [[ "$key" == " " ]]; then
             # Toggle inline live log view
             if [[ "$inline_view_visible" == "false" ]]; then
@@ -296,6 +331,9 @@ log_run() {
                 
                 # Re-setup raw mode
                 _log_setup_terminal
+                
+                # Update trap with new spinner PID
+                trap "_log_cleanup '$spinner_pid' '$cmd_pid'; trap - INT TERM; return 130" INT TERM
                 
                 inline_view_visible="true"
             else
@@ -317,12 +355,18 @@ log_run() {
                 spinner_pid=$!
                 disown "$spinner_pid" 2>/dev/null || true
                 
+                # Update trap with new spinner PID
+                trap "_log_cleanup '$spinner_pid' '$cmd_pid'; trap - INT TERM; return 130" INT TERM
+                
                 inline_view_visible="false"
             fi
         fi
         
         sleep 0.1
     done
+    
+    # Remove traps before cleanup
+    trap - INT TERM
     
     # Kill the spinner
     if kill -0 "$spinner_pid" 2>/dev/null; then
