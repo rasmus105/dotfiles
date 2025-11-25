@@ -132,8 +132,12 @@ log_run "Updating symlinks" "stow_dotfiles"
 echo
 
 # 2. Update system configurations (requires sudo)
-gum_section "Updating system configurations..."
-log_run "Updating system configurations" "cp_system_configs"
+if ! sudo -v; then
+    gum_warning "Did not receive root privileges, will skip updating system configurations."
+else
+    gum_section "Updating system configurations..."
+    log_run "Updating system configurations" "cp_system_configs"
+fi
 
 echo
 
