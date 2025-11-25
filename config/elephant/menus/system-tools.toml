@@ -10,7 +10,7 @@ actions = { "set-system-theme" = "bash ~/.config/elephant/menus/set-system-theme
 [[entries]]
 text = "Set System Font"
 icon = ""
-actions = { "set-system-theme" = "bash ~/.config/elephant/menus/set-system-font.sh" }
+actions = { "set-system-font" = "bash ~/.config/elephant/menus/set-system-font.sh" }
 
 [[entries]]
 text = "Set Brightness"
@@ -23,11 +23,16 @@ icon = ""
 actions = { "system-refresh" = "systemd-run --user --collect bash -lc ~/.local/bin/system-refresh" }
 
 [[entries]]
-text = "Install package"
+text = "Install Package"
 icon = "󰣇"
 actions = { "install-package" = "ghostty --class=TUI.float -e ~/.local/bin/package-install" }
 
 [[entries]]
-text = "Remove package"
+text = "Remove Package"
 icon = "󰭌"
 actions = { "remove-package" = "ghostty --class=TUI.float -e ~/.local/bin/package-remove" }
+
+[[entries]]
+text = "Toggle Nightlight"
+icon = ""
+actions = { "toggle-nightlight" = "bash ~/.local/bin/system-toggle-nightlight" }
