@@ -1,0 +1,11 @@
+[preview]
+wrap            = "no"
+tab_size        = 2
+max_width       = 1800
+max_height      = 2700
+image_delay     = 100
+image_filter    = "triangle"
+image_quality   = 50
+
+[tasks]
+image_bound      = [ 10000, 10000 ]
