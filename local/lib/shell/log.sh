@@ -11,6 +11,23 @@ if ! command -v gum &>/dev/null; then
     exit 1
 fi
 
+# ============================================================================
+# Color Configuration
+# ============================================================================
+# ANSI 256-color codes (matching gum_utils.sh style)
+LOG_COLOR_SPINNER=212       # Pink/magenta for spinner
+LOG_COLOR_SUCCESS=2         # Green for success messages
+LOG_COLOR_ERROR=196         # Red for error messages
+LOG_COLOR_TEXT=15           # White for normal text
+LOG_COLOR_MUTED=240         # Gray for separators and muted text
+
+# Helper function to output colored text
+_log_color() {
+    local color="$1"
+    local text="$2"
+    printf "\033[38;5;%sm%s\033[0m" "$color" "$text"
+}
+
 # Setup logging directory
 LOG_DIR="${LOG_DIR:-/tmp/gum-log}"
 LOG_FILE="${LOG_FILE:-$LOG_DIR/run-$(date +%Y%m%d_%H%M%S).log}"
@@ -59,8 +76,11 @@ _log_check_keypress() {
 _log_spinner_with_inline() {
     local title="$1"
     local spinner_chars="⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
-    local delay=0.5
+    local delay=0.1
     local i=0
+    
+    # Switch to alternate screen buffer (preserves main screen)
+    tput smcup 2>/dev/null || true
     
     # Get terminal dimensions
     local term_height=$(tput lines)
@@ -73,24 +93,47 @@ _log_spinner_with_inline() {
     # Hide cursor
     tput civis 2>/dev/null || true
     
+    # Initial clear and draw header once
+    clear
+    
+    # Show spinner at top with colored spinner and white text
+    local char="${spinner_chars:0:1}"
+    _log_color "$LOG_COLOR_SPINNER" "$char"
+    printf " "
+    _log_color "$LOG_COLOR_TEXT" "$title"
+    printf " "
+    _log_color "$LOG_COLOR_MUTED" "(Press 'l' for fullscreen, space to hide logs)"
+    echo
+    
+    # Show gray separator
+    _log_color "$LOG_COLOR_MUTED" "────────────────────────────────────────────────────────────────"
+    echo
+    
+    # Save cursor position (start of log area)
+    tput sc 2>/dev/null || true
+    
     while true; do
-        # Clear screen
-        clear
+        # Return to saved position (start of log area)
+        tput rc 2>/dev/null || true
         
-        # Show spinner at top
-        local char="${spinner_chars:$i:1}"
-        echo "$char $title (Press 'l' for fullscreen, space to hide logs)"
-        echo "────────────────────────────────────────────────────────────────"
+        # Clear from cursor to end of screen
+        tput ed 2>/dev/null || true
         
         # Show last N lines of log
         tail -n "$log_lines" "$LOG_FILE" 2>/dev/null || true
+        
+        # Update spinner character on first line
+        tput cup 0 0 2>/dev/null || true
+        local char="${spinner_chars:$i:1}"
+        _log_color "$LOG_COLOR_SPINNER" "$char"
         
         i=$(( (i + 1) % ${#spinner_chars} ))
         sleep "$delay"
     done
     
-    # Show cursor (cleanup)
+    # Show cursor and return to main screen buffer (cleanup)
     tput cnorm 2>/dev/null || true
+    tput rmcup 2>/dev/null || true
 }
 
 # No longer needed - inline view is handled by combined spinner
@@ -143,7 +186,9 @@ _log_spinner() {
             local char="${spinner_chars:$i:1}"
             # Return to saved position and overwrite spinner line
             tput rc 2>/dev/null || true
-            printf "%s %s (Press 'l' for fullscreen, space to hide logs)     " "$char" "$title"
+            printf "\033[38;5;%sm%s\033[0m " "$LOG_COLOR_SPINNER" "$char"
+            printf "\033[38;5;%sm%s\033[0m " "$LOG_COLOR_TEXT" "$title"
+            printf "\033[38;5;%sm%s\033[0m     " "$LOG_COLOR_MUTED" "(Press 'l' for fullscreen, space to hide logs)"
             tput sc 2>/dev/null || true
             i=$(( (i + 1) % ${#spinner_chars} ))
             sleep "$delay"
@@ -153,9 +198,13 @@ _log_spinner() {
         while true; do
             local char="${spinner_chars:$i:1}"
             if [[ "$show_inline_hint" == "true" ]]; then
-                printf "\r%s %s (Press 'l' for fullscreen, space to hide logs)" "$char" "$title"
+                printf "\r\033[38;5;%sm%s\033[0m " "$LOG_COLOR_SPINNER" "$char"
+                printf "\033[38;5;%sm%s\033[0m " "$LOG_COLOR_TEXT" "$title"
+                printf "\033[38;5;%sm%s\033[0m" "$LOG_COLOR_MUTED" "(Press 'l' for fullscreen, space to hide logs)"
             else
-                printf "\r%s %s (Press 'l' for fullscreen, space for inline logs)" "$char" "$title"
+                printf "\r\033[38;5;%sm%s\033[0m " "$LOG_COLOR_SPINNER" "$char"
+                printf "\033[38;5;%sm%s\033[0m " "$LOG_COLOR_TEXT" "$title"
+                printf "\033[38;5;%sm%s\033[0m" "$LOG_COLOR_MUTED" "(Press 'l' for fullscreen, space for inline logs)"
             fi
             i=$(( (i + 1) % ${#spinner_chars} ))
             sleep "$delay"
@@ -257,8 +306,8 @@ log_run() {
                 # Temporarily restore terminal
                 _log_restore_terminal
                 
-                # Clear screen
-                clear
+                # Return to main screen buffer (restores everything as it was)
+                tput rmcup 2>/dev/null || true
                 
                 # Re-setup raw mode
                 _log_setup_terminal
@@ -281,9 +330,11 @@ log_run() {
         wait "$spinner_pid" 2>/dev/null || true
     fi
     
-    # Clean up inline view if it's visible (clear screen)
+    # Clean up inline view if it's visible (return to main screen)
     if [[ "$inline_view_visible" == "true" ]]; then
-        clear
+        _log_restore_terminal
+        tput rmcup 2>/dev/null || true
+        _log_setup_terminal
     fi
     
     # Clear the spinner line
@@ -300,16 +351,18 @@ log_run() {
     _log_restore_terminal
     tput cnorm 2>/dev/null || true
     
-    # Show result
+    # Show result with colors
     if [[ $exit_code -eq 0 ]]; then
-        echo "✓ $title"
+        _log_color "$LOG_COLOR_SUCCESS" "✓ $title"
+        echo
         {
             echo ">>> Success"
             echo ""
         } >>"$LOG_FILE"
         return 0
     else
-        echo "✗ $title (failed)"
+        _log_color "$LOG_COLOR_ERROR" "✗ $title (failed)"
+        echo
         {
             echo ">>> Exit code: $exit_code"
             echo ">>> FAILED"
