@@ -42,6 +42,7 @@ qt6-wayland
 xorg-xwayland
 kanshi
 awww
+xmlstarlet
 
 # ============================================================
 # BROWSERS
