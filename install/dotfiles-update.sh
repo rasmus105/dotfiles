@@ -154,7 +154,7 @@ fi
 # 4. Refresh running services
 gum_section "Refreshing system..."
 if command_exists system-refresh; then
-    timeout 10s system-refresh || gum_warning "system-refresh timed out! (you may want to refresh system manually)"
+    timeout 10s system-refresh || gum_warning "system-refresh failed! (you may want to refresh system manually)"
 else
     gum_warning "system-refresh not found, skipping service refresh"
 fi

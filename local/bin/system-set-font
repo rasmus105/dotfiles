@@ -1,0 +1,36 @@
+#!/bin/bash
+
+font_name="$1"
+
+if [[ -n "$font_name" && "$font_name" != "CNCLD" ]]; then
+    if fc-list | grep -iq "$font_name"; then
+        sed -i "s/family = \".*?\"/family = \"$font_name\"/g" ~/.config/alacritty/alacritty.toml || true
+        sed -i "s/font-family: \".*?\"/font-family: \"$font_name\"/g" ~/.config/waybar/style.css || true
+        sed -i "s/font-family: \".*?\"/font-family: \"$font_name\"/g" ~/.config/swayosd/style.css || true
+        sed -i "s/font-family: \".*?\"/font-family: \"$font_name\"/g" ~/.config/wlogout/style.css || true
+        sed -i "s/font_family = .*/font_family = $font_name/g" ~/.config/hypr/core/style.conf || true
+        sed -i "s/font=.*/font=$font_name/g" ~/.config/mako/config || true
+        sed -i "s/font-family = .*/font-family = $font_name/g" ~/.config/ghostty/config || true
+        pkill -SIGUSR2 ghostty
+
+        xmlstarlet ed -L \
+            -u '//match[@target="pattern"][test/string="monospace"]/edit[@name="family"]/string' \
+            -v "$font_name" \
+            ~/.config/fontconfig/fonts.conf
+
+        systemctl --user restart elephant.service
+        systemctl --user restart walker.service
+        system-restart-app swayosd-server
+        if pgrep -x waybar >/dev/null; then
+            pkill waybar
+            nohup waybar &>/dev/null &
+        fi
+        hyprctl reload
+        makoctl reload &>/dev/null
+    else
+        notify-send "Font '$font_name' not found."
+        exit 1
+    fi
+else
+    echo "Usage: system-set-font <font-name>"
+fi

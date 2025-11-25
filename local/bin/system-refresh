@@ -4,25 +4,29 @@ set -e
 # Trap errors to provide debugging info
 trap 'notify-send --urgency critical "System refresh failed: Command '\''$BASH_COMMAND'\'' exited with code $?"; exit 1' ERR
 
-systemctl --user restart elephant.service
+# restart multi-purpose launcher
+systemctl --user restart elephant.service # used by walker
 systemctl --user restart walker.service
 
-# Restart mako if running (in background)
+# Restart mako if running
 if pgrep -x mako >/dev/null; then
     pkill -x mako
     nohup uwsm app -- mako &>/dev/null &
 fi
 
-# Restart waybar if it is running (in background)
+# Restart waybar if it is running
 if pgrep -x waybar >/dev/null; then
     pkill waybar
     nohup waybar &>/dev/null &
 fi
 
-# reset hyprland
-hyprctl reload
-
 # Sync filesystem to ensure clean state
 sync
+
+system-update-awww
+system-restart-app swayosd-server
+pkill -SIGUSR2 btop 2>/dev/null || true
+system-update-terminal-theme
+system-update-gnome-theme
 
 notify-send "System has been refreshed!"
