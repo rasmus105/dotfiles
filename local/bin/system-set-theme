@@ -24,7 +24,8 @@ fi
 # Update theme symlinks
 ln -nsf "$THEME_PATH" "$CURRENT_THEME_DIR"
 
-system-update-hyprpaper
+# update background
+system-update-awww
 
 # Restart components to apply new theme
 system-restart-app swayosd-server

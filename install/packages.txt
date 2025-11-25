@@ -4,7 +4,6 @@
 hyprland
 hyprland-guiutils
 hyprland-qt-support
-hyprpaper
 hyprpicker
 hypridle
 hyprlock
@@ -42,6 +41,7 @@ qt5-wayland
 qt6-wayland
 xorg-xwayland
 kanshi
+awww
 
 # ============================================================
 # BROWSERS
