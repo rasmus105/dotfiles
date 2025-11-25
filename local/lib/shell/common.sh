@@ -20,7 +20,7 @@ ensure_gum_is_installed() {
 add_dotfiles_bin_to_path() {
     case ":$PATH:" in
     *":$_COMMON_DOTFILES_DIR/bin:"*) ;; # already present
-    *) export PATH="$_COMMON_DOTFILES_DIR/bin:$PATH" ;;
+    *) export PATH="$_COMMON_DOTFILES_DIR/local/bin:$PATH" ;;
     esac
 }
 

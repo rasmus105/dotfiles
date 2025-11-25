@@ -81,6 +81,7 @@ button:hover {
 
 /* All right-side modules */
 #custom-wlogout,
+#custom-updates,
 #network,
 #bluetooth,
 #pulseaudio,
@@ -96,6 +97,7 @@ button:hover {
 
 /* Hover effects for interactive modules */
 #custom-wlogout:hover,
+#custom-updates:hover,
 #network:hover,
 #bluetooth:hover,
 #pulseaudio:hover,
