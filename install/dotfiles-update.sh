@@ -29,6 +29,10 @@ NEW_COMMIT="${2:-$(cd "$DOTFILES_DIR" && git rev-parse HEAD)}"
 # Source helper functions
 source "$HOME/.local/lib/shell/common.sh"
 
+# Initialize logging with consistent log file name
+LOG_FILE="/tmp/gum-log/dotfiles-update.log"
+log_init
+
 # ==== Migration System ====
 
 run_migrations() {
@@ -124,14 +128,12 @@ fi
 # 1. Stow configurations (relink everything)
 gum_section "Updating symlinks..."
 source "$SCRIPT_DIR/stow.sh"
-stow_dotfiles
-gum_success "Symlinks updated"
+log_run "Updating symlinks" "stow_dotfiles"
 echo
 
 # 2. Update system configurations (requires sudo)
 gum_section "Updating system configurations..."
-cp_system_configs
-gum_success "System configs updated"
+log_run "Updating system configurations" "cp_system_configs"
 
 echo
 

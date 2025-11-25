@@ -8,6 +8,10 @@ fi
 
 source "$HOME/.local/lib/shell/common.sh"
 
+# Initialize logging with consistent log file name
+LOG_FILE="/tmp/gum-log/system-update.log"
+log_init
+
 # Graceful shutdown handler
 graceful_shutdown() {
     local action="$1"
@@ -72,14 +76,12 @@ main() {
     # System package update
     if command -v pacman &>/dev/null; then
         if command -v paru &>/dev/null; then
-            gum_info "Updating system packages with paru..."
-            paru -Syu --noconfirm || {
+            log_run "Updating system packages with paru" "paru -Syu --noconfirm" || {
                 gum_error "System update failed"
                 exit 1
             }
         else
-            gum_info "Updating system packages with pacman..."
-            sudo pacman -Syu --noconfirm || {
+            log_run "Updating system packages with pacman" "sudo pacman -Syu --noconfirm" || {
                 gum_error "System update failed"
                 exit 1
             }
@@ -92,8 +94,7 @@ main() {
 
     # Flatpak updates
     if command -v flatpak &>/dev/null; then
-        gum_info "Searching for Flatpak updates..."
-        flatpak update -y || gum_warning "Flatpak update had issues"
+        log_run "Searching for Flatpak updates" "flatpak update -y" || gum_warning "Flatpak update had issues"
         echo
     fi
 

@@ -14,9 +14,10 @@ ensure_gum_is_installed
 add_dotfiles_bin_to_path
 
 # ==== Initial Setup (gum to improve UI, install paru)
-# Initialize logging
-gum_log_init
-gum_info "Logging to: $INSTALL_LOG_FILE"
+# Initialize logging with consistent log file name
+LOG_FILE="/tmp/gum-log/dotfiles-setup.log"
+log_init
+gum_info "Logging to: $LOG_FILE"
 echo # newline
 
 # ==== Source Modules with Functions ====
