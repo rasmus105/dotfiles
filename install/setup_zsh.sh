@@ -2,7 +2,7 @@
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 DOTFILES_DIR=$(dirname "$SCRIPT_DIR")
-source "$DOTFILES_DIR/common.sh"
+source "$HOME/.local/lib/shell/common.sh"
 
 setup_zsh_main() {
     local ZSH_PATH=/usr/bin/zsh

@@ -7,7 +7,7 @@ sudo -v
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 DOTFILES_DIR=$(dirname "$SCRIPT_DIR")
-source "$DOTFILES_DIR/common.sh"
+source "$DOTFILES_DIR/local/lib/shell/common.sh"
 
 # Core environment/bootstrap steps
 ensure_gum_is_installed
@@ -23,7 +23,7 @@ echo # newline
 source "$SCRIPT_DIR/install_packages.sh"
 source "$SCRIPT_DIR/setup_zsh.sh"
 source "$SCRIPT_DIR/stow.sh"
-source "$SCRIPT_DIR/config/mimetypes.sh"
+source "$SCRIPT_DIR/mimetypes.sh"
 
 # ==== Install Packages ====
 if ! is_installed "paru"; then
@@ -33,6 +33,11 @@ fi
 install_packages "$SCRIPT_DIR/packages.txt"
 
 # ==== Configuration ====
+# Export DOTFILES_DIR to shell configs
+gum_info "Setting DOTFILES_DIR in shell configurations..."
+sed -i "s|# export DOTFILES_DIR=.*|export DOTFILES_DIR=\"$DOTFILES_DIR\"|" "$HOME/.bashrc"
+sed -i "s|# export DOTFILES_DIR=.*|export DOTFILES_DIR=\"$DOTFILES_DIR\"|" "$HOME/.zshrc"
+
 stow_dotfiles       # symlink config/ to ~/.config/
 configure_mimetypes # set default applications
 setup_zsh_main      # set shell to zsh

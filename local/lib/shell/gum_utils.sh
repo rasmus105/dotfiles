@@ -80,7 +80,7 @@ gum_section() {
 # Confirmation prompt (returns 0 for yes, 1 for no)
 gum_confirm() {
     local prompt="${1:-Proceed?}"
-    gum confirm "$prompt"
+    gum confirm "$prompt" && return 0 || return 1
 }
 
 # Confirmation with custom buttons
@@ -167,13 +167,6 @@ gum_bold() {
 # Italic text
 gum_italic() {
     gum style --italic "$*"
-}
-
-# Separator line
-gum_separator() {
-    local char="${1:--}"
-    local width="${2:-50}"
-    printf '%*s\n' "$width" '' | tr ' ' "$char"
 }
 
 # Ask yes/no with default (like [Y/n])
@@ -344,7 +337,7 @@ gum_run_quiet() {
     return $exit_code
 }
 
-show_done() {
+gum_show () {
     echo
     gum spin --spinner "dot" --title "Done! Press any key to close..." -- bash -c 'read -n 1 -s'
 }
