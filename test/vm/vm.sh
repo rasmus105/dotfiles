@@ -6,11 +6,11 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOTFILES_DIR=$(dirname $(dirname "$SCRIPT_DIR"))
+DOTFILES_DIR=$(dirname "$(dirname "$SCRIPT_DIR")")
 
 # Source helpers and initialize gum / PATH
 source "$DOTFILES_DIR/common.sh"
-ensure_gum
+ensure_gum_is_installed
 add_dotfiles_bin_to_path
 
 VM_DIR="$SCRIPT_DIR/.vm"
@@ -24,28 +24,28 @@ FRESH_START=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --auto-install)
-            AUTO_INSTALL=true
-            shift
-            ;;
-        --fresh)
-            FRESH_START=true
-            shift
-            ;;
-        --help)
-            echo "Usage: $0 [OPTIONS]"
-            echo ""
-            echo "Options:"
-            echo "  --auto-install    Run automated Arch installation"
-            echo "  --fresh           Delete existing VM and start fresh"
-            echo "  --help            Show this help message"
-            exit 0
-            ;;
-        *)
-            echo "Unknown option: $1"
-            echo "Use --help for usage information"
-            exit 1
-            ;;
+    --auto-install)
+        AUTO_INSTALL=true
+        shift
+        ;;
+    --fresh)
+        FRESH_START=true
+        shift
+        ;;
+    --help)
+        echo "Usage: $0 [OPTIONS]"
+        echo ""
+        echo "Options:"
+        echo "  --auto-install    Run automated Arch installation"
+        echo "  --fresh           Delete existing VM and start fresh"
+        echo "  --help            Show this help message"
+        exit 0
+        ;;
+    *)
+        echo "Unknown option: $1"
+        echo "Use --help for usage information"
+        exit 1
+        ;;
     esac
 done
 
@@ -53,7 +53,7 @@ done
 mkdir -p "$VM_DIR"
 
 # Check for required tools
-if ! command -v qemu-system-x86_64 &> /dev/null; then
+if ! command -v qemu-system-x86_64 &>/dev/null; then
     gum_error "QEMU not found. Install with:"
     gum_muted "  Arch Linux: sudo pacman -S qemu-full"
     gum_muted "  Ubuntu/Debian: sudo apt install qemu-system-x86 qemu-utils"
@@ -135,10 +135,10 @@ echo ""
 
 # Determine boot order
 if [ -f "$VM_DIR/.installed" ]; then
-    BOOT_ORDER="c"  # Boot from disk
+    BOOT_ORDER="c" # Boot from disk
     gum_info "Booting from installed system..."
 else
-    BOOT_ORDER="d"  # Boot from CD
+    BOOT_ORDER="d" # Boot from CD
     gum_info "Booting from Arch ISO..."
 fi
 
@@ -204,8 +204,8 @@ qemu-system-x86_64 \
     -display gtk,gl=on,zoom-to-fit=on \
     -device virtio-net-pci,netdev=net0 \
     -netdev user,id=net0,hostfwd=tcp::2222-:22 \
-    -name "Arch Linux - Dotfiles Test" \
-    # uncomment below for audio on VM (though may degrade audio on system)
-    # -device intel-hda \
-    # -device hda-duplex
     -name "Arch Linux - Dotfiles Test"
+# uncomment below for audio on VM (though may degrade audio on system)
+# -device intel-hda \
+# -device hda-duplex
+-name "Arch Linux - Dotfiles Test"

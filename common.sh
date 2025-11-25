@@ -2,7 +2,7 @@ _COMMON_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pw
 _COMMON_DOTFILES_DIR=$(dirname "$_COMMON_SCRIPT_DIR")
 
 # Public helper: ensure gum is installed
-ensure_gum() {
+ensure_gum_is_installed() {
     if ! command -v gum &>/dev/null; then
         echo "Installing gum for cleaner UI..."
         sudo pacman -S --noconfirm gum
@@ -12,8 +12,8 @@ ensure_gum() {
 # Public helper: add dotfiles bin to PATH
 add_dotfiles_bin_to_path() {
     case ":$PATH:" in
-        *":$_COMMON_DOTFILES_DIR/bin:"*) ;; # already present
-        *) export PATH="$_COMMON_DOTFILES_DIR/bin:$PATH" ;;
+    *":$_COMMON_DOTFILES_DIR/bin:"*) ;; # already present
+    *) export PATH="$_COMMON_DOTFILES_DIR/bin:$PATH" ;;
     esac
 }
 

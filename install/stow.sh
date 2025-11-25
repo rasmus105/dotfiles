@@ -26,7 +26,18 @@ stow_dotfiles() {
     fi
 }
 
+cp_system_configs() {
+    local SCRIPT_DIR
+    local DOTFILES_DIR
+
+    SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd) # Get script directory
+    DOTFILES_DIR=$(dirname "$SCRIPT_DIR")                          # Get dotfiles directory (parent of script directory)
+
+    sudo rsync -av "$DOTFILES_DIR/system/" /
+}
+
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     set -e
     stow_dotfiles "$@"
+    cp_system_configs
 fi
