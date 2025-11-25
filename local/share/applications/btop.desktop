@@ -3,7 +3,6 @@ Version=1.0
 Name=Btop++
 Comment=Btop (system monitor)
 Exec=alacritty --class=TUI.float -e btop
-Terminal=false
 Type=Application
 Icon=/home/rasmus105/.local/share/applications/icons/btop.svg
 StartupNotify=true
