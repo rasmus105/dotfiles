@@ -1,5 +1,10 @@
 #!/bin/bash
-set -euo pipefail
+set -eo pipefail
+
+SCRIPT_NAME=$(basename "$0")
+if [[ $(pgrep -fc "$SCRIPT_NAME") -gt 1 ]]; then
+    gum spin --spinner "dot" --title "This script is already running!" -- bash -c 'read -n 1 -s'
+fi
 
 source "$HOME/.local/lib/shell/common.sh"
 
@@ -37,7 +42,6 @@ graceful_shutdown() {
 
 # Main update function
 main() {
-    clear
     gum_header "System Update"
 
     if gum_confirm "Update now?"; then
@@ -59,7 +63,7 @@ main() {
     # Update dotfiles
     gum_info "Checking for dotfiles update..."
     if command -v system-dotfiles-update &>/dev/null; then
-        system-dotfiles-update || gum_warning "Dotfiles update failed or had no changes"
+        system-dotfiles-update || gum_warning "Dotfiles update had issues."
     else
         gum_warning "system-dotfiles-update binary not found! Dotfiles setup may be incomplete."
     fi
