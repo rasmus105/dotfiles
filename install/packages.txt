@@ -11,6 +11,7 @@ hyprsunset
 hyprcursor
 hyprshot
 hyprpolkitagent
+hyprsunset
 xdg-desktop-portal-hyprland
 
 # ============================================================
