@@ -34,11 +34,11 @@
         "format": " {}",
         "escape": true,
         "return-type": "json",
-        "exec": "system-update-check",
+        "exec": "~/.config/waybar/check-updates",
         "interval": 1800,
         "signal": 1,
         "hide-empty-text": true,
-        "on-click": "ghostty --class=TUI.float -e system-update-perform"
+        "on-click": "ghostty --class=TUI.float -e system-perform-update"
     },
     // Wlogout
     "custom/wlogout": {

@@ -18,7 +18,7 @@ stow_dotfiles() {
     stow -t "$HOME/.local" local
 
     # Link all system themes to ~/.config/themes
-    ln -sf themes "$HOME/.config/themes"
+    ln -sf "$DOTFILES_DIR/themes" "$HOME/.config/themes"
 
     # Set default theme (gruvbox) if theme symlink doesn't exist
     if [[ ! -e "$HOME/.config/theme" ]]; then

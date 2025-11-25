@@ -1,3 +1,5 @@
+[ -f "$HOME/.dotfiles_env" ] && source "$HOME/.dotfiles_env"
+
 # ===============================
 # History Configuration
 # ===============================
@@ -18,6 +20,9 @@ wmname LG3D  # Needed for Ghidra, Maple, and other Java-based software
 # ===============================
 # Exports
 # ===============================
+# DOTFILES_DIR will be set during installation
+# export DOTFILES_DIR="$HOME/.dotfiles"
+
 export PATH=$PATH:~/.npm/bin:/home/rasmus105/.platformio/penv/bin:~/.local/bin:/home/rasmus105/.opencode/bin
 export MANPAGER="nvim +Man!" # use neovim for man pages.
 export EDITOR="nvim" # some applications such as Yazi use this variable for determining editor
