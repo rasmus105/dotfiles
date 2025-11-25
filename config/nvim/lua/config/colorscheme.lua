@@ -76,10 +76,10 @@ apply_theme()
 
 -- Watch for external changes by polling the symlink target
 -- fs_event doesn't work well with symlinks, so we poll instead
--- Using 2500 ms interval - very low overhead
+-- Using 1000 ms interval - very low overhead
 local last_target = vim.fn.resolve(theme_file)
 local timer = uv.new_timer()
-timer:start(2500, 2500, vim.schedule_wrap(function()
+timer:start(1000, 1000, vim.schedule_wrap(function()
     local current_target = vim.fn.resolve(theme_file)
     if current_target ~= last_target then
         last_target = current_target

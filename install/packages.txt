@@ -41,6 +41,7 @@ playerctl
 qt5-wayland
 qt6-wayland
 xorg-xwayland
+kanshi
 
 # ============================================================
 # BROWSERS
@@ -79,6 +80,8 @@ wget
 jq
 man-db
 man-pages
+aerc
+protonmail-bridge
 
 # ============================================================
 # FILE MANAGEMENT
@@ -121,6 +124,7 @@ bluetui
 blueman
 networkmanager
 network-manager-applet
+iwd
 openssh
 
 # ============================================================
@@ -135,6 +139,7 @@ keyd
 pipewire
 pipewire-pulse
 wireplumber
+ddcutil
 
 # ============================================================
 # ELEPHANT LAUNCHER & PLUGINS

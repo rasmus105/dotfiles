@@ -10,7 +10,7 @@ DOTFILES_DIR=$(dirname "$SCRIPT_DIR")
 source "$DOTFILES_DIR/common.sh"
 
 # Core environment/bootstrap steps
-ensure_gum
+ensure_gum_is_installed
 add_dotfiles_bin_to_path
 
 # ==== Initial Setup (gum to improve UI, install paru)
@@ -35,7 +35,7 @@ install_packages "$SCRIPT_DIR/packages.txt"
 # ==== Configuration ====
 stow_dotfiles       # symlink config/ to ~/.config/
 configure_mimetypes # set default applications
-setup_zsh_main      # set shell
+setup_zsh_main      # set shell to zsh
 
 #
 # systemctl --user enable elephant
