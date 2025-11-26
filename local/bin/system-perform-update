@@ -4,6 +4,7 @@ set -eo pipefail
 SCRIPT_NAME=$(basename "$0")
 if [[ $(pgrep -fc "$SCRIPT_NAME") -gt 1 ]]; then
     gum spin --spinner "dot" --title "This script is already running!" -- bash -c 'read -n 1 -s'
+    exit 0
 fi
 
 source "$HOME/.local/lib/shell/common.sh"
