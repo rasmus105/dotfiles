@@ -8,8 +8,8 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_DIR="$(dirname "$SCRIPT_DIR")"
 
-# Source gum utilities
-source "$HOME/.local/lib/shell/common.sh"
+# Source gum utilities from dotfiles directory
+source "$DOTFILES_DIR/local/lib/shell/common.sh"
 
 # Test configuration
 IMAGE_NAME="dotfiles-test"
@@ -170,19 +170,33 @@ docker exec -i -t -u testuser "$CONTAINER_NAME" bash -c "
     set -e
     
     # Check that dotfiles directory exists
-    test -d ~/dotfiles || { echo 'dotfiles directory not found'; exit 1; }
+    test -d ~/.dotfiles || { echo '✗ dotfiles directory not found'; exit 1; }
+    echo '✓ dotfiles directory exists'
     
-    # Check if stow was run (at least some configs should be linked)
-    if [ -d ~/.config ]; then
-        echo '✓ .config directory exists'
+    # Check if stow was run (config directory should be linked)
+    test -d ~/.config || { echo '✗ .config directory not found'; exit 1; }
+    echo '✓ .config directory exists'
+    
+    # Check for specific symlinks created by stow
+    if [ -L ~/.config/nvim ] || [ -d ~/.config/nvim ]; then
+        echo '✓ nvim config present'
     fi
     
-    # Add more specific checks here based on your dotfiles structure
-    # Examples:
-    # test -L ~/.config/nvim/init.lua && echo '✓ nvim config linked'
-    # test -L ~/.zshrc && echo '✓ zshrc linked'
+    if [ -L ~/.zshrc ] || [ -f ~/.zshrc ]; then
+        echo '✓ zshrc present'
+    fi
     
-    echo 'Basic verification checks passed'
+    # Check that shell was changed to zsh
+    if getent passwd testuser | grep -q zsh; then
+        echo '✓ Default shell set to zsh'
+    else
+        echo '⚠ Default shell not set to zsh (expected for test)'
+    fi
+    
+    # Check for dotfiles_env file
+    test -f ~/.dotfiles_env && echo '✓ dotfiles_env file created'
+    
+    echo '✓ All verification checks passed'
 " || {
     gum_error "Verification failed"
     exit 1

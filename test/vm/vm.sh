@@ -8,8 +8,8 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_DIR=$(dirname "$(dirname "$SCRIPT_DIR")")
 
-# Source helpers and initialize gum / PATH
-source "$HOME/.local/lib/shell/common.sh"
+# Source helpers and initialize gum / PATH from dotfiles directory
+source "$DOTFILES_DIR/local/lib/shell/common.sh"
 ensure_gum_is_installed
 add_dotfiles_bin_to_path
 
@@ -186,6 +186,18 @@ if [ ! -f "$OVMF_VARS" ]; then
         # Some systems have it in a different location
         VARS_TEMPLATE="$(dirname "$OVMF_CODE")/OVMF_VARS.4m.fd"
     fi
+    if [ ! -f "$VARS_TEMPLATE" ]; then
+        # Try without the .4m suffix
+        VARS_TEMPLATE="$(dirname "$OVMF_CODE")/OVMF_VARS.fd"
+    fi
+    if [ ! -f "$VARS_TEMPLATE" ]; then
+        gum_error "OVMF_VARS template file not found!"
+        gum_info "Tried locations:"
+        gum_muted "  ${OVMF_CODE/CODE/VARS}"
+        gum_muted "  $(dirname "$OVMF_CODE")/OVMF_VARS.4m.fd"
+        gum_muted "  $(dirname "$OVMF_CODE")/OVMF_VARS.fd"
+        exit 1
+    fi
     cp "$VARS_TEMPLATE" "$OVMF_VARS"
 fi
 
@@ -208,4 +220,3 @@ qemu-system-x86_64 \
 # uncomment below for audio on VM (though may degrade audio on system)
 # -device intel-hda \
 # -device hda-duplex
--name "Arch Linux - Dotfiles Test"
