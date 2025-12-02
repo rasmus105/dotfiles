@@ -2,8 +2,10 @@
 set -e
 
 # cache credentials (needed for later installation)
-# FIXME - will expire after 5 minutes.
 sudo -v
+
+# periodically cache sudo to keep it cached (otherwise it expires after 5 minutes)
+while sleep 100; do sudo -v; done &
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 DOTFILES_DIR=$(dirname "$SCRIPT_DIR")
