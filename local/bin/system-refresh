@@ -18,6 +18,7 @@ fi
 if pgrep -x waybar >/dev/null; then
     pkill waybar
     nohup waybar &>/dev/null &
+    disown
 fi
 
 # Sync filesystem to ensure clean state

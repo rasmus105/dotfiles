@@ -2,9 +2,10 @@
 
 while true; do
     battery=$(upower -i "$(upower -e | grep BAT)" | grep -E "percentage" | awk '{print $2}' | tr -d '%')
+    state=$(upower -b | grep "state:" | awk '{ print $2 }')
 
-    if [ "$battery" -le "30" ]; then
-        notify-send --urgency=critical --expire-time=10000 "Low battery: ${battery}%" 
+    if [ "$battery" -le "30" ] && [ "$state" != "charging" ]; then
+        notify-send --urgency=critical --expire-time=10000 --action="default=silence" --action="silence=Silence for 1 hour" "󱐋 Low battery: ${battery}%"
         sleep 60
     else
         sleep 120
