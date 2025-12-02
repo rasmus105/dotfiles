@@ -43,8 +43,4 @@ stow_dotfiles       # symlink config/ to ~/.config/
 configure_mimetypes # set default applications
 setup_zsh_main      # set shell to zsh
 
-#
-# systemctl --user enable elephant
-# systemctl --user enable walker
-# systemctl --user start elephant
-# systemctl --user start walker
+systemctl --user enable --now battery-monitor.timer
