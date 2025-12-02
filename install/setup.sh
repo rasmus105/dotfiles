@@ -44,3 +44,6 @@ configure_mimetypes # set default applications
 setup_zsh_main      # set shell to zsh
 
 systemctl --user enable --now battery-monitor.timer
+
+sudo mkdir -p /etc/chromium/policies/managed
+sudo chmod a+rw /etc/chromium/policies/managed

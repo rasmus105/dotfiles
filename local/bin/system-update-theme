@@ -14,4 +14,4 @@ system-update-terminal-theme
 system-update-gnome-theme
 system-update-nvim-theme
 system-update-zathura-theme
-# system-update-browser-theme
+system-update-browser-theme
