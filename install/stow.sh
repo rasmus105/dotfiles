@@ -10,13 +10,13 @@ stow_dotfiles() {
 
     cd "$DOTFILES_DIR" # Change to dotfiles directory (required for stow)
 
-    # Stow the config and home directory
-    stow -t "$HOME/.config" config
-    stow -t "$HOME" home
+    # Stow the config and home directory (--restow handles re-installation)
+    stow --restow -t "$HOME/.config" config
+    stow --restow -t "$HOME" home
 
     # Stow the .application config files
     mkdir -p "$HOME/.local/share/applications/icons"
-    stow -t "$HOME/.local" local
+    stow --restow -t "$HOME/.local" local
 
     # Link all system themes to ~/.config/themes
     ln -sf "$DOTFILES_DIR/themes" "$HOME/.config/themes"

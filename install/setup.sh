@@ -43,7 +43,18 @@ stow_dotfiles       # symlink config/ to ~/.config/
 configure_mimetypes # set default applications
 setup_zsh_main      # set shell to zsh
 
-systemctl --user enable --now battery-monitor.timer
+# Enable battery monitor timer if it exists
+if systemctl --user list-unit-files battery-monitor.timer &>/dev/null; then
+    systemctl --user enable --now battery-monitor.timer
+else
+    gum_warning "battery-monitor.timer not found, skipping"
+fi
 
-sudo mkdir -p /etc/chromium/policies/managed
-sudo chmod a+rw /etc/chromium/policies/managed
+# Setup chromium policies directory if chromium is installed
+if is_installed "chromium" || is_installed "google-chrome"; then
+    sudo mkdir -p /etc/chromium/policies/managed
+    # Use more restrictive permissions (owner read/write, group/others read-only)
+    sudo chmod 755 /etc/chromium/policies/managed
+else
+    gum_info "Chromium not installed, skipping policy directory setup"
+fi

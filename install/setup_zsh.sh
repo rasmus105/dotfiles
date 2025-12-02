@@ -27,7 +27,12 @@ setup_zsh_main() {
     fi
 
     # ==== install antidote (zsh plugin manager) ====
-    git clone --depth=1 https://github.com/mattmc3/antidote.git "${ZDOTDIR:-~}/.antidote"
+    local ANTIDOTE_DIR="${ZDOTDIR:-~}/.antidote"
+    if [[ ! -d "$ANTIDOTE_DIR" ]]; then
+        log_run "Installing antidote plugin manager" "git clone --depth=1 https://github.com/mattmc3/antidote.git '$ANTIDOTE_DIR'"
+    else
+        log_info "Antidote already installed at $ANTIDOTE_DIR"
+    fi
 }
 
 # only run setup is called as `bash setup_zsh.sh` (not when sourced)

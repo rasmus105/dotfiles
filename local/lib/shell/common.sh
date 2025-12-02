@@ -1,15 +1,15 @@
 # main file for shell helpers.
 # Import this to get all helpers.
 
+_COMMON_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+_COMMON_DOTFILES_DIR=$(dirname "$(dirname "$(dirname "$_COMMON_SCRIPT_DIR")")")
+
 ## Source all shell helpers
 # Gum UI utilities (no side effects on source)
-source "$HOME/.local/lib/shell/gum_utils.sh"
+source "$_COMMON_DOTFILES_DIR/local/lib/shell/gum_utils.sh"
 
 # Log utilities (no side effects on source)
-source "$HOME/.local/lib/shell/log.sh"
-
-_COMMON_SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-_COMMON_DOTFILES_DIR=$(dirname "$_COMMON_SCRIPT_DIR")
+source "$_COMMON_DOTFILES_DIR/local/lib/shell/log.sh"
 
 # Public helper: ensure gum is installed
 ensure_gum_is_installed() {

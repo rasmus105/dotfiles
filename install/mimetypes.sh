@@ -1,6 +1,23 @@
 #!/bin/bash
 
 configure_mimetypes() {
+    # Check if required applications are installed
+    local missing_apps=()
+    command -v imv &>/dev/null || missing_apps+=("imv")
+    command -v zathura &>/dev/null || missing_apps+=("zathura")
+    command -v mpv &>/dev/null || missing_apps+=("mpv")
+    command -v nvim &>/dev/null || missing_apps+=("nvim")
+    
+    # Check for zen browser (via .desktop file)
+    if [[ ! -f "$HOME/.local/share/applications/zen.desktop" ]] && [[ ! -f "/usr/share/applications/zen.desktop" ]]; then
+        missing_apps+=("zen-browser")
+    fi
+    
+    if [[ ${#missing_apps[@]} -gt 0 ]]; then
+        gum_warning "Some applications are not installed: ${missing_apps[*]}"
+        gum_info "MIME type associations will be configured, but may not work until applications are installed"
+    fi
+    
     # Open all images with imv
     xdg-mime default imv.desktop image/png
     xdg-mime default imv.desktop image/jpeg

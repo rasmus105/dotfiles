@@ -113,7 +113,7 @@ if ! command -v git &>/dev/null; then
 fi
 
 echo "Cloning dotfiles directory..."
-git clone $REPO_URL $DOTFILES_DIR
+git clone "$REPO_URL" "$DOTFILES_DIR"
 
 echo
 echo -e "${GREEN}✓${NC} Repository has been cloned succesfully!"
