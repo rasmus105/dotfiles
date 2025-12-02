@@ -103,7 +103,7 @@ ffmpeg
 imv
 wiremix
 loupe
-zathura
+zathura-git
 zathura-pdf-mupdf
 
 # ============================================================

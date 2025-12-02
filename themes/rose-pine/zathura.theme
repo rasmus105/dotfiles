@@ -1,0 +1,36 @@
+set default-fg                rgba(87,82,121,1)
+set default-bg                rgba(250,244,237, 0.8)
+
+set completion-bg             rgba(244,237,229,1)
+set completion-fg             rgba(87,82,121,1)
+set completion-highlight-bg   rgba(215,130,126,1)
+set completion-highlight-fg   rgba(250,244,237,1)
+set completion-group-bg       rgba(240,233,225,1)
+set completion-group-fg       rgba(87,82,121,1)
+
+set statusbar-fg              rgba(87,82,121,1)
+set statusbar-bg              rgba(244,237,229,1)
+set inputbar-fg               rgba(87,82,121,1)
+set inputbar-bg               rgba(250,244,237,1)
+
+set notification-bg           rgba(250,244,237,1)
+set notification-fg           rgba(87,82,121,1)
+set notification-error-bg     rgba(250,244,237,1)
+set notification-error-fg     rgba(180,99,122,1)
+set notification-warning-bg   rgba(250,244,237,1)
+set notification-warning-fg   rgba(234,154,151,1)
+
+set recolor-lightcolor        rgba(250,244,237,1)
+set recolor-darkcolor         rgba(87,82,121,1)
+
+set index-fg                  rgba(87,82,121,1)
+set index-bg                  rgba(250,244,237,1)
+set index-active-fg           rgba(250,244,237,1)
+set index-active-bg           rgba(215,130,126,1)
+
+set render-loading-bg         rgba(250,244,237,1)
+set render-loading-fg         rgba(87,82,121,1)
+
+set highlight-color           rgba(234,154,151,0.3)
+set highlight-fg              rgba(87,82,121,1)
+set highlight-active-color    rgba(215,130,126,0.3)
