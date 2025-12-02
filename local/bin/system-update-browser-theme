@@ -27,7 +27,7 @@ if command_present chromium || command_present helium-browser; then
     fi
 
     if command_present helium-browser; then
-        echo "{\"BrowserThemeColor\": \"$THEME_HEX_COLOR\"}" | sudo tee "/etc/chromium/policies/managed/color.json" >/dev/null
+        echo "{\"BrowserThemeColor\": \"$THEME_HEX_COLOR\"}" | tee "/etc/chromium/policies/managed/color.json" >/dev/null
         helium-browser --no-startup-window --refresh-platform-policy
     fi
 fi

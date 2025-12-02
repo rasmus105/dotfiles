@@ -1,5 +1,5 @@
 set default-fg                rgba(230,217,219,1)
-set default-bg                rgba(44,37,37, 0.8)
+set default-bg                rgba(44,37,37,0.8)
 
 set completion-bg             rgba(64,54,54,1)
 set completion-fg             rgba(230,217,219,1)
