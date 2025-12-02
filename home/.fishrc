@@ -1,0 +1,41 @@
+[ -f "$HOME/.dotfiles_env" ] && source "$HOME/.dotfiles_env"
+
+# ===============================
+# Exports
+# ===============================
+set -gx PATH $PATH ~/.npm/bin ~/.platformio/penv/bin ~/.local/bin ~/.opencode/bin
+set -gx MANPAGER "nvim +Man!"
+set -gx EDITOR "nvim"
+set -gx TERM xterm-256color
+
+# ===============================
+# Aliases
+# ===============================
+alias grep='grep --color=auto'
+alias cd='z'
+alias cat='bat'
+alias g='lazygit'
+alias n='nvim'
+
+# Better ls command
+function ls
+    command eza $argv
+end
+
+# Yazi file manager
+function y
+    set tmp (mktemp -t "yazi-cwd.XXXXXX")
+    yazi $argv --cwd-file="$tmp"
+    if test -f "$tmp"
+        set cwd (cat "$tmp")
+        if test -n "$cwd" -a "$cwd" != "$PWD"
+            cd "$cwd"
+        end
+        rm -f "$tmp"
+    end
+end
+
+# ===============================
+# Zoxide Integration
+# ===============================
+zoxide init fish | source
