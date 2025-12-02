@@ -12,9 +12,20 @@ RUN pacman -Syu --noconfirm && \
     git \
     curl \
     sudo \
-    expect && \
-    # Clean pacman cache to reduce image size
-    pacman -Scc --noconfirm
+    expect \
+    gum \
+    stow && \
+    # Don't clean cache yet - we'll add more packages to it
+    rm -rf /var/cache/pacman/pkg/*
+
+# Copy local pacman cache to speed up package installations
+# This contains pre-downloaded packages from the host system
+# Note: This directory is created by the build script before building
+COPY .cache/pacman/pkg/ /var/cache/pacman/pkg/
+
+# Set correct permissions on the cache directory
+RUN chown -R root:root /var/cache/pacman/pkg/ && \
+    chmod 755 /var/cache/pacman/pkg/
 
 # Create a test user (installation shouldn't be run as root)
 RUN useradd -m -G wheel -s /bin/bash testuser && \
@@ -40,4 +51,3 @@ ENV TERM=xterm-256color
 
 # The test will be run by the test script, not in the build
 CMD ["/bin/bash"]
-

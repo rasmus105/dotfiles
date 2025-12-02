@@ -14,3 +14,7 @@ install/logs/
 
 # Exclude private data
 git/
+
+# Note: .cache/ is intentionally NOT excluded
+# The .cache/pacman/pkg/ directory is used to speed up Docker builds
+# by including pre-downloaded packages from the host system
