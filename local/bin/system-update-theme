@@ -1,12 +1,15 @@
+# Refresh everything required to update system
+# theme globally.
+
+hyprctl reload 2>/dev/null
+
 # update background
 system-update-awww
 
-# Restart components to apply new theme
 system-restart-app swayosd-server
-hyprctl reload 2>/dev/null
-pkill -SIGUSR2 btop 2>/dev/null || true
 makoctl reload 2>/dev/null
 
+pkill -SIGUSR2 btop 2>/dev/null || true
 system-update-terminal-theme
 system-update-gnome-theme
 system-update-nvim-theme
