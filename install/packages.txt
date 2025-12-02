@@ -160,3 +160,4 @@ elephant-symbols
 # OTHER APPLICATIONS
 # ============================================================
 localsend-bin
+stow

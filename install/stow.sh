@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 stow_dotfiles() {
     local SCRIPT_DIR
