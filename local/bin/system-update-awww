@@ -52,7 +52,7 @@ ln -sf "$SELECTED_BG" "$HYPR_BACKGROUND"
 
 # Reload awww if it's running
 if command -v hyprctl &>/dev/null && pgrep -x awww-daemon >/dev/null; then
-    awww img "$HYPR_BACKGROUND" --transition-type center --transition-duration 0.5
+    awww img "$HYPR_BACKGROUND" --transition-type fade --transition-duration 0.5
 else
     notify-send "Cannot update wallpaper, hyprctl is missing or awww-daemon isn't running"
 fi
