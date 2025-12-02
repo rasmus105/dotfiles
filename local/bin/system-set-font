@@ -13,6 +13,9 @@ if [[ -n "$font_name" && "$font_name" != "CNCLD" ]]; then
         sed -i "s/font-family = .*/font-family = $font_name/g" ~/.config/ghostty/config || true
         pkill -SIGUSR2 ghostty
 
+        # Update zathura font
+        sed -i "s/^set font \".*\"$/set font \"$font_name 15\"/g" ~/.config/zathura/zathurarc || true
+
         xmlstarlet ed -L \
             -u '//match[@target="pattern"][test/string="monospace"]/edit[@name="family"]/string' \
             -v "$font_name" \

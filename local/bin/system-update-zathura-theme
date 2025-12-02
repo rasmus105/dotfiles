@@ -1,0 +1,13 @@
+#!/bin/bash
+# Update zathura theme based on current system theme
+
+THEME_ZATHURA="$HOME/.config/theme/zathura.theme"
+ZATHURA_THEME_FILE="$HOME/.config/zathura/theme.zathurarc"
+
+if [[ ! -f "$THEME_ZATHURA" ]]; then
+    notify-send "Error: No zathura.theme found in current theme. Unable to update zathura theme." >&2
+    exit 1
+fi
+
+# Simply symlink the theme's zathura.theme to ~/.config/zathura/theme.zathurarc
+ln -sf "$THEME_ZATHURA" "$ZATHURA_THEME_FILE"

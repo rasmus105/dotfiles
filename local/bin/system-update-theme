@@ -13,4 +13,5 @@ pkill -SIGUSR2 btop 2>/dev/null || true
 system-update-terminal-theme
 system-update-gnome-theme
 system-update-nvim-theme
+system-update-zathura-theme
 # system-update-browser-theme
