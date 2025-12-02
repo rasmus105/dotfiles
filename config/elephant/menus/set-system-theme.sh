@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/common.sh"
 THEMES_DIR="$HOME/.config/themes/"
 CURRENT_THEME_DIR="$HOME/.config/theme"
 CURRENT_THEME=$(basename "$(readlink "$CURRENT_THEME_DIR")")
-ALL_THEMES=$(find "$THEMES_DIR" -mindepth 1 -maxdepth 1 \( -type d -o -type l \) | sort | grep -Eo "[^/]+$")
+ALL_THEMES=$(find "$THEMES_DIR" -mindepth 1 -maxdepth 1 \( -type d \) | sort | grep -Eo "[^/]+$")
 
 # Create options with prefix for current theme
 themes_options=""
