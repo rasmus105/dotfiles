@@ -99,7 +99,7 @@ ui_init() {
 
     # Start background monitor
     _ui_start_monitor
-    
+
     # Send initial state to monitor
     _ui_send_update "INIT|$UI_CURRENT_STEP|$UI_TOTAL_STEPS|$UI_TERM_LINES|$UI_TERM_COLS"
 }
@@ -120,7 +120,7 @@ ui_run() {
 
     # Record start
     UI_CURRENT_CMD="$desc"
-    UI_CURRENT_START=$(date +%s)
+    UI_CURRENT_START=$(_get_time)
 
     # Notify monitor of new command
     _ui_send_update "CMD|$UI_CURRENT_CMD|$UI_CURRENT_START"
@@ -133,9 +133,9 @@ ui_run() {
     local exit_code=$?
 
     # Calculate duration
-    local end_time=$(date +%s)
+    local end_time=$(_get_time)
     local duration=$((end_time - UI_CURRENT_START))
-    local duration_str=$(_ui_format_duration $duration)
+    local duration_str=$(_format_duration $duration)
 
     # Update history based on exit code
     if [ $exit_code -eq 0 ]; then
@@ -148,7 +148,7 @@ ui_run() {
 
     UI_CURRENT_STEP=$((UI_CURRENT_STEP + 1))
     UI_CURRENT_CMD=""
-    
+
     # Clear current command and update step
     _ui_send_update "CMD||0"
     _ui_send_update "STEP|$UI_CURRENT_STEP|$UI_TOTAL_STEPS"
@@ -464,28 +464,15 @@ _ui_set_colors() {
     fi
 }
 
-# Format duration in human-readable format
-_ui_format_duration() {
-    local seconds=$1
-
-    if [ $seconds -lt 60 ]; then
-        echo "${seconds}s"
-    else
-        local mins=$((seconds / 60))
-        local secs=$((seconds % 60))
-        echo "${mins}m ${secs}s"
-    fi
-}
-
 # Send update message to monitor via FIFO
 # Usage: _ui_send_update "MESSAGE_TYPE|data|more_data"
 _ui_send_update() {
     if [ -z "$UI_FIFO" ] || [ ! -p "$UI_FIFO" ]; then
         return
     fi
-    
+
     # Send message, ignore errors if monitor is not reading
-    echo "$1" > "$UI_FIFO" 2>/dev/null || true
+    echo "$1" >"$UI_FIFO" 2>/dev/null || true
 }
 
 # Start background monitor process
@@ -496,8 +483,8 @@ _ui_start_monitor() {
 
     (
         # Open FIFO for reading (non-blocking)
-        exec 3< "$UI_FIFO"
-        
+        exec 3<"$UI_FIFO"
+
         # Local state (isolated from parent process)
         local -a local_history=()
         local local_current_cmd=""
@@ -506,7 +493,7 @@ _ui_start_monitor() {
         local local_total_steps=$UI_TOTAL_STEPS
         local local_term_lines=$UI_TERM_LINES
         local local_term_cols=$UI_TERM_COLS
-        
+
         # Copy color variables (these don't change)
         local color_success=$UI_COLOR_SUCCESS
         local color_error=$UI_COLOR_ERROR
@@ -514,45 +501,45 @@ _ui_start_monitor() {
         local color_info=$UI_COLOR_INFO
         local color_muted=$UI_COLOR_MUTED
         local color_reset=$UI_COLOR_RESET
-        
+
         while true; do
             # Read all pending updates from FIFO (non-blocking)
             while true; do
                 if IFS='|' read -r -t 0.01 -u 3 msg_type rest; then
                     # Successfully read a message
                     case "$msg_type" in
-                        INIT)
-                            # Full state initialization
-                            IFS='|' read -r local_current_step local_total_steps local_term_lines local_term_cols <<< "$rest"
-                            ;;
-                        CMD)
-                            # Current command update
-                            IFS='|' read -r local_current_cmd local_current_start <<< "$rest"
-                            ;;
-                        HISTORY)
-                            # Add history entry
-                            local_history+=("$rest")
-                            ;;
-                        STEP)
-                            # Update step counter
-                            IFS='|' read -r local_current_step local_total_steps <<< "$rest"
-                            ;;
-                        RESIZE)
-                            # Terminal resize
-                            IFS='|' read -r local_term_lines local_term_cols <<< "$rest"
-                            ;;
-                        STOP)
-                            # Exit signal
-                            exec 3<&-  # Close FIFO
-                            exit 0
-                            ;;
+                    INIT)
+                        # Full state initialization
+                        IFS='|' read -r local_current_step local_total_steps local_term_lines local_term_cols <<<"$rest"
+                        ;;
+                    CMD)
+                        # Current command update
+                        IFS='|' read -r local_current_cmd local_current_start <<<"$rest"
+                        ;;
+                    HISTORY)
+                        # Add history entry
+                        local_history+=("$rest")
+                        ;;
+                    STEP)
+                        # Update step counter
+                        IFS='|' read -r local_current_step local_total_steps <<<"$rest"
+                        ;;
+                    RESIZE)
+                        # Terminal resize
+                        IFS='|' read -r local_term_lines local_term_cols <<<"$rest"
+                        ;;
+                    STOP)
+                        # Exit signal
+                        exec 3<&- # Close FIFO
+                        exit 0
+                        ;;
                     esac
                 else
                     # Timeout - no more data available
                     break
                 fi
             done
-            
+
             # Draw screen with local state
             _ui_draw_screen_local \
                 "$local_current_cmd" \
@@ -568,12 +555,12 @@ _ui_start_monitor() {
                 "$color_muted" \
                 "$color_reset" \
                 "${local_history[@]}"
-            
+
             sleep 0.1
         done
     ) &
     UI_MONITOR_PID=$!
-    
+
     # Give monitor time to open FIFO for reading
     sleep 0.05
 }
@@ -583,7 +570,7 @@ _ui_stop_monitor() {
     if [ -n "$UI_MONITOR_PID" ]; then
         # Send stop signal via FIFO
         _ui_send_update "STOP"
-        
+
         # Wait for monitor to exit gracefully
         sleep 0.1
         wait "$UI_MONITOR_PID" 2>/dev/null || true
@@ -628,7 +615,7 @@ _ui_draw_screen_local() {
     local color_reset=${12}
     shift 12
     local -a history=("$@")
-    
+
     # Calculate region heights (as percentage of terminal)
     local history_lines=$((term_lines * 20 / 100))
     local status_lines=3
@@ -652,11 +639,8 @@ _ui_draw_screen_local() {
     # Draw output region
     _ui_draw_output_local "$output_lines" "$term_cols" "$color_muted" "$color_reset"
 
-    # Draw separator
-    _ui_draw_separator_local "$term_cols" "$color_muted" "$color_reset"
-
-    # Draw status bar
-    _ui_draw_status_local "$current_step" "$total_steps" "$term_cols" "$color_info" "$color_reset"
+    # Draw status bar (it will draw its own separator and position itself at bottom)
+    _ui_draw_status_local "$current_step" "$total_steps" "$term_cols" "$color_info" "$color_reset" "$term_lines" "$color_muted"
 }
 
 # Draw command history region (with local state)
@@ -703,8 +687,8 @@ _ui_draw_history_local() {
 
     # Show current command if running
     if [ -n "$current_cmd" ]; then
-        local elapsed=$(($(date +%s) - current_start))
-        local elapsed_str=$(_ui_format_duration $elapsed)
+        local elapsed=$(($(_get_time) - current_start))
+        local elapsed_str=$(_format_duration $elapsed)
 
         printf "%s" "$color_pending"
         local line="⊙ $current_cmd ($elapsed_str)"
@@ -720,7 +704,7 @@ _ui_draw_separator_local() {
     local term_cols=$1
     local color_muted=$2
     local color_reset=$3
-    
+
     printf "%s" "$color_muted"
     printf "─%.0s" $(seq 1 $term_cols)
     printf "%s\n" "$color_reset"
@@ -756,8 +740,24 @@ _ui_draw_status_local() {
     local term_cols=$3
     local color_info=$4
     local color_reset=$5
-    
-    # Progress bar
+    local term_lines=$6
+    local color_muted=$7
+
+    # Position cursor at bottom of terminal (3 lines from bottom for separator + 2 status lines)
+    # Status occupies last 2 lines: progress bar + keybindings
+    # Line before that is the separator
+
+    # Move cursor to position for bottom separator (3rd line from bottom)
+    tput cup $((term_lines - 3)) 0 2>/dev/null || printf "\033[%d;0H" $((term_lines - 2))
+
+    # Draw bottom separator
+    printf "%s" "$color_muted"
+    printf "─%.0s" $(seq 1 $term_cols)
+    printf "%s\n" "$color_reset"
+
+    # Progress bar (2nd line from bottom)
+    tput cup $((term_lines - 2)) 0 2>/dev/null || printf "\033[%d;0H" $((term_lines - 1))
+
     local percent=0
     if [ $total_steps -gt 0 ]; then
         percent=$((current_step * 100 / total_steps))
@@ -774,8 +774,39 @@ _ui_draw_status_local() {
     printf "─%.0s" $(seq 1 $empty)
     printf " %3d%% (%d/%d)%s\n" $percent $current_step $total_steps "$color_reset"
 
-    # Keybindings
-    printf "%s^C Cancel  ^Z Background%s\n" "$ANSI_DIM" "$color_reset"
+    # Keybindings (last line - bottom of terminal)
+    tput cup $((term_lines - 1)) 0 2>/dev/null || printf "\033[%d;0H" $term_lines
+    printf "%s^C Cancel  ^Z Background%s" "$ANSI_DIM" "$color_reset"
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Internal Helper Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+# Get unix time in milliseconds
+_get_time() {
+    echo $(($(date +%s%N) / 1000000))
+}
+
+# Format duration in human-readable format
+_format_duration() {
+    local milliseconds=$1
+
+    if [ "$milliseconds" -lt 1000 ]; then
+        # Less than 1 second: show milliseconds
+        echo "${milliseconds} ms"
+    elif [ "$milliseconds" -lt 60000 ]; then
+        # Less than 60 seconds: show seconds with 3 decimal places (millisecond precision)
+        local secs
+        secs=$(awk "BEGIN {printf \"%.3f\", ${milliseconds}/1000}")
+        echo "${secs} s"
+    else
+        # 60 seconds or more: show minutes and seconds without millisecond precision
+        local total_secs=$((milliseconds / 1000))
+        local mins=$((total_secs / 60))
+        local secs=$((total_secs % 60))
+        echo "${mins} min ${secs} s"
+    fi
 }
 
 #──────────────────────────────────────────────────────────────────────────────
