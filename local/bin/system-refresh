@@ -1,19 +1,267 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Trap errors to provide debugging info
-trap 'notify-send --urgency critical "System refresh failed: Command '\''$BASH_COMMAND'\'' exited with code $?"; exit 1' ERR
+#──────────────────────────────────────────────────────────────────────────────
+# Setup
+#──────────────────────────────────────────────────────────────────────────────
 
-# restart apps (noop if not running)
-system-restart-app elephant
-system-restart-app walker --gapplication-service
-system-restart-app mako
-system-restart-app --only-if-running waybar
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/shell/common.sh" 2>/dev/null || q() { "$@" >/dev/null 2>&1; }
 
-hyprctl reload 2>/dev/null
-system-update-awww
+THEME_DIR="$HOME/.config/theme"
 
-# Sync filesystem to ensure clean state
-sync
+#──────────────────────────────────────────────────────────────────────────────
+# Functions
+#──────────────────────────────────────────────────────────────────────────────
 
-notify-send "System has been refreshed!"
+main() {
+    parse_args "$@"
+}
+
+parse_args() {
+    # Default action if no arguments
+    if [[ $# -eq 0 ]]; then
+        refresh_all
+        exit 0
+    fi
+    
+    local action="$1"
+    shift
+    
+    case "$action" in
+    all)
+        [[ $# -eq 0 ]] || { echo "Error: all takes no arguments" >&2; exit 1; }
+        refresh_all
+        ;;
+    apps)
+        [[ $# -eq 0 ]] || { echo "Error: apps takes no arguments" >&2; exit 1; }
+        refresh_apps
+        ;;
+    theme)
+        [[ $# -eq 0 ]] || { echo "Error: theme takes no arguments" >&2; exit 1; }
+        refresh_theme
+        ;;
+    app)
+        [[ $# -ge 1 ]] || { echo "Error: app requires application name" >&2; exit 1; }
+        restart_app "$@"
+        ;;
+    --help | -h | help)
+        [[ $# -eq 0 ]] || { echo "Error: help takes no arguments" >&2; exit 1; }
+        print_help
+        ;;
+    *)
+        echo "Error: Unknown action: $action" >&2
+        print_help
+        exit 1
+        ;;
+    esac
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Refresh Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+refresh_all() {
+    refresh_apps
+    refresh_theme
+    
+    # Sync filesystem to ensure clean state
+    q sync
+    
+    echo "System refreshed"
+}
+
+refresh_apps() {
+    # Restart apps
+    restart_app elephant || true
+    restart_app walker --gapplication-service || true
+    restart_app mako || true
+    restart_app --only-if-running waybar || true
+    
+    echo "Apps refreshed"
+}
+
+restart_app() {
+    # Parse options
+    local only_if_running=false
+    
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+        --only-if-running)
+            only_if_running=true
+            shift
+            ;;
+        *)
+            break
+            ;;
+        esac
+    done
+    
+    # Check if app name is provided
+    if [[ $# -eq 0 ]]; then
+        echo "Error: No application name provided" >&2
+        return 1
+    fi
+    
+    local app_name="$1"
+    shift # Remove app name, leaving optional args in $@
+    
+    # Check if app is currently running
+    local is_running=false
+    if pgrep -x "$app_name" >/dev/null 2>&1; then
+        is_running=true
+    fi
+    
+    # If --only-if-running is set and app is not running, exit silently
+    if [[ "$only_if_running" == true ]] && [[ "$is_running" == false ]]; then
+        return 0
+    fi
+    
+    # Kill the app if it's running
+    if [[ "$is_running" == true ]]; then
+        q pkill -x "$app_name" || true
+    fi
+    
+    # Start the app with any additional arguments
+    q setsid uwsm app -- "$app_name" "$@" &
+    
+    echo "Restarted $app_name"
+}
+
+refresh_theme() {
+    # Compositor & system services
+    q hyprctl reload || true
+    restart_app swayosd-server || true
+    q makoctl reload || true
+    q pkill -SIGUSR2 btop || true
+    
+    # Terminal themes
+    refresh_terminal_theme
+    
+    # Application themes
+    refresh_gnome_theme
+    refresh_nvim_theme
+    refresh_zathura_theme
+    refresh_browser_theme
+    
+    # Shuffle background
+    q system-theme background shuffle || true
+    
+    echo "Theme refreshed"
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Theme Update Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+refresh_terminal_theme() {
+    # Alacritty: touch config to trigger reload
+    if [[ -f "$HOME/.config/alacritty/alacritty.toml" ]]; then
+        q touch "$HOME/.config/alacritty/alacritty.toml" || true
+    fi
+    
+    # Ghostty: send SIGUSR2 to reload
+    q killall -SIGUSR2 ghostty || true
+}
+
+refresh_gnome_theme() {
+    # Set color scheme based on light/dark mode
+    if [[ -f "$THEME_DIR/light.mode" ]]; then
+        q gsettings set org.gnome.desktop.interface color-scheme "prefer-light" || true
+        q gsettings set org.gnome.desktop.interface gtk-theme "Adwaita" || true
+    else
+        q gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" || true
+        q gsettings set org.gnome.desktop.interface gtk-theme "Adwaita-dark" || true
+    fi
+    
+    # Set icon theme if specified
+    local icons_theme="$THEME_DIR/icons.theme"
+    if [[ -f "$icons_theme" ]]; then
+        q gsettings set org.gnome.desktop.interface icon-theme "$(<"$icons_theme")" || true
+    else
+        q gsettings set org.gnome.desktop.interface icon-theme "Yaru-blue" || true
+    fi
+}
+
+refresh_nvim_theme() {
+    local theme_neovim="$THEME_DIR/neovim.lua"
+    local nvim_theme_file="$HOME/.config/nvim/theme.lua"
+    
+    if [[ -f "$theme_neovim" ]]; then
+        q ln -sf "$theme_neovim" "$nvim_theme_file" || true
+    fi
+}
+
+refresh_zathura_theme() {
+    local theme_zathura="$THEME_DIR/zathura.theme"
+    local zathura_theme_file="$HOME/.config/zathura/theme.zathurarc"
+    
+    if [[ -f "$theme_zathura" ]]; then
+        q ln -sf "$theme_zathura" "$zathura_theme_file" || true
+    fi
+}
+
+refresh_browser_theme() {
+    local browser_theme="$THEME_DIR/browser.theme"
+    
+    # Only proceed if chromium or helium-browser is installed
+    if ! command -v chromium &>/dev/null && ! command -v helium-browser &>/dev/null; then
+        return 0
+    fi
+    
+    # Read theme color or use default
+    local theme_rgb_color theme_hex_color
+    if [[ -f "$browser_theme" ]]; then
+        theme_rgb_color=$(<"$browser_theme")
+        theme_hex_color=$(printf '#%02x%02x%02x' ${theme_rgb_color//,/ })
+    else
+        theme_rgb_color="28,32,39"
+        theme_hex_color="#1c2027"
+    fi
+    
+    # Update chromium
+    if command -v chromium &>/dev/null; then
+        q rm -f /etc/chromium/policies/managed/color.json || true
+        q chromium --no-startup-window --set-theme-color="$theme_rgb_color" || true
+        
+        if [[ -f "$THEME_DIR/light.mode" ]]; then
+            q chromium --no-startup-window --set-color-scheme="light" || true
+        else
+            q chromium --no-startup-window --set-color-scheme="dark" || true
+        fi
+    fi
+    
+    # Update helium-browser
+    if command -v helium-browser &>/dev/null; then
+        q bash -c "echo '{\"BrowserThemeColor\": \"$theme_hex_color\"}' | tee /etc/chromium/policies/managed/color.json >/dev/null" || true
+        q helium-browser --no-startup-window --refresh-platform-policy || true
+    fi
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Help Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+print_help() {
+    cat <<EOF
+Usage: system-refresh [command] [arguments]
+
+Commands:
+  all                Refresh everything (apps + theme) [default]
+  apps               Restart system applications
+  theme              Refresh theme and application themes
+  app NAME [ARGS]    Restart specific application with optional arguments
+                     Options: --only-if-running (only restart if already running)
+  help               Show this help
+
+Examples:
+  system-refresh                              # Refresh everything
+  system-refresh apps                         # Just restart apps
+  system-refresh theme                        # Just refresh theme
+  system-refresh app waybar                   # Restart waybar
+  system-refresh app --only-if-running waybar # Restart waybar only if running
+  system-refresh app walker --gapplication-service
+EOF
+}
+
+main "$@"

@@ -10,6 +10,8 @@ source "${SCRIPT_DIR}/../lib/shell/common.sh" 2>/dev/null || q() { "$@" >/dev/nu
 
 THEMES_DIR="$HOME/.config/themes"
 CURRENT_THEME_DIR="$HOME/.config/theme"
+THEME_BACKGROUNDS="$HOME/.config/theme/backgrounds"
+HYPR_BACKGROUND="$HOME/.config/hypr/background.jpg"
 
 #──────────────────────────────────────────────────────────────────────────────
 # Functions
@@ -29,33 +31,29 @@ parse_args() {
     shift
 
     case "$action" in
-    --help | -h)
-        [[ $# -eq 0 ]] || {
-            echo "Error: --help takes no arguments" >&2
-            exit 1
-        }
-        print_help
-        ;;
-    --set | -s)
+    set)
         [[ $# -eq 1 ]] || {
-            echo "Error: --set requires exactly one theme name" >&2
+            echo "Error: set requires exactly one theme name" >&2
             exit 1
         }
         set_theme "$1"
         ;;
-    --get | -g)
+    get)
         [[ $# -eq 0 ]] || {
-            echo "Error: --get takes no arguments" >&2
+            echo "Error: get takes no arguments" >&2
             exit 1
         }
         print_theme
         ;;
-    --refresh | -r)
+    background | bg)
+        parse_background_args "$@"
+        ;;
+    --help | -h | help)
         [[ $# -eq 0 ]] || {
-            echo "Error: --refresh takes no arguments" >&2
+            echo "Error: help takes no arguments" >&2
             exit 1
         }
-        refresh_theme
+        print_help
         ;;
     *)
         echo "Error: Unknown action: $action" >&2
@@ -65,18 +63,82 @@ parse_args() {
     esac
 }
 
+parse_background_args() {
+    [[ $# -gt 0 ]] || {
+        echo "Error: background requires an action" >&2
+        print_background_help
+        exit 1
+    }
+
+    local bg_action="$1"
+    shift
+
+    case "$bg_action" in
+    shuffle)
+        [[ $# -eq 0 ]] || {
+            echo "Error: shuffle takes no arguments" >&2
+            exit 1
+        }
+        shuffle_background
+        ;;
+    next)
+        [[ $# -eq 0 ]] || {
+            echo "Error: next takes no arguments" >&2
+            exit 1
+        }
+        next_background
+        ;;
+    set)
+        [[ $# -eq 1 ]] || {
+            echo "Error: set requires image path" >&2
+            exit 1
+        }
+        set_background "$1"
+        ;;
+    get)
+        [[ $# -eq 0 ]] || {
+            echo "Error: get takes no arguments" >&2
+            exit 1
+        }
+        get_background
+        ;;
+    --help | -h | help)
+        [[ $# -eq 0 ]] || {
+            echo "Error: help takes no arguments" >&2
+            exit 1
+        }
+        print_background_help
+        ;;
+    *)
+        echo "Error: Unknown background action: $bg_action" >&2
+        print_background_help
+        exit 1
+        ;;
+    esac
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Theme Functions
+#──────────────────────────────────────────────────────────────────────────────
+
 set_theme() {
     local theme_name="$1"
 
     [[ -d "$THEMES_DIR/$theme_name" ]] || {
         echo "Error: Theme '$theme_name' not found" >&2
         echo "Available themes:" >&2
-        ls "$THEMES_DIR" 2>/dev/null >&2 || echo "  (No themes directory found)" >&2
+        ls "$THEMES_DIR" >&2 2>/dev/null || echo "  (No themes directory found)" >&2
         return 1
     }
 
     q ln -nsf "$THEMES_DIR/$theme_name" "$CURRENT_THEME_DIR"
-    refresh_theme
+    
+    # Apply theme to running applications
+    if command -v system-refresh &>/dev/null; then
+        system-refresh theme
+    else
+        echo "Warning: system-refresh not found, theme set but not applied" >&2
+    fi
 
     echo "Theme set to $theme_name"
 }
@@ -90,35 +152,166 @@ print_theme() {
     fi
 }
 
-refresh_theme() {
-    q hyprctl reload
-    q system-update-awww
-    q system-restart-app swayosd-server
-    q makoctl reload
-    q pkill -SIGUSR2 btop
-    q system-update-terminal-theme
-    q system-update-gnome-theme
-    q system-update-nvim-theme
-    q system-update-zathura-theme
-    q system-update-browser-theme
+#──────────────────────────────────────────────────────────────────────────────
+# Background Functions
+#──────────────────────────────────────────────────────────────────────────────
 
-    echo "Theme refreshed"
+get_available_backgrounds() {
+    [[ -d "$THEME_BACKGROUNDS" ]] || {
+        echo "Error: No backgrounds directory found in current theme" >&2
+        return 1
+    }
+
+    local -n bg_array=$1
+    mapfile -t bg_array < <(find "$THEME_BACKGROUNDS" -type f \( -name "*.jpg" -o -name "*.png" -o -name "*.jpeg" \) | sort)
+
+    [[ ${#bg_array[@]} -gt 0 ]] || {
+        echo "Error: No background images found in theme" >&2
+        return 1
+    }
 }
+
+apply_background() {
+    local bg_path="$1"
+
+    [[ -f "$bg_path" ]] || {
+        echo "Error: Background file not found: $bg_path" >&2
+        return 1
+    }
+
+    q ln -sf "$bg_path" "$HYPR_BACKGROUND"
+
+    # Reload awww if it's running
+    if command -v awww &>/dev/null && pgrep -x awww-daemon >/dev/null 2>&1; then
+        q awww img "$HYPR_BACKGROUND" --transition-type fade --transition-duration 0.5
+    fi
+
+    echo "Background set to: $(basename "$bg_path")"
+}
+
+shuffle_background() {
+    local -a bg_files
+    get_available_backgrounds bg_files || return 1
+
+    # If only one background, use it
+    if [[ ${#bg_files[@]} -eq 1 ]]; then
+        apply_background "${bg_files[0]}"
+        return
+    fi
+
+    # Get current background basename
+    local current_bg_basename=""
+    if [[ -L "$HYPR_BACKGROUND" ]]; then
+        current_bg_basename=$(basename "$(readlink "$HYPR_BACKGROUND")")
+    fi
+
+    # Filter out current background and pick random from remaining
+    local -a available_bgs=()
+    for bg in "${bg_files[@]}"; do
+        if [[ "$(basename "$bg")" != "$current_bg_basename" ]]; then
+            available_bgs+=("$bg")
+        fi
+    done
+
+    # Pick random background
+    if [[ ${#available_bgs[@]} -gt 0 ]]; then
+        local selected_bg="${available_bgs[RANDOM % ${#available_bgs[@]}]}"
+    else
+        # Fallback: pick any random one
+        local selected_bg="${bg_files[RANDOM % ${#bg_files[@]}]}"
+    fi
+
+    apply_background "$selected_bg"
+}
+
+next_background() {
+    local -a bg_files
+    get_available_backgrounds bg_files || return 1
+
+    # If only one background, use it
+    if [[ ${#bg_files[@]} -eq 1 ]]; then
+        apply_background "${bg_files[0]}"
+        return
+    fi
+
+    # Get current background path
+    local current_bg=""
+    if [[ -L "$HYPR_BACKGROUND" ]]; then
+        current_bg=$(readlink "$HYPR_BACKGROUND")
+    fi
+
+    # Find current index
+    local current_idx=-1
+    for i in "${!bg_files[@]}"; do
+        if [[ "${bg_files[$i]}" == "$current_bg" ]]; then
+            current_idx=$i
+            break
+        fi
+    done
+
+    # Get next index (wrap around)
+    local next_idx=$(((current_idx + 1) % ${#bg_files[@]}))
+
+    apply_background "${bg_files[$next_idx]}"
+}
+
+set_background() {
+    local bg_path="$1"
+
+    # Handle relative and absolute paths
+    if [[ ! "$bg_path" = /* ]]; then
+        bg_path="$(pwd)/$bg_path"
+    fi
+
+    apply_background "$bg_path"
+}
+
+get_background() {
+    if [[ -L "$HYPR_BACKGROUND" ]]; then
+        readlink "$HYPR_BACKGROUND"
+    else
+        echo "Error: No background set" >&2
+        return 1
+    fi
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Help Functions
+#──────────────────────────────────────────────────────────────────────────────
 
 print_help() {
     cat <<EOF
-Usage: system-theme [ACTION]
+Usage: system-theme <command> [arguments]
 
-Actions:
-  --set, -s THEME    Set theme to THEME
-  --get, -g          Print current theme name
-  --refresh, -r      Refresh current theme
-  --help, -h         Show this help
+Commands:
+  set THEME          Set theme to THEME (automatically applies to running apps)
+  get                Print current theme name
+  background, bg     Manage background images (see 'system-theme background help')
+  help               Show this help
 
 Examples:
-  system-theme --set gruvbox
-  system-theme --get
-  system-theme --refresh
+  system-theme set gruvbox
+  system-theme get
+  system-theme background shuffle
+EOF
+}
+
+print_background_help() {
+    cat <<EOF
+Usage: system-theme background <action> [arguments]
+
+Actions:
+  shuffle            Set random background from current theme
+  next               Set next background in sequence
+  set PATH           Set specific background image
+  get                Print current background path
+  help               Show this help
+
+Examples:
+  system-theme background shuffle
+  system-theme background next
+  system-theme background set ~/Pictures/wallpaper.jpg
+  system-theme background get
 EOF
 }
 
