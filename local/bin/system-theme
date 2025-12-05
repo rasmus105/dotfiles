@@ -51,6 +51,13 @@ parse_args() {
     font)
         parse_font_args "$@"
         ;;
+    nightlight)
+        [[ $# -eq 0 ]] || {
+            echo "Error: nightlight takes no arguments" >&2
+            exit 1
+        }
+        toggle_nightlight
+        ;;
     --help | -h | help)
         [[ $# -eq 0 ]] || {
             echo "Error: help takes no arguments" >&2
@@ -379,6 +386,32 @@ list_fonts() {
 }
 
 #──────────────────────────────────────────────────────────────────────────────
+# Nightlight Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+toggle_nightlight() {
+    # Default temperature values
+    local ON_TEMP=4000
+    local OFF_TEMP=6000
+
+    # Ensure hyprsunset is running
+    if ! pgrep -x hyprsunset >/dev/null 2>&1; then
+        setsid uwsm app -- hyprsunset &
+    fi
+
+    # Query the current temperature
+    local CURRENT_TEMP=$(hyprctl hyprsunset temperature 2>/dev/null | grep -oE '[0-9]+')
+
+    if [[ "$CURRENT_TEMP" == "$ON_TEMP" ]]; then
+        hyprctl hyprsunset temperature $OFF_TEMP
+        notify-send "   Daylight screen temperature"
+    else
+        hyprctl hyprsunset temperature $ON_TEMP
+        notify-send "  Nightlight screen temperature"
+    fi
+}
+
+#──────────────────────────────────────────────────────────────────────────────
 # Background Functions
 #──────────────────────────────────────────────────────────────────────────────
 
@@ -514,6 +547,7 @@ Commands:
   get                Print current theme name
   background, bg     Manage background images (see 'system-theme background help')
   font               Manage fonts (see 'system-theme font help')
+  nightlight         Toggle nightlight mode (changes screen temperature)
   help               Show this help
 
 Examples:
@@ -521,6 +555,7 @@ Examples:
   system-theme get
   system-theme background shuffle
   system-theme font set "JetBrains Mono"
+  system-theme nightlight
 EOF
 }
 
