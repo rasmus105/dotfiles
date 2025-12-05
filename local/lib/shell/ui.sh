@@ -625,22 +625,27 @@ _ui_draw_screen_local() {
     [ $history_lines -lt 3 ] && history_lines=3
     [ $output_lines -lt 5 ] && output_lines=5
 
-    # Move to top-left and clear screen
-    tput cup 0 0 2>/dev/null || printf "\033[H" # Fallback to ANSI
-    tput ed 2>/dev/null || printf "\033[J"      # Clear to end, fallback to ANSI
-
-    # Draw history region
-    _ui_draw_history_local "$history_lines" "$current_cmd" "$current_start" \
-        "$term_cols" "$color_success" "$color_error" "$color_pending" "$color_reset" "${history[@]}"
-
-    # Draw separator
-    _ui_draw_separator_local "$term_cols" "$color_muted" "$color_reset"
-
-    # Draw output region
-    _ui_draw_output_local "$output_lines" "$term_cols" "$color_muted" "$color_reset"
-
-    # Draw status bar (it will draw its own separator and position itself at bottom)
-    _ui_draw_status_local "$current_step" "$total_steps" "$term_cols" "$color_info" "$color_reset" "$term_lines" "$color_muted"
+    # Build complete frame in memory
+    local frame=""
+    
+    # Accumulate all sections (command substitution strips trailing newlines, so add them during concatenation)
+    frame+="$(_ui_draw_history_local "$history_lines" "$current_cmd" "$current_start" \
+        "$term_cols" "$color_success" "$color_error" "$color_pending" "$color_reset" "${history[@]}")"
+    frame+=$'\n'
+    
+    frame+="$(_ui_draw_separator_local "$term_cols" "$color_muted" "$color_reset")"
+    frame+=$'\n'
+    
+    frame+="$(_ui_draw_output_local "$output_lines" "$term_cols" "$color_muted" "$color_reset")"
+    frame+=$'\n'
+    
+    frame+="$(_ui_draw_status_local "$current_step" "$total_steps" "$term_cols" \
+        "$color_info" "$color_reset" "$term_lines" "$color_muted")"
+    
+    # Atomic display: move to top, clear screen, print entire frame
+    tput cup 0 0 2>/dev/null || printf "\033[H"
+    tput ed 2>/dev/null || printf "\033[J"
+    printf "%s" "$frame"
 }
 
 # Draw command history region (with local state)
@@ -656,6 +661,8 @@ _ui_draw_history_local() {
     shift 8
     local -a history=("$@")
 
+    local output=""
+    
     # Calculate how many history entries to show
     local history_count=${#history[@]}
     local start=0
@@ -670,10 +677,11 @@ _ui_draw_history_local() {
         IFS='|' read -r icon desc time status <<<"$entry"
 
         # Set color based on icon
+        local color=""
         case $icon in
-        ✓) printf "%s" "$color_success" ;;
-        ✗) printf "%s" "$color_error" ;;
-        ⊙) printf "%s" "$color_pending" ;;
+        ✓) color="$color_success" ;;
+        ✗) color="$color_error" ;;
+        ⊙) color="$color_pending" ;;
         esac
 
         # Format and truncate if needed
@@ -682,7 +690,7 @@ _ui_draw_history_local() {
             line="${line:0:$((term_cols - 3))}..."
         fi
 
-        printf "%s%s\n" "$line" "$color_reset"
+        output+="${color}${line}${color_reset}"$'\n'
     done
 
     # Show current command if running
@@ -690,13 +698,14 @@ _ui_draw_history_local() {
         local elapsed=$(($(_get_time) - current_start))
         local elapsed_str=$(_format_duration $elapsed)
 
-        printf "%s" "$color_pending"
         local line="⊙ $current_cmd ($elapsed_str)"
         if [ ${#line} -gt $term_cols ]; then
             line="${line:0:$((term_cols - 3))}..."
         fi
-        printf "%s%s\n" "$line" "$color_reset"
+        output+="${color_pending}${line}${color_reset}"$'\n'
     fi
+    
+    printf "%s" "$output"
 }
 
 # Draw separator line (with local state)
@@ -705,9 +714,12 @@ _ui_draw_separator_local() {
     local color_muted=$2
     local color_reset=$3
 
-    printf "%s" "$color_muted"
-    printf "─%.0s" $(seq 1 $term_cols)
-    printf "%s\n" "$color_reset"
+    local output=""
+    output+="${color_muted}"
+    output+="$(printf "─%.0s" $(seq 1 $term_cols))"
+    output+="${color_reset}"$'\n'
+    
+    printf "%s" "$output"
 }
 
 # Draw command output region (with local state)
@@ -717,6 +729,8 @@ _ui_draw_output_local() {
     local color_muted=$3
     local color_reset=$4
 
+    local output=""
+    
     # Read last N lines from log file
     if [ -f "$UI_LOG_FILE" ]; then
         mapfile -t lines < <(tail -n "$max_lines" "$UI_LOG_FILE" 2>/dev/null || true)
@@ -727,10 +741,12 @@ _ui_draw_output_local() {
                 line="${line:0:$((term_cols - 5))}..."
             fi
 
-            # Print with muted color and indentation
-            printf "%s  %s%s\n" "$color_muted" "$line" "$color_reset"
+            # Append to output string instead of printing
+            output+="${color_muted}  ${line}${color_reset}"$'\n'
         done
     fi
+    
+    printf "%s" "$output"
 }
 
 # Draw status bar (progress and keybindings) (with local state)
@@ -743,20 +759,22 @@ _ui_draw_status_local() {
     local term_lines=$6
     local color_muted=$7
 
+    local output=""
+    
     # Position cursor at bottom of terminal (3 lines from bottom for separator + 2 status lines)
     # Status occupies last 2 lines: progress bar + keybindings
     # Line before that is the separator
 
     # Move cursor to position for bottom separator (3rd line from bottom)
-    tput cup $((term_lines - 3)) 0 2>/dev/null || printf "\033[%d;0H" $((term_lines - 2))
+    output+="$(tput cup $((term_lines - 3)) 0 2>/dev/null || printf "\033[%d;0H" $((term_lines - 2)))"
 
     # Draw bottom separator
-    printf "%s" "$color_muted"
-    printf "─%.0s" $(seq 1 $term_cols)
-    printf "%s\n" "$color_reset"
+    output+="${color_muted}"
+    output+="$(printf "─%.0s" $(seq 1 $term_cols))"
+    output+="${color_reset}"$'\n'
 
     # Progress bar (2nd line from bottom)
-    tput cup $((term_lines - 2)) 0 2>/dev/null || printf "\033[%d;0H" $((term_lines - 1))
+    output+="$(tput cup $((term_lines - 2)) 0 2>/dev/null || printf "\033[%d;0H" $((term_lines - 1)))"
 
     local percent=0
     if [ $total_steps -gt 0 ]; then
@@ -769,14 +787,16 @@ _ui_draw_status_local() {
     local filled=$((bar_width * percent / 100))
     local empty=$((bar_width - filled))
 
-    printf "%s" "$color_info"
-    printf "━%.0s" $(seq 1 $filled)
-    printf "─%.0s" $(seq 1 $empty)
-    printf " %3d%% (%d/%d)%s\n" $percent $current_step $total_steps "$color_reset"
+    output+="${color_info}"
+    output+="$(printf "━%.0s" $(seq 1 $filled))"
+    output+="$(printf "─%.0s" $(seq 1 $empty))"
+    output+=" $(printf "%3d" $percent)% (${current_step}/${total_steps})${color_reset}"$'\n'
 
     # Keybindings (last line - bottom of terminal)
-    tput cup $((term_lines - 1)) 0 2>/dev/null || printf "\033[%d;0H" $term_lines
-    printf "%s^C Cancel  ^Z Background%s" "$ANSI_DIM" "$color_reset"
+    output+="$(tput cup $((term_lines - 1)) 0 2>/dev/null || printf "\033[%d;0H" $term_lines)"
+    output+="${ANSI_DIM}^C Cancel  ^Z Background${color_reset}"
+    
+    printf "%s" "$output"
 }
 
 #──────────────────────────────────────────────────────────────────────────────
