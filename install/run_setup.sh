@@ -1,0 +1,190 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+#──────────────────────────────────────────────────────────────────────────────
+# Dotfiles Setup Orchestration Layer
+# Main entry point for complete dotfiles installation with TUI
+#──────────────────────────────────────────────────────────────────────────────
+
+# Setup paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Source dependencies
+source "${DOTFILES_DIR}/local/lib/shell/ui.sh"
+source "${DOTFILES_DIR}/local/lib/shell/common.sh" 2>/dev/null || true
+
+# Configuration
+PACKAGES_FILE="${SCRIPT_DIR}/packages.txt"
+DEFAULT_THEME="gruvbox"
+NON_INTERACTIVE=0
+SYSTEM_SETUP="${DOTFILES_DIR}/local/bin/system-setup.sh"
+
+#──────────────────────────────────────────────────────────────────────────────
+# Argument Parsing
+#──────────────────────────────────────────────────────────────────────────────
+
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        --non-interactive)
+            NON_INTERACTIVE=1
+            shift
+            ;;
+        --theme)
+            DEFAULT_THEME="$2"
+            shift 2
+            ;;
+        --help | -h)
+            print_help
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown option: $1" >&2
+            print_help
+            exit 1
+            ;;
+        esac
+    done
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Helper Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+# Wrapper for error handling based on mode
+run_step() {
+    if [[ $NON_INTERACTIVE -eq 1 ]]; then
+        ui_run_or_abort "$@"
+    else
+        ui_run_or_prompt "$@"
+    fi
+}
+
+# Read packages from file, filtering comments and empty lines
+read_packages() {
+    local -a packages=()
+    while IFS= read -r line; do
+        # Remove leading/trailing whitespace
+        line=$(echo "$line" | xargs 2>/dev/null || echo "$line")
+        # Skip empty lines and comments
+        [[ -z "$line" || "$line" =~ ^[#] ]] && continue
+        packages+=("$line")
+    done <"$PACKAGES_FILE"
+
+    # Return via stdout (caller should capture with readarray or similar)
+    printf '%s\n' "${packages[@]}"
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Main Setup Flow
+#──────────────────────────────────────────────────────────────────────────────
+
+main() {
+    parse_args "$@"
+
+    # Initialize UI with 9 steps
+    ui_init 9 "basic"
+
+    # Read packages from file
+    local -a packages=()
+    mapfile -t packages < <(read_packages)
+
+    # Step 1: Install gum (UI toolkit) - critical for rest of setup
+    run_step "Installing gum (UI toolkit)" \
+        "$SYSTEM_SETUP" bootstrap gum
+
+    # Step 2: Install paru (AUR helper) - needed for package installation
+    run_step "Installing paru (AUR helper)" \
+        "$SYSTEM_SETUP" bootstrap paru
+
+    # Step 3: Install packages from list
+    if [[ ${#packages[@]} -gt 0 ]]; then
+        run_step "Installing ${#packages[@]} packages" \
+            "$SYSTEM_SETUP" packages install-list "${packages[@]}"
+    else
+        run_step "No packages to install" true
+    fi
+
+    # Step 4: Stow dotfiles (config, home, local directories)
+    run_step "Stowing dotfiles" \
+        "$SYSTEM_SETUP" stow dotfiles
+
+    # Step 5: Copy system configurations (requires sudo)
+    run_step "Copying system configurations" \
+        "$SYSTEM_SETUP" system copy-configs
+
+    # Step 6: Configure MIME types (default applications)
+    run_step "Configuring MIME types" \
+        "$SYSTEM_SETUP" configure mimetypes
+
+    # Step 7: Setup shell (prompt for choice unless non-interactive)
+    local shell_choice="zsh"
+    if [[ $NON_INTERACTIVE -eq 0 ]]; then
+        shell_choice=$(ui_prompt_select "Choose your default shell" zsh bash fish)
+    fi
+    run_step "Setting up $shell_choice" \
+        "$SYSTEM_SETUP" configure "$shell_choice"
+
+    # Step 8: Setup systemd services
+    run_step "Enabling systemd services" \
+        "$SYSTEM_SETUP" configure systemd
+
+    # Step 9: Set default theme (with confirmation in interactive mode)
+    if [[ $NON_INTERACTIVE -eq 0 ]]; then
+        if ui_prompt_confirm "Set default theme to $DEFAULT_THEME?"; then
+            run_step "Setting default theme to $DEFAULT_THEME" \
+                "$SYSTEM_SETUP" configure theme "$DEFAULT_THEME"
+        else
+            # User declined, still increment step but skip action
+            ui_run "Skipping theme setup" true
+        fi
+    else
+        run_step "Setting default theme to $DEFAULT_THEME" \
+            "$SYSTEM_SETUP" configure theme "$DEFAULT_THEME"
+    fi
+
+    # Cleanup UI and show summary
+    ui_cleanup
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Help
+#──────────────────────────────────────────────────────────────────────────────
+
+print_help() {
+    cat <<EOF
+Usage: run_setup.sh [OPTIONS]
+
+Orchestrates the complete dotfiles installation and setup process.
+
+Options:
+  --non-interactive    Run in non-interactive mode (abort on any error)
+  --theme THEME        Set default theme (default: gruvbox)
+  --help, -h           Show this help message
+
+Setup Steps (9 total):
+  1. Install gum (UI toolkit)
+  2. Install paru (AUR helper)
+  3. Install packages from packages.txt
+  4. Stow dotfiles (config, home, local)
+  5. Copy system configurations
+  6. Configure MIME types
+  7. Setup shell (zsh/bash/fish)
+  8. Enable systemd services
+  9. Set default theme
+
+Notes:
+  • This script is idempotent - safe to run multiple times
+  • In interactive mode, you can retry/skip/abort failed steps
+  • In non-interactive mode, any failure aborts the entire setup
+  • All output is captured and displayed in a scrolling TUI view
+
+EOF
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Entry Point
+#──────────────────────────────────────────────────────────────────────────────
+
+main "$@"
