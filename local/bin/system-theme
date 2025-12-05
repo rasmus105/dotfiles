@@ -48,6 +48,9 @@ parse_args() {
     background | bg)
         parse_background_args "$@"
         ;;
+    font)
+        parse_font_args "$@"
+        ;;
     --help | -h | help)
         [[ $# -eq 0 ]] || {
             echo "Error: help takes no arguments" >&2
@@ -117,6 +120,53 @@ parse_background_args() {
     esac
 }
 
+parse_font_args() {
+    [[ $# -gt 0 ]] || {
+        echo "Error: font requires an action" >&2
+        print_font_help
+        exit 1
+    }
+
+    local font_action="$1"
+    shift
+
+    case "$font_action" in
+    set)
+        [[ $# -eq 1 ]] || {
+            echo "Error: set requires font name" >&2
+            exit 1
+        }
+        set_font "$1"
+        ;;
+    get)
+        [[ $# -eq 0 ]] || {
+            echo "Error: get takes no arguments" >&2
+            exit 1
+        }
+        get_font
+        ;;
+    list)
+        [[ $# -eq 0 ]] || {
+            echo "Error: list takes no arguments" >&2
+            exit 1
+        }
+        list_fonts
+        ;;
+    --help | -h | help)
+        [[ $# -eq 0 ]] || {
+            echo "Error: help takes no arguments" >&2
+            exit 1
+        }
+        print_font_help
+        ;;
+    *)
+        echo "Error: Unknown font action: $font_action" >&2
+        print_font_help
+        exit 1
+        ;;
+    esac
+}
+
 #──────────────────────────────────────────────────────────────────────────────
 # Theme Functions
 #──────────────────────────────────────────────────────────────────────────────
@@ -150,6 +200,97 @@ print_theme() {
         echo "Error: No theme set" >&2
         return 1
     fi
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Font Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+set_font() {
+    local font_name="$1"
+    
+    # Validate font exists
+    if ! fc-list | grep -iq "$font_name"; then
+        echo "Error: Font '$font_name' not found" >&2
+        echo "Use 'system-theme font list' to see available fonts" >&2
+        return 1
+    fi
+    
+    # Update alacritty
+    if [[ -f "$HOME/.config/alacritty/alacritty.toml" ]]; then
+        q sed -i "s/family = \"[^\"]*\"/family = \"$font_name\"/g" "$HOME/.config/alacritty/alacritty.toml" || true
+    fi
+    
+    # Update waybar
+    if [[ -f "$HOME/.config/waybar/style.css" ]]; then
+        q sed -i "s/font-family: \"[^\"]*\"/font-family: \"$font_name\"/g" "$HOME/.config/waybar/style.css" || true
+    fi
+    
+    # Update swayosd
+    if [[ -f "$HOME/.config/swayosd/style.css" ]]; then
+        q sed -i "s/font-family: \"[^\"]*\"/font-family: \"$font_name\"/g" "$HOME/.config/swayosd/style.css" || true
+    fi
+    
+    # Update wlogout
+    if [[ -f "$HOME/.config/wlogout/style.css" ]]; then
+        q sed -i "s/font-family: \"[^\"]*\"/font-family: \"$font_name\"/g" "$HOME/.config/wlogout/style.css" || true
+    fi
+    
+    # Update hyprland
+    if [[ -f "$HOME/.config/hypr/core/style.conf" ]]; then
+        q sed -i "s/font_family = .*/font_family = $font_name/g" "$HOME/.config/hypr/core/style.conf" || true
+    fi
+    
+    # Update mako
+    if [[ -f "$HOME/.config/mako/config" ]]; then
+        q sed -i "s/font=.*/font=$font_name/g" "$HOME/.config/mako/config" || true
+    fi
+    
+    # Update ghostty
+    if [[ -f "$HOME/.config/ghostty/config" ]]; then
+        q sed -i "s/font-family = .*/font-family = $font_name/g" "$HOME/.config/ghostty/config" || true
+        q pkill -SIGUSR2 ghostty || true
+    fi
+    
+    # Update zathura
+    if [[ -f "$HOME/.config/zathura/zathurarc" ]]; then
+        q sed -i "s/^set font \".*\"$/set font \"$font_name 15\"/g" "$HOME/.config/zathura/zathurarc" || true
+    fi
+    
+    # Update fontconfig
+    if [[ -f "$HOME/.config/fontconfig/fonts.conf" ]] && command -v xmlstarlet &>/dev/null; then
+        q xmlstarlet ed -L \
+            -u '//match[@target="pattern"][test/string="monospace"]/edit[@name="family"]/string' \
+            -v "$font_name" \
+            "$HOME/.config/fontconfig/fonts.conf" || true
+    fi
+    
+    # Refresh applications if system-refresh is available
+    if command -v system-refresh &>/dev/null; then
+        q system-refresh apps || true
+        q system-refresh theme || true
+    fi
+    
+    echo "Font set to $font_name"
+}
+
+get_font() {
+    # Try to extract from waybar style.css
+    if [[ -f "$HOME/.config/waybar/style.css" ]]; then
+        local font=$(grep -oP 'font-family:\s*["'\'']?\K[^;"'\'']+' "$HOME/.config/waybar/style.css" | head -n1)
+        if [[ -n "$font" ]]; then
+            echo "$font"
+            return 0
+        fi
+    fi
+    
+    echo "Error: Unable to determine current font" >&2
+    return 1
+}
+
+list_fonts() {
+    # List monospace fonts, excluding emoji and signwriting fonts
+    fc-list :spacing=100 -f "%{family[0]}\n" | grep -v -i -E 'emoji|signwriting' | sort -u
 }
 
 #──────────────────────────────────────────────────────────────────────────────
@@ -287,12 +428,14 @@ Commands:
   set THEME          Set theme to THEME (automatically applies to running apps)
   get                Print current theme name
   background, bg     Manage background images (see 'system-theme background help')
+  font               Manage fonts (see 'system-theme font help')
   help               Show this help
 
 Examples:
   system-theme set gruvbox
   system-theme get
   system-theme background shuffle
+  system-theme font set "JetBrains Mono"
 EOF
 }
 
@@ -312,6 +455,23 @@ Examples:
   system-theme background next
   system-theme background set ~/Pictures/wallpaper.jpg
   system-theme background get
+EOF
+}
+
+print_font_help() {
+    cat <<EOF
+Usage: system-theme font <action> [arguments]
+
+Actions:
+  set NAME           Set font to NAME (applies to all applications)
+  get                Print current font name
+  list               List available monospace fonts
+  help               Show this help
+
+Examples:
+  system-theme font set "JetBrains Mono"
+  system-theme font get
+  system-theme font list
 EOF
 }
 
