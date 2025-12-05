@@ -1,0 +1,1120 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+#──────────────────────────────────────────────────────────────────────────────
+# Setup
+#──────────────────────────────────────────────────────────────────────────────
+
+# SCRIPT_DIR is ~/.local/bin/
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# DOTFILES_DIR is ~/.dotfiles (go up from ~/.local/bin to ~/.local, then find .dotfiles)
+DOTFILES_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Enable verbose output for UI layer to capture
+export VERBOSE=1
+
+# Source common utilities (defines q() function that respects VERBOSE)
+source "${DOTFILES_DIR}/local/lib/shell/common.sh" 2>/dev/null || q() { "$@"; }
+
+VERSION_FILE="${DOTFILES_DIR}/.version"
+
+#──────────────────────────────────────────────────────────────────────────────
+# Configuration Options (can be set by caller)
+#──────────────────────────────────────────────────────────────────────────────
+
+# Abort on first error (default: continue)
+ABORT_ON_ERROR="${ABORT_ON_ERROR:-0}"
+
+# Default theme to set (if none exists)
+DEFAULT_THEME="${DEFAULT_THEME:-gruvbox}"
+
+#──────────────────────────────────────────────────────────────────────────────
+# Main Entry Point
+#──────────────────────────────────────────────────────────────────────────────
+
+main() {
+    parse_args "$@"
+}
+
+parse_args() {
+    [[ $# -gt 0 ]] || {
+        print_help
+        exit 0
+    }
+
+    local action="$1"
+    shift
+
+    case "$action" in
+    bootstrap)
+        parse_bootstrap_args "$@"
+        ;;
+    packages)
+        parse_packages_args "$@"
+        ;;
+    stow)
+        parse_stow_args "$@"
+        ;;
+    system)
+        parse_system_args "$@"
+        ;;
+    configure)
+        parse_configure_args "$@"
+        ;;
+    version)
+        parse_version_args "$@"
+        ;;
+    all)
+        [[ $# -eq 0 ]] || {
+            echo "Error: all takes no arguments" >&2
+            exit 1
+        }
+        run_all_setup
+        ;;
+    --help | -h | help)
+        [[ $# -eq 0 ]] || {
+            echo "Error: help takes no arguments" >&2
+            exit 1
+        }
+        print_help
+        ;;
+    *)
+        echo "Error: Unknown action: $action" >&2
+        print_help
+        exit 1
+        ;;
+    esac
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Subcommand Parsers
+#──────────────────────────────────────────────────────────────────────────────
+
+parse_bootstrap_args() {
+    [[ $# -gt 0 ]] || {
+        echo "Error: bootstrap requires an action" >&2
+        print_bootstrap_help
+        exit 1
+    }
+
+    local bootstrap_action="$1"
+    shift
+
+    case "$bootstrap_action" in
+    gum)
+        [[ $# -eq 0 ]] || {
+            echo "Error: gum takes no arguments" >&2
+            exit 1
+        }
+        install_gum
+        ;;
+    paru)
+        [[ $# -eq 0 ]] || {
+            echo "Error: paru takes no arguments" >&2
+            exit 1
+        }
+        install_paru
+        ;;
+    all)
+        [[ $# -eq 0 ]] || {
+            echo "Error: all takes no arguments" >&2
+            exit 1
+        }
+        install_gum
+        install_paru
+        ;;
+    --help | -h | help)
+        [[ $# -eq 0 ]] || {
+            echo "Error: help takes no arguments" >&2
+            exit 1
+        }
+        print_bootstrap_help
+        ;;
+    *)
+        echo "Error: Unknown bootstrap action: $bootstrap_action" >&2
+        print_bootstrap_help
+        exit 1
+        ;;
+    esac
+}
+
+parse_packages_args() {
+    [[ $# -gt 0 ]] || {
+        echo "Error: packages requires an action" >&2
+        print_packages_help
+        exit 1
+    }
+
+    local packages_action="$1"
+    shift
+
+    case "$packages_action" in
+    install)
+        local package_file="${1:-}"
+        if [[ -z "$package_file" ]]; then
+            echo "Error: install requires a package file path" >&2
+            exit 1
+        fi
+        install_packages "$package_file"
+        ;;
+    install-list)
+        # Accept packages as arguments
+        install_packages_from_list "$@"
+        ;;
+    --help | -h | help)
+        [[ $# -eq 0 ]] || {
+            echo "Error: help takes no arguments" >&2
+            exit 1
+        }
+        print_packages_help
+        ;;
+    *)
+        echo "Error: Unknown packages action: $packages_action" >&2
+        print_packages_help
+        exit 1
+        ;;
+    esac
+}
+
+parse_stow_args() {
+    [[ $# -gt 0 ]] || {
+        echo "Error: stow requires an action" >&2
+        print_stow_help
+        exit 1
+    }
+
+    local stow_action="$1"
+    shift
+
+    case "$stow_action" in
+    dotfiles)
+        [[ $# -eq 0 ]] || {
+            echo "Error: dotfiles takes no arguments" >&2
+            exit 1
+        }
+        stow_dotfiles
+        ;;
+    --help | -h | help)
+        [[ $# -eq 0 ]] || {
+            echo "Error: help takes no arguments" >&2
+            exit 1
+        }
+        print_stow_help
+        ;;
+    *)
+        echo "Error: Unknown stow action: $stow_action" >&2
+        print_stow_help
+        exit 1
+        ;;
+    esac
+}
+
+parse_system_args() {
+    [[ $# -gt 0 ]] || {
+        echo "Error: system requires an action" >&2
+        print_system_help
+        exit 1
+    }
+
+    local system_action="$1"
+    shift
+
+    case "$system_action" in
+    copy-configs)
+        [[ $# -eq 0 ]] || {
+            echo "Error: copy-configs takes no arguments" >&2
+            exit 1
+        }
+        copy_system_configs
+        ;;
+    --help | -h | help)
+        [[ $# -eq 0 ]] || {
+            echo "Error: help takes no arguments" >&2
+            exit 1
+        }
+        print_system_help
+        ;;
+    *)
+        echo "Error: Unknown system action: $system_action" >&2
+        print_system_help
+        exit 1
+        ;;
+    esac
+}
+
+parse_configure_args() {
+    [[ $# -gt 0 ]] || {
+        echo "Error: configure requires an action" >&2
+        print_configure_help
+        exit 1
+    }
+
+    local configure_action="$1"
+    shift
+
+    case "$configure_action" in
+    mimetypes)
+        [[ $# -eq 0 ]] || {
+            echo "Error: mimetypes takes no arguments" >&2
+            exit 1
+        }
+        configure_mimetypes
+        ;;
+    zsh)
+        [[ $# -eq 0 ]] || {
+            echo "Error: zsh takes no arguments" >&2
+            exit 1
+        }
+        setup_zsh
+        ;;
+    bash)
+        [[ $# -eq 0 ]] || {
+            echo "Error: bash takes no arguments" >&2
+            exit 1
+        }
+        setup_bash
+        ;;
+    fish)
+        [[ $# -eq 0 ]] || {
+            echo "Error: fish takes no arguments" >&2
+            exit 1
+        }
+        setup_fish
+        ;;
+    systemd)
+        [[ $# -eq 0 ]] || {
+            echo "Error: systemd takes no arguments" >&2
+            exit 1
+        }
+        setup_systemd_services
+        ;;
+    chromium)
+        [[ $# -eq 0 ]] || {
+            echo "Error: chromium takes no arguments" >&2
+            exit 1
+        }
+        setup_chromium_policies
+        ;;
+    theme)
+        local theme_name="${1:-$DEFAULT_THEME}"
+        setup_default_theme "$theme_name"
+        ;;
+    env)
+        [[ $# -eq 0 ]] || {
+            echo "Error: env takes no arguments" >&2
+            exit 1
+        }
+        setup_dotfiles_env
+        ;;
+    all)
+        [[ $# -eq 0 ]] || {
+            echo "Error: all takes no arguments" >&2
+            exit 1
+        }
+        setup_dotfiles_env
+        configure_mimetypes
+        setup_zsh
+        setup_systemd_services
+        setup_chromium_policies
+        setup_default_theme "$DEFAULT_THEME"
+        ;;
+    --help | -h | help)
+        [[ $# -eq 0 ]] || {
+            echo "Error: help takes no arguments" >&2
+            exit 1
+        }
+        print_configure_help
+        ;;
+    *)
+        echo "Error: Unknown configure action: $configure_action" >&2
+        print_configure_help
+        exit 1
+        ;;
+    esac
+}
+
+parse_version_args() {
+    [[ $# -gt 0 ]] || {
+        echo "Error: version requires an action" >&2
+        print_version_help
+        exit 1
+    }
+
+    local version_action="$1"
+    shift
+
+    case "$version_action" in
+    write)
+        [[ $# -eq 0 ]] || {
+            echo "Error: write takes no arguments" >&2
+            exit 1
+        }
+        write_version_file
+        ;;
+    get)
+        [[ $# -eq 0 ]] || {
+            echo "Error: get takes no arguments" >&2
+            exit 1
+        }
+        get_current_version
+        ;;
+    pre-install)
+        [[ $# -eq 0 ]] || {
+            echo "Error: pre-install takes no arguments" >&2
+            exit 1
+        }
+        run_pre_install_migrations
+        ;;
+    --help | -h | help)
+        [[ $# -eq 0 ]] || {
+            echo "Error: help takes no arguments" >&2
+            exit 1
+        }
+        print_version_help
+        ;;
+    *)
+        echo "Error: Unknown version action: $version_action" >&2
+        print_version_help
+        exit 1
+        ;;
+    esac
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Bootstrap Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+install_gum() {
+    if command -v gum &>/dev/null; then
+        return 0
+    fi
+
+    q sudo pacman -S --noconfirm gum || {
+        echo "Error: Failed to install gum" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    }
+}
+
+install_paru() {
+    if command -v paru &>/dev/null; then
+        echo "paru is already installed"
+        return 0
+    fi
+
+    echo "Installing paru (AUR helper)..."
+
+    # Ensure base-devel is installed
+    if ! pacman -Qg base-devel &>/dev/null; then
+        echo "Installing base-devel..."
+        q sudo pacman --noconfirm -S base-devel || {
+            echo "Error: Failed to install base-devel" >&2
+            [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+            return 1
+        }
+    fi
+
+    # Ensure git is installed
+    if ! command -v git &>/dev/null; then
+        echo "Installing git..."
+        q sudo pacman --noconfirm -S git || {
+            echo "Error: Failed to install git" >&2
+            [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+            return 1
+        }
+    fi
+
+    # Clone and build paru
+    local paru_dir="/tmp/paru-$$"
+    q rm -rf "$paru_dir"
+    
+    q git clone --depth=1 https://aur.archlinux.org/paru-bin.git "$paru_dir" || {
+        echo "Error: Failed to clone paru repository" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    }
+
+    (
+        cd "$paru_dir" || exit 1
+        q makepkg -si --noconfirm || exit 1
+    ) || {
+        echo "Error: Failed to build and install paru" >&2
+        q rm -rf "$paru_dir"
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    }
+
+    q rm -rf "$paru_dir"
+    echo "paru installed successfully"
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Package Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+install_packages() {
+    local package_file="${1:-$PACKAGES_FILE}"
+
+    if [[ ! -f "$package_file" ]]; then
+        echo "Error: Package file not found: $package_file" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    fi
+
+    # Read packages from file, filter out comments and empty lines
+    local -a packages=()
+    while IFS= read -r line; do
+        # Remove leading/trailing whitespace
+        line=$(echo "$line" | xargs 2>/dev/null || echo "$line")
+
+        # Skip empty lines and comments
+        [[ -z "$line" || "$line" =~ ^[#//] ]] && continue
+
+        packages+=("$line")
+    done < "$package_file"
+
+    if [[ ${#packages[@]} -eq 0 ]]; then
+        echo "No packages found in $package_file"
+        return 0
+    fi
+
+    echo "Found ${#packages[@]} packages to install"
+
+    # Track installation results
+    local installed=0
+    local failed=0
+    local skipped=0
+    local -a failed_packages=()
+
+    for package in "${packages[@]}"; do
+        # Check if package exists in repos
+        if ! paru -Si "$package" &>/dev/null && ! paru -Sg "$package" &>/dev/null; then
+            echo "Package not found: $package"
+            failed=$((failed + 1))
+            failed_packages+=("$package")
+            continue
+        fi
+
+        # Check if already installed
+        if paru -Q "$package" &>/dev/null; then
+            skipped=$((skipped + 1))
+            continue
+        fi
+
+        # Install package
+        echo "Installing $package..."
+        if q yes | paru -S --needed --noconfirm "$package"; then
+            # Verify installation
+            if paru -Q "$package" &>/dev/null; then
+                installed=$((installed + 1))
+            else
+                echo "Failed to verify installation: $package"
+                failed=$((failed + 1))
+                failed_packages+=("$package")
+            fi
+        else
+            echo "Failed to install: $package"
+            failed=$((failed + 1))
+            failed_packages+=("$package")
+        fi
+    done
+
+    echo "Installation complete: $installed installed, $skipped already installed, $failed failed"
+    
+    if [[ ${#failed_packages[@]} -gt 0 ]]; then
+        echo "Failed packages: ${failed_packages[*]}" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    fi
+
+    return 0
+}
+
+install_packages_from_list() {
+    local -a packages=("$@")
+
+    if [[ ${#packages[@]} -eq 0 ]]; then
+        echo "No packages provided"
+        return 0
+    fi
+
+    # Track installation results
+    local installed=0
+    local failed=0
+    local skipped=0
+    local -a failed_packages=()
+
+    for package in "${packages[@]}"; do
+        # Check if package exists in repos
+        if ! paru -Si "$package" &>/dev/null && ! paru -Sg "$package" &>/dev/null; then
+            echo "Package not found: $package"
+            failed=$((failed + 1))
+            failed_packages+=("$package")
+            continue
+        fi
+
+        # Check if already installed (idempotent)
+        if paru -Q "$package" &>/dev/null; then
+            skipped=$((skipped + 1))
+            continue
+        fi
+
+        # Install package
+        echo "Installing $package..."
+        if q yes | paru -S --needed --noconfirm "$package"; then
+            # Verify installation
+            if paru -Q "$package" &>/dev/null; then
+                installed=$((installed + 1))
+            else
+                echo "Failed to verify installation: $package"
+                failed=$((failed + 1))
+                failed_packages+=("$package")
+            fi
+        else
+            echo "Failed to install: $package"
+            failed=$((failed + 1))
+            failed_packages+=("$package")
+        fi
+    done
+
+    echo "Installation complete: $installed installed, $skipped already installed, $failed failed"
+    
+    if [[ ${#failed_packages[@]} -gt 0 ]]; then
+        echo "Failed packages: ${failed_packages[*]}" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    fi
+
+    return 0
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Stow Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+stow_dotfiles() {
+    if ! command -v stow &>/dev/null; then
+        echo "Error: stow is not installed" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    fi
+
+    echo "Stowing dotfiles..."
+
+    # Stow config directory
+    if [[ -d "$DOTFILES_DIR/config" ]]; then
+        q stow --restow -d "$DOTFILES_DIR" -t "$HOME/.config" config || {
+            echo "Error: Failed to stow config directory" >&2
+            [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+            return 1
+        }
+    fi
+
+    # Stow home directory
+    if [[ -d "$DOTFILES_DIR/home" ]]; then
+        q stow --restow -d "$DOTFILES_DIR" -t "$HOME" home || {
+            echo "Error: Failed to stow home directory" >&2
+            [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+            return 1
+        }
+    fi
+
+    # Stow local directory
+    if [[ -d "$DOTFILES_DIR/local" ]]; then
+        q mkdir -p "$HOME/.local/share/applications/icons"
+        q stow --restow -d "$DOTFILES_DIR" -t "$HOME/.local" local || {
+            echo "Error: Failed to stow local directory" >&2
+            [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+            return 1
+        }
+    fi
+
+    echo "Dotfiles stowed successfully"
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# System Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+copy_system_configs() {
+    if [[ ! -d "$DOTFILES_DIR/system" ]]; then
+        echo "No system directory found, skipping"
+        return 0
+    fi
+
+    echo "Copying system configs..."
+    q sudo rsync -av "$DOTFILES_DIR/system/" / || {
+        echo "Error: Failed to copy system configs" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    }
+
+    echo "System configs copied successfully"
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Configuration Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+setup_dotfiles_env() {
+    echo "Setting up dotfiles environment..."
+    echo "export DOTFILES_DIR=\"$DOTFILES_DIR\"" > "$HOME/.dotfiles_env" || {
+        echo "Error: Failed to create .dotfiles_env" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    }
+    echo "Dotfiles environment configured"
+}
+
+configure_mimetypes() {
+    echo "Configuring MIME types..."
+
+    # Check for required applications
+    local -a missing_apps=()
+    command -v imv &>/dev/null || missing_apps+=("imv")
+    command -v zathura &>/dev/null || missing_apps+=("zathura")
+    command -v mpv &>/dev/null || missing_apps+=("mpv")
+    command -v nvim &>/dev/null || missing_apps+=("nvim")
+    
+    # Check for zen browser
+    if [[ ! -f "$HOME/.local/share/applications/zen.desktop" ]] && [[ ! -f "/usr/share/applications/zen.desktop" ]]; then
+        missing_apps+=("zen-browser")
+    fi
+    
+    if [[ ${#missing_apps[@]} -gt 0 ]]; then
+        echo "Warning: Some applications are not installed: ${missing_apps[*]}" >&2
+        echo "MIME type associations will be configured, but may not work until applications are installed"
+    fi
+
+    # Image associations
+    q xdg-mime default imv.desktop image/png
+    q xdg-mime default imv.desktop image/jpeg
+    q xdg-mime default imv.desktop image/gif
+    q xdg-mime default imv.desktop image/webp
+    q xdg-mime default imv.desktop image/bmp
+    q xdg-mime default imv.desktop image/tiff
+
+    # PDF associations
+    q xdg-mime default org.pwmt.zathura.desktop application/pdf
+
+    # Browser associations
+    q xdg-settings set default-web-browser zen.desktop
+    q xdg-mime default zen.desktop x-scheme-handler/http
+    q xdg-mime default zen.desktop x-scheme-handler/https
+
+    # Video associations
+    local -a video_types=(
+        "video/mp4" "video/x-msvideo" "video/x-matroska" "video/x-flv"
+        "video/x-ms-wmv" "video/mpeg" "video/ogg" "video/webm"
+        "video/quicktime" "video/3gpp" "video/3gpp2" "video/x-ms-asf"
+        "video/x-ogm+ogg" "video/x-theora+ogg" "application/ogg"
+    )
+    for type in "${video_types[@]}"; do
+        q xdg-mime default mpv.desktop "$type"
+    done
+
+    # Text associations
+    local -a text_types=(
+        "text/plain" "text/english" "text/x-makefile" "text/x-c++hdr"
+        "text/x-c++src" "text/x-chdr" "text/x-csrc" "text/x-java"
+        "text/x-moc" "text/x-pascal" "text/x-tcl" "text/x-tex"
+        "application/x-shellscript" "text/x-c" "text/x-c++"
+        "application/xml" "text/xml"
+    )
+    for type in "${text_types[@]}"; do
+        q xdg-mime default nvim.desktop "$type"
+    done
+
+    echo "MIME types configured"
+}
+
+setup_zsh() {
+    local ZSH_PATH="/usr/bin/zsh"
+    
+    if [[ ! -f "$ZSH_PATH" ]]; then
+        echo "Error: zsh not found at $ZSH_PATH" >&2
+        echo "Install zsh before running this command" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    fi
+
+    echo "Setting up zsh..."
+
+    # Check current shell
+    local current_shell
+    current_shell=$(getent passwd "$USER" | cut -d: -f7)
+
+    if [[ "$current_shell" != "$ZSH_PATH" ]]; then
+        echo "Changing default shell to zsh..."
+        q sudo chsh -s "$ZSH_PATH" "$USER" || {
+            echo "Error: Failed to change shell to zsh" >&2
+            [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+            return 1
+        }
+        echo "Default shell set to zsh (restart session to take effect)"
+    else
+        echo "zsh is already the default shell"
+    fi
+
+    # Install antidote (zsh plugin manager)
+    local ANTIDOTE_DIR="${ZDOTDIR:-$HOME}/.antidote"
+    if [[ ! -d "$ANTIDOTE_DIR" ]]; then
+        echo "Installing antidote plugin manager..."
+        q git clone --depth=1 https://github.com/mattmc3/antidote.git "$ANTIDOTE_DIR" || {
+            echo "Error: Failed to install antidote" >&2
+            [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+            return 1
+        }
+        echo "Antidote installed"
+    else
+        echo "Antidote already installed"
+    fi
+
+    echo "zsh setup complete"
+}
+
+setup_bash() {
+    local BASH_PATH="/usr/bin/bash"
+    
+    if [[ ! -f "$BASH_PATH" ]]; then
+        echo "Error: bash not found at $BASH_PATH" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    fi
+
+    # Check current shell
+    local current_shell
+    current_shell=$(getent passwd "$USER" | cut -d: -f7)
+
+    if [[ "$current_shell" != "$BASH_PATH" ]]; then
+        echo "Changing default shell to bash..."
+        q sudo chsh -s "$BASH_PATH" "$USER" || {
+            echo "Error: Failed to change shell to bash" >&2
+            [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+            return 1
+        }
+        echo "Default shell set to bash (restart session to take effect)"
+    else
+        echo "bash is already the default shell"
+    fi
+
+    echo "bash setup complete"
+}
+
+setup_fish() {
+    local FISH_PATH="/usr/bin/fish"
+    
+    if [[ ! -f "$FISH_PATH" ]]; then
+        echo "Error: fish not found at $FISH_PATH" >&2
+        echo "Install fish before running this command" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    fi
+
+    # Check current shell
+    local current_shell
+    current_shell=$(getent passwd "$USER" | cut -d: -f7)
+
+    if [[ "$current_shell" != "$FISH_PATH" ]]; then
+        echo "Changing default shell to fish..."
+        q sudo chsh -s "$FISH_PATH" "$USER" || {
+            echo "Error: Failed to change shell to fish" >&2
+            [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+            return 1
+        }
+        echo "Default shell set to fish (restart session to take effect)"
+    else
+        echo "fish is already the default shell"
+    fi
+
+    echo "fish setup complete"
+}
+
+setup_systemd_services() {
+    echo "Setting up systemd services..."
+
+    # Enable battery monitor timer if it exists
+    if systemctl --user list-unit-files battery-monitor.timer &>/dev/null; then
+        q systemctl --user enable --now battery-monitor.timer || {
+            echo "Warning: Failed to enable battery-monitor.timer" >&2
+        }
+        echo "battery-monitor.timer enabled"
+    else
+        echo "battery-monitor.timer not found, skipping"
+    fi
+
+    echo "Systemd services configured"
+}
+
+setup_chromium_policies() {
+    # Check if chromium or chrome is installed
+    if ! command -v chromium &>/dev/null && ! command -v google-chrome &>/dev/null; then
+        echo "Chromium not installed, skipping policy directory setup"
+        return 0
+    fi
+
+    echo "Setting up Chromium policies directory..."
+    q sudo mkdir -p /etc/chromium/policies/managed || {
+        echo "Error: Failed to create chromium policies directory" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    }
+    
+    q sudo chmod 755 /etc/chromium/policies/managed || {
+        echo "Warning: Failed to set permissions on chromium policies directory" >&2
+    }
+
+    echo "Chromium policies directory configured"
+}
+
+setup_default_theme() {
+    local theme_name="${1:-$DEFAULT_THEME}"
+    local current_theme_link="$HOME/.config/theme"
+
+    # If theme symlink already exists, don't override
+    if [[ -e "$current_theme_link" ]]; then
+        echo "Theme already configured, skipping"
+        return 0
+    fi
+
+    echo "Setting default theme to $theme_name..."
+
+    # Check if system-theme command is available
+    if ! command -v system-theme &>/dev/null; then
+        echo "Warning: system-theme command not found, skipping theme setup" >&2
+        return 0
+    fi
+
+    q system-theme set "$theme_name" || {
+        echo "Error: Failed to set theme to $theme_name" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    }
+
+    echo "Default theme set to $theme_name"
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Version Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+write_version_file() {
+    echo "Writing version file..."
+
+    # Get current git commit hash
+    local commit_hash
+    commit_hash=$(cd "$DOTFILES_DIR" && git rev-parse HEAD 2>/dev/null) || {
+        echo "Error: Failed to get git commit hash" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    }
+
+    echo "$commit_hash" > "$VERSION_FILE" || {
+        echo "Error: Failed to write version file" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    }
+
+    echo "Version file written: $commit_hash"
+}
+
+get_current_version() {
+    if [[ ! -f "$VERSION_FILE" ]]; then
+        echo "Error: Version file not found" >&2
+        return 1
+    fi
+
+    cat "$VERSION_FILE"
+}
+
+run_pre_install_migrations() {
+    local migration_script="${SCRIPT_DIR}/pre-install.sh"
+
+    if [[ ! -f "$migration_script" ]]; then
+        echo "No pre-install migrations found, skipping"
+        return 0
+    fi
+
+    echo "Running pre-install migrations..."
+    q bash "$migration_script" || {
+        echo "Error: Pre-install migrations failed" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    }
+
+    echo "Pre-install migrations complete"
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Complete Setup
+#──────────────────────────────────────────────────────────────────────────────
+
+run_all_setup() {
+    echo "Running complete dotfiles setup..."
+
+    # Check for pre-install migrations first
+    run_pre_install_migrations || return 1
+
+    # Bootstrap
+    install_gum || return 1
+    install_paru || return 1
+
+    # Install packages
+    install_packages "$PACKAGES_FILE" || return 1
+
+    # Stow dotfiles
+    stow_dotfiles || return 1
+
+    # Copy system configs
+    copy_system_configs || return 1
+
+    # Configure everything
+    setup_dotfiles_env || return 1
+    configure_mimetypes || return 1
+    setup_zsh || return 1
+    setup_systemd_services || return 1
+    setup_chromium_policies || return 1
+    setup_default_theme "$DEFAULT_THEME" || return 1
+
+    # Write version
+    write_version_file || return 1
+
+    echo "Complete setup finished successfully"
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Help Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+print_help() {
+    cat <<EOF
+Usage: system-setup.sh <command> [arguments]
+
+Commands:
+  bootstrap          Bootstrap essentials (gum, paru)
+  packages           Package management operations
+  stow               Stow dotfiles to home directory
+  system             System-level configuration
+  configure          Configure applications and services
+  version            Version tracking and migrations
+  all                Run complete setup (all steps in order)
+  help               Show this help
+
+For command-specific help, use: system-setup.sh <command> help
+
+Examples:
+  system-setup.sh bootstrap all
+  system-setup.sh packages install-list firefox neovim
+  system-setup.sh stow dotfiles
+  system-setup.sh configure zsh
+
+Environment Variables:
+  ABORT_ON_ERROR     Set to 1 to stop on first error (default: 0)
+  DEFAULT_THEME      Theme to set if none exists (default: gruvbox)
+  VERBOSE            Set to 1 to show all command output (default: 0)
+
+Note: This script is called by install/run_setup.sh for orchestrated setup
+EOF
+}
+
+print_bootstrap_help() {
+    cat <<EOF
+Usage: setup_new.sh bootstrap <action>
+
+Actions:
+  gum                Install gum (TUI toolkit)
+  paru               Install paru (AUR helper)
+  all                Install both gum and paru
+  help               Show this help
+
+Examples:
+  setup_new.sh bootstrap gum
+  setup_new.sh bootstrap paru
+  setup_new.sh bootstrap all
+EOF
+}
+
+print_packages_help() {
+    cat <<EOF
+Usage: system-setup.sh packages <action> [arguments]
+
+Actions:
+  install FILE       Install packages from file
+  install-list PKG.. Install packages from argument list
+  help               Show this help
+
+Examples:
+  system-setup.sh packages install /path/to/packages.txt
+  system-setup.sh packages install-list firefox neovim git
+EOF
+}
+
+print_stow_help() {
+    cat <<EOF
+Usage: setup_new.sh stow <action>
+
+Actions:
+  dotfiles           Stow config, home, and local directories
+  help               Show this help
+
+Examples:
+  setup_new.sh stow dotfiles
+EOF
+}
+
+print_system_help() {
+    cat <<EOF
+Usage: setup_new.sh system <action>
+
+Actions:
+  copy-configs       Copy system configs to / (requires sudo)
+  help               Show this help
+
+Examples:
+  setup_new.sh system copy-configs
+EOF
+}
+
+print_configure_help() {
+    cat <<EOF
+Usage: system-setup.sh configure <action> [arguments]
+
+Actions:
+  env                Export DOTFILES_DIR to shell environment
+  mimetypes          Configure default applications for file types
+  zsh                Set zsh as default shell and install antidote
+  bash               Set bash as default shell
+  fish               Set fish as default shell
+  systemd            Enable systemd user services
+  chromium           Setup Chromium policies directory
+  theme [NAME]       Set default theme (default: gruvbox)
+  all                Run all configuration steps
+  help               Show this help
+
+Examples:
+  system-setup.sh configure mimetypes
+  system-setup.sh configure zsh
+  system-setup.sh configure bash
+  system-setup.sh configure theme rose-pine
+  system-setup.sh configure all
+EOF
+}
+
+print_version_help() {
+    cat <<EOF
+Usage: setup_new.sh version <action>
+
+Actions:
+  write              Write current git commit to .version file
+  get                Display current version from .version file
+  pre-install        Run pre-install migration scripts (if they exist)
+  help               Show this help
+
+Examples:
+  setup_new.sh version write
+  setup_new.sh version get
+  setup_new.sh version pre-install
+EOF
+}
+
+main "$@"
