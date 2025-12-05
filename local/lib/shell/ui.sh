@@ -18,6 +18,7 @@ declare -g UI_LOG_FILE="/tmp/dotfiles-output.log"
 declare -g UI_MONITOR_PID="" # Background monitor process PID
 declare -g UI_IS_TTY=1       # Whether we're in a TTY (fancy UI enabled)
 declare -g UI_ENABLED=0      # Whether UI has been initialized
+declare -g UI_FIFO=""        # Named pipe for IPC with monitor process
 
 # Color configuration (set via ui_init)
 declare -g UI_COLOR_SUCCESS="" # Green for success (✓)
@@ -81,6 +82,14 @@ ui_init() {
     # Create/clear log file
     : >"$UI_LOG_FILE"
 
+    # Create FIFO for IPC
+    UI_FIFO="/tmp/dotfiles-ui-$$.fifo"
+    mkfifo "$UI_FIFO" 2>/dev/null || {
+        echo "Failed to create FIFO, disabling fancy UI" >&2
+        UI_IS_TTY=0
+        return
+    }
+
     # Setup terminal
     printf "%s" "$ANSI_HIDE_CURSOR"
 
@@ -90,6 +99,9 @@ ui_init() {
 
     # Start background monitor
     _ui_start_monitor
+    
+    # Send initial state to monitor
+    _ui_send_update "INIT|$UI_CURRENT_STEP|$UI_TOTAL_STEPS|$UI_TERM_LINES|$UI_TERM_COLS"
 }
 
 # Run a command with UI integration
@@ -110,6 +122,9 @@ ui_run() {
     UI_CURRENT_CMD="$desc"
     UI_CURRENT_START=$(date +%s)
 
+    # Notify monitor of new command
+    _ui_send_update "CMD|$UI_CURRENT_CMD|$UI_CURRENT_START"
+
     # Clear log for this command
     : >"$UI_LOG_FILE"
 
@@ -125,12 +140,18 @@ ui_run() {
     # Update history based on exit code
     if [ $exit_code -eq 0 ]; then
         UI_HISTORY+=("✓|$desc|$duration_str|success")
+        _ui_send_update "HISTORY|✓|$desc|$duration_str|success"
     else
         UI_HISTORY+=("✗|$desc|$duration_str|failed")
+        _ui_send_update "HISTORY|✗|$desc|$duration_str|failed"
     fi
 
     UI_CURRENT_STEP=$((UI_CURRENT_STEP + 1))
     UI_CURRENT_CMD=""
+    
+    # Clear current command and update step
+    _ui_send_update "CMD||0"
+    _ui_send_update "STEP|$UI_CURRENT_STEP|$UI_TOTAL_STEPS"
 
     return $exit_code
 }
@@ -386,6 +407,11 @@ ui_cleanup() {
     _ui_stop_monitor
     printf "%s" "$ANSI_SHOW_CURSOR"
 
+    # Remove FIFO
+    if [ -n "$UI_FIFO" ] && [ -p "$UI_FIFO" ]; then
+        rm -f "$UI_FIFO"
+    fi
+
     # Clear traps
     trap - EXIT INT TERM WINCH
 
@@ -451,6 +477,17 @@ _ui_format_duration() {
     fi
 }
 
+# Send update message to monitor via FIFO
+# Usage: _ui_send_update "MESSAGE_TYPE|data|more_data"
+_ui_send_update() {
+    if [ -z "$UI_FIFO" ] || [ ! -p "$UI_FIFO" ]; then
+        return
+    fi
+    
+    # Send message, ignore errors if monitor is not reading
+    echo "$1" > "$UI_FIFO" 2>/dev/null || true
+}
+
 # Start background monitor process
 _ui_start_monitor() {
     if [ $UI_IS_TTY -eq 0 ] || [ -n "$UI_MONITOR_PID" ]; then
@@ -458,18 +495,97 @@ _ui_start_monitor() {
     fi
 
     (
+        # Open FIFO for reading (non-blocking)
+        exec 3< "$UI_FIFO"
+        
+        # Local state (isolated from parent process)
+        local -a local_history=()
+        local local_current_cmd=""
+        local local_current_start=0
+        local local_current_step=0
+        local local_total_steps=$UI_TOTAL_STEPS
+        local local_term_lines=$UI_TERM_LINES
+        local local_term_cols=$UI_TERM_COLS
+        
+        # Copy color variables (these don't change)
+        local color_success=$UI_COLOR_SUCCESS
+        local color_error=$UI_COLOR_ERROR
+        local color_pending=$UI_COLOR_PENDING
+        local color_info=$UI_COLOR_INFO
+        local color_muted=$UI_COLOR_MUTED
+        local color_reset=$UI_COLOR_RESET
+        
         while true; do
-            _ui_draw_screen
+            # Read all pending updates from FIFO (non-blocking)
+            while true; do
+                if IFS='|' read -r -t 0.01 -u 3 msg_type rest; then
+                    # Successfully read a message
+                    case "$msg_type" in
+                        INIT)
+                            # Full state initialization
+                            IFS='|' read -r local_current_step local_total_steps local_term_lines local_term_cols <<< "$rest"
+                            ;;
+                        CMD)
+                            # Current command update
+                            IFS='|' read -r local_current_cmd local_current_start <<< "$rest"
+                            ;;
+                        HISTORY)
+                            # Add history entry
+                            local_history+=("$rest")
+                            ;;
+                        STEP)
+                            # Update step counter
+                            IFS='|' read -r local_current_step local_total_steps <<< "$rest"
+                            ;;
+                        RESIZE)
+                            # Terminal resize
+                            IFS='|' read -r local_term_lines local_term_cols <<< "$rest"
+                            ;;
+                        STOP)
+                            # Exit signal
+                            exec 3<&-  # Close FIFO
+                            exit 0
+                            ;;
+                    esac
+                else
+                    # Timeout - no more data available
+                    break
+                fi
+            done
+            
+            # Draw screen with local state
+            _ui_draw_screen_local \
+                "$local_current_cmd" \
+                "$local_current_start" \
+                "$local_current_step" \
+                "$local_total_steps" \
+                "$local_term_lines" \
+                "$local_term_cols" \
+                "$color_success" \
+                "$color_error" \
+                "$color_pending" \
+                "$color_info" \
+                "$color_muted" \
+                "$color_reset" \
+                "${local_history[@]}"
+            
             sleep 0.1
         done
     ) &
     UI_MONITOR_PID=$!
+    
+    # Give monitor time to open FIFO for reading
+    sleep 0.05
 }
 
 # Stop background monitor process
 _ui_stop_monitor() {
     if [ -n "$UI_MONITOR_PID" ]; then
-        kill "$UI_MONITOR_PID" 2>/dev/null || true
+        # Send stop signal via FIFO
+        _ui_send_update "STOP"
+        
+        # Wait for monitor to exit gracefully
+        sleep 0.1
         wait "$UI_MONITOR_PID" 2>/dev/null || true
         UI_MONITOR_PID=""
 
@@ -490,15 +606,33 @@ _ui_handle_resize() {
             _ui_stop_monitor
             echo "Terminal too small, switching to simple mode"
         fi
+    else
+        # Send resize notification to monitor
+        _ui_send_update "RESIZE|$UI_TERM_LINES|$UI_TERM_COLS"
     fi
 }
 
-# Draw the entire screen (called by background monitor)
-_ui_draw_screen() {
+# Draw the entire screen (called by background monitor with local state)
+_ui_draw_screen_local() {
+    local current_cmd=$1
+    local current_start=$2
+    local current_step=$3
+    local total_steps=$4
+    local term_lines=$5
+    local term_cols=$6
+    local color_success=$7
+    local color_error=$8
+    local color_pending=$9
+    local color_info=${10}
+    local color_muted=${11}
+    local color_reset=${12}
+    shift 12
+    local -a history=("$@")
+    
     # Calculate region heights (as percentage of terminal)
-    local history_lines=$((UI_TERM_LINES * 20 / 100))
+    local history_lines=$((term_lines * 20 / 100))
     local status_lines=3
-    local output_lines=$((UI_TERM_LINES - history_lines - status_lines - 2)) # -2 for separators
+    local output_lines=$((term_lines - history_lines - status_lines - 2)) # -2 for separators
 
     # Ensure minimum sizes
     [ $history_lines -lt 3 ] && history_lines=3
@@ -509,78 +643,95 @@ _ui_draw_screen() {
     tput ed 2>/dev/null || printf "\033[J"      # Clear to end, fallback to ANSI
 
     # Draw history region
-    _ui_draw_history $history_lines
+    _ui_draw_history_local "$history_lines" "$current_cmd" "$current_start" \
+        "$term_cols" "$color_success" "$color_error" "$color_pending" "$color_reset" "${history[@]}"
 
     # Draw separator
-    _ui_draw_separator
+    _ui_draw_separator_local "$term_cols" "$color_muted" "$color_reset"
 
     # Draw output region
-    _ui_draw_output $output_lines
+    _ui_draw_output_local "$output_lines" "$term_cols" "$color_muted" "$color_reset"
 
     # Draw separator
-    _ui_draw_separator
+    _ui_draw_separator_local "$term_cols" "$color_muted" "$color_reset"
 
     # Draw status bar
-    _ui_draw_status
+    _ui_draw_status_local "$current_step" "$total_steps" "$term_cols" "$color_info" "$color_reset"
 }
 
-# Draw command history region
-_ui_draw_history() {
+# Draw command history region (with local state)
+_ui_draw_history_local() {
     local max_lines=$1
+    local current_cmd=$2
+    local current_start=$3
+    local term_cols=$4
+    local color_success=$5
+    local color_error=$6
+    local color_pending=$7
+    local color_reset=$8
+    shift 8
+    local -a history=("$@")
 
     # Calculate how many history entries to show
-    local history_count=${#UI_HISTORY[@]}
+    local history_count=${#history[@]}
     local start=0
 
-    if [ "$history_count" -gt "$max_lines" ]; then
+    if [ $history_count -gt $max_lines ]; then
         start=$((history_count - max_lines))
     fi
 
     # Show history entries
     for ((i = start; i < history_count; i++)); do
-        local entry="${UI_HISTORY[$i]}"
+        local entry="${history[$i]}"
         IFS='|' read -r icon desc time status <<<"$entry"
 
         # Set color based on icon
         case $icon in
-        ✓) printf "%s" "$UI_COLOR_SUCCESS" ;;
-        ✗) printf "%s" "$UI_COLOR_ERROR" ;;
-        ⊙) printf "%s" "$UI_COLOR_PENDING" ;;
+        ✓) printf "%s" "$color_success" ;;
+        ✗) printf "%s" "$color_error" ;;
+        ⊙) printf "%s" "$color_pending" ;;
         esac
 
         # Format and truncate if needed
         local line="$icon $desc ${time:+($time)}"
-        if [ ${#line} -gt $UI_TERM_COLS ]; then
-            line="${line:0:$((UI_TERM_COLS - 3))}..."
+        if [ ${#line} -gt $term_cols ]; then
+            line="${line:0:$((term_cols - 3))}..."
         fi
 
-        printf "%s%s\n" "$line" "$UI_COLOR_RESET"
+        printf "%s%s\n" "$line" "$color_reset"
     done
 
     # Show current command if running
-    if [ -n "$UI_CURRENT_CMD" ]; then
-        local elapsed=$(($(date +%s) - UI_CURRENT_START))
+    if [ -n "$current_cmd" ]; then
+        local elapsed=$(($(date +%s) - current_start))
         local elapsed_str=$(_ui_format_duration $elapsed)
 
-        printf "%s" "$UI_COLOR_PENDING"
-        local line="⊙ $UI_CURRENT_CMD ($elapsed_str)"
-        if [ ${#line} -gt $UI_TERM_COLS ]; then
-            line="${line:0:$((UI_TERM_COLS - 3))}..."
+        printf "%s" "$color_pending"
+        local line="⊙ $current_cmd ($elapsed_str)"
+        if [ ${#line} -gt $term_cols ]; then
+            line="${line:0:$((term_cols - 3))}..."
         fi
-        printf "%s%s\n" "$line" "$UI_COLOR_RESET"
+        printf "%s%s\n" "$line" "$color_reset"
     fi
 }
 
-# Draw separator line
-_ui_draw_separator() {
-    printf "%s" "$UI_COLOR_MUTED"
-    printf "─%.0s" $(seq 1 $UI_TERM_COLS)
-    printf "%s\n" "$UI_COLOR_RESET"
+# Draw separator line (with local state)
+_ui_draw_separator_local() {
+    local term_cols=$1
+    local color_muted=$2
+    local color_reset=$3
+    
+    printf "%s" "$color_muted"
+    printf "─%.0s" $(seq 1 $term_cols)
+    printf "%s\n" "$color_reset"
 }
 
-# Draw command output region
-_ui_draw_output() {
+# Draw command output region (with local state)
+_ui_draw_output_local() {
     local max_lines=$1
+    local term_cols=$2
+    local color_muted=$3
+    local color_reset=$4
 
     # Read last N lines from log file
     if [ -f "$UI_LOG_FILE" ]; then
@@ -588,37 +739,43 @@ _ui_draw_output() {
 
         for line in "${lines[@]}"; do
             # Truncate if too long
-            if [ ${#line} -gt $((UI_TERM_COLS - 2)) ]; then
-                line="${line:0:$((UI_TERM_COLS - 5))}..."
+            if [ ${#line} -gt $((term_cols - 2)) ]; then
+                line="${line:0:$((term_cols - 5))}..."
             fi
 
             # Print with muted color and indentation
-            printf "%s  %s%s\n" "$UI_COLOR_MUTED" "$line" "$UI_COLOR_RESET"
+            printf "%s  %s%s\n" "$color_muted" "$line" "$color_reset"
         done
     fi
 }
 
-# Draw status bar (progress and keybindings)
-_ui_draw_status() {
+# Draw status bar (progress and keybindings) (with local state)
+_ui_draw_status_local() {
+    local current_step=$1
+    local total_steps=$2
+    local term_cols=$3
+    local color_info=$4
+    local color_reset=$5
+    
     # Progress bar
     local percent=0
-    if [ $UI_TOTAL_STEPS -gt 0 ]; then
-        percent=$((UI_CURRENT_STEP * 100 / UI_TOTAL_STEPS))
+    if [ $total_steps -gt 0 ]; then
+        percent=$((current_step * 100 / total_steps))
     fi
 
-    local bar_width=$((UI_TERM_COLS - 20))
+    local bar_width=$((term_cols - 20))
     [ $bar_width -lt 10 ] && bar_width=10
 
     local filled=$((bar_width * percent / 100))
     local empty=$((bar_width - filled))
 
-    printf "%s" "$UI_COLOR_INFO"
+    printf "%s" "$color_info"
     printf "━%.0s" $(seq 1 $filled)
     printf "─%.0s" $(seq 1 $empty)
-    printf " %3d%% (%d/%d)%s\n" $percent $UI_CURRENT_STEP $UI_TOTAL_STEPS "$UI_COLOR_RESET"
+    printf " %3d%% (%d/%d)%s\n" $percent $current_step $total_steps "$color_reset"
 
     # Keybindings
-    printf "%s^C Cancel  ^Z Background%s\n" "$ANSI_DIM" "$UI_COLOR_RESET"
+    printf "%s^C Cancel  ^Z Background%s\n" "$ANSI_DIM" "$color_reset"
 }
 
 #──────────────────────────────────────────────────────────────────────────────
