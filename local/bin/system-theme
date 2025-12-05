@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+#──────────────────────────────────────────────────────────────────────────────
+# Setup
+#──────────────────────────────────────────────────────────────────────────────
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/shell/common.sh" 2>/dev/null || q() { "$@" >/dev/null 2>&1; }
+
+THEMES_DIR="$HOME/.config/themes"
+CURRENT_THEME_DIR="$HOME/.config/theme"
+
+#──────────────────────────────────────────────────────────────────────────────
+# Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+main() {
+    parse_args "$@"
+}
+
+parse_args() {
+    [[ $# -gt 0 ]] || {
+        print_help
+        exit 0
+    }
+
+    local action="$1"
+    shift
+
+    case "$action" in
+    --help | -h)
+        [[ $# -eq 0 ]] || {
+            echo "Error: --help takes no arguments" >&2
+            exit 1
+        }
+        print_help
+        ;;
+    --set | -s)
+        [[ $# -eq 1 ]] || {
+            echo "Error: --set requires exactly one theme name" >&2
+            exit 1
+        }
+        set_theme "$1"
+        ;;
+    --get | -g)
+        [[ $# -eq 0 ]] || {
+            echo "Error: --get takes no arguments" >&2
+            exit 1
+        }
+        print_theme
+        ;;
+    --refresh | -r)
+        [[ $# -eq 0 ]] || {
+            echo "Error: --refresh takes no arguments" >&2
+            exit 1
+        }
+        refresh_theme
+        ;;
+    *)
+        echo "Error: Unknown action: $action" >&2
+        print_help
+        exit 1
+        ;;
+    esac
+}
+
+set_theme() {
+    local theme_name="$1"
+
+    [[ -d "$THEMES_DIR/$theme_name" ]] || {
+        echo "Error: Theme '$theme_name' not found" >&2
+        echo "Available themes:" >&2
+        ls "$THEMES_DIR" 2>/dev/null >&2 || echo "  (No themes directory found)" >&2
+        return 1
+    }
+
+    q ln -nsf "$THEMES_DIR/$theme_name" "$CURRENT_THEME_DIR"
+    refresh_theme
+
+    echo "Theme set to $theme_name"
+}
+
+print_theme() {
+    if [[ -L "$CURRENT_THEME_DIR" ]]; then
+        basename "$(readlink "$CURRENT_THEME_DIR")"
+    else
+        echo "Error: No theme set" >&2
+        return 1
+    fi
+}
+
+refresh_theme() {
+    q hyprctl reload
+    q system-update-awww
+    q system-restart-app swayosd-server
+    q makoctl reload
+    q pkill -SIGUSR2 btop
+    q system-update-terminal-theme
+    q system-update-gnome-theme
+    q system-update-nvim-theme
+    q system-update-zathura-theme
+    q system-update-browser-theme
+
+    echo "Theme refreshed"
+}
+
+print_help() {
+    cat <<EOF
+Usage: system-theme [ACTION]
+
+Actions:
+  --set, -s THEME    Set theme to THEME
+  --get, -g          Print current theme name
+  --refresh, -r      Refresh current theme
+  --help, -h         Show this help
+
+Examples:
+  system-theme --set gruvbox
+  system-theme --get
+  system-theme --refresh
+EOF
+}
+
+main "$@"
