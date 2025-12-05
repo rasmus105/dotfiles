@@ -6,3 +6,8 @@ profile home {
 profile undocked {
   output "eDP-1" enable
 }
+
+profile big-tv {
+  output "Samsung Electric Company SAMSUNG 0x01000E00" mode 3840x2160@30Hz position 0,0 scale 3.0
+  output "eDP-1" disable
+}

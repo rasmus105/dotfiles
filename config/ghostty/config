@@ -32,6 +32,8 @@ keybind = ctrl+enter=unbind
 keybind = ctrl+tab=unbind
 
 # Misc
+keybind = super+/=start_search
+
 keybind = super+q=close_surface
 
 keybind = super+t=toggle_quick_terminal
