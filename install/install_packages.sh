@@ -1,6 +1,13 @@
 #!/bin/bash
 
 install_paru() {
+    # Check if paru is already installed
+    if is_installed "paru"; then
+        gum_success "Paru is already installed"
+        echo ""
+        return 0
+    fi
+
     gum_info "Installing paru (AUR helper)..."
 
     if ! is_installed "base-devel"; then
@@ -12,7 +19,8 @@ install_paru() {
     fi
 
     # install paru (AUR helper)
-    log_run "Cloning paru from AUR" "rm -rf /tmp/paru && git clone https://aur.archlinux.org/paru-bin.git /tmp/paru"
+    # Use shallow clone (--depth=1) for faster cloning
+    log_run "Cloning paru from AUR" "rm -rf /tmp/paru && git clone --depth=1 https://aur.archlinux.org/paru-bin.git /tmp/paru"
     cd /tmp/paru || exit
     log_run "Building and installing paru" "makepkg -si --noconfirm"
     cd ~ || exit
@@ -65,9 +73,10 @@ install_packages() {
         if paru -Si "$package" &>/dev/null || paru -Sg "$package" &>/dev/null; then
             if paru -Q "$package" &>/dev/null; then
                 gum_info "Package '$package' is already installed"
-                ((skipped++))
+                skipped=$((skipped + 1))
             else
-                log_run "Installing $package" "paru -S --needed --noconfirm $package" || true
+                # Pipe 'yes' to automatically answer all prompts (paru still prompts even with --noconfirm)
+                log_run "Installing $package" "yes | paru -S --needed --noconfirm $package" || true
                 # Verify installation by checking if package is now installed
                 if paru -Q "$package" &>/dev/null; then
                     installed=$((installed + 1))

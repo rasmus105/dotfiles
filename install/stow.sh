@@ -18,9 +18,6 @@ stow_dotfiles() {
     mkdir -p "$HOME/.local/share/applications/icons"
     stow --restow -t "$HOME/.local" local
 
-    # Link all system themes to ~/.config/themes
-    ln -sf "$DOTFILES_DIR/themes" "$HOME/.config/themes"
-
     # Set default theme (gruvbox) if theme symlink doesn't exist
     if [[ ! -e "$HOME/.config/theme" ]]; then
         system-set-theme gruvbox
