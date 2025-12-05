@@ -129,20 +129,18 @@ restart_app() {
 }
 
 refresh_theme() {
-    # Compositor & system services
+    # Reload compositor
     q hyprctl reload || true
+    
+    # Reload system services
     restart_app swayosd-server || true
     q makoctl reload || true
+    
+    # Reload terminals (picks up all config changes including theme)
+    reload_terminals
+    
+    # Reload btop
     q pkill -SIGUSR2 btop || true
-    
-    # Terminal themes
-    refresh_terminal_theme
-    
-    # Application themes
-    refresh_gnome_theme
-    refresh_nvim_theme
-    refresh_zathura_theme
-    refresh_browser_theme
     
     # Shuffle background
     q system-theme background shuffle || true
@@ -151,91 +149,17 @@ refresh_theme() {
 }
 
 #──────────────────────────────────────────────────────────────────────────────
-# Theme Update Functions
+# Application Reload Functions
 #──────────────────────────────────────────────────────────────────────────────
 
-refresh_terminal_theme() {
+reload_terminals() {
     # Alacritty: touch config to trigger reload
     if [[ -f "$HOME/.config/alacritty/alacritty.toml" ]]; then
         q touch "$HOME/.config/alacritty/alacritty.toml" || true
     fi
     
-    # Ghostty: send SIGUSR2 to reload
+    # Ghostty: send SIGUSR2 to reload configuration
     q killall -SIGUSR2 ghostty || true
-}
-
-refresh_gnome_theme() {
-    # Set color scheme based on light/dark mode
-    if [[ -f "$THEME_DIR/light.mode" ]]; then
-        q gsettings set org.gnome.desktop.interface color-scheme "prefer-light" || true
-        q gsettings set org.gnome.desktop.interface gtk-theme "Adwaita" || true
-    else
-        q gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" || true
-        q gsettings set org.gnome.desktop.interface gtk-theme "Adwaita-dark" || true
-    fi
-    
-    # Set icon theme if specified
-    local icons_theme="$THEME_DIR/icons.theme"
-    if [[ -f "$icons_theme" ]]; then
-        q gsettings set org.gnome.desktop.interface icon-theme "$(<"$icons_theme")" || true
-    else
-        q gsettings set org.gnome.desktop.interface icon-theme "Yaru-blue" || true
-    fi
-}
-
-refresh_nvim_theme() {
-    local theme_neovim="$THEME_DIR/neovim.lua"
-    local nvim_theme_file="$HOME/.config/nvim/theme.lua"
-    
-    if [[ -f "$theme_neovim" ]]; then
-        q ln -sf "$theme_neovim" "$nvim_theme_file" || true
-    fi
-}
-
-refresh_zathura_theme() {
-    local theme_zathura="$THEME_DIR/zathura.theme"
-    local zathura_theme_file="$HOME/.config/zathura/theme.zathurarc"
-    
-    if [[ -f "$theme_zathura" ]]; then
-        q ln -sf "$theme_zathura" "$zathura_theme_file" || true
-    fi
-}
-
-refresh_browser_theme() {
-    local browser_theme="$THEME_DIR/browser.theme"
-    
-    # Only proceed if chromium or helium-browser is installed
-    if ! command -v chromium &>/dev/null && ! command -v helium-browser &>/dev/null; then
-        return 0
-    fi
-    
-    # Read theme color or use default
-    local theme_rgb_color theme_hex_color
-    if [[ -f "$browser_theme" ]]; then
-        theme_rgb_color=$(<"$browser_theme")
-        theme_hex_color=$(printf '#%02x%02x%02x' ${theme_rgb_color//,/ })
-    else
-        theme_rgb_color="28,32,39"
-        theme_hex_color="#1c2027"
-    fi
-    
-    # Update chromium
-    if command -v chromium &>/dev/null; then
-        q rm -f /etc/chromium/policies/managed/color.json || true
-        q chromium --no-startup-window --set-theme-color="$theme_rgb_color" || true
-        
-        if [[ -f "$THEME_DIR/light.mode" ]]; then
-            q chromium --no-startup-window --set-color-scheme="light" || true
-        else
-            q chromium --no-startup-window --set-color-scheme="dark" || true
-        fi
-    fi
-    
-    # Update helium-browser
-    if command -v helium-browser &>/dev/null; then
-        q bash -c "echo '{\"BrowserThemeColor\": \"$theme_hex_color\"}' | tee /etc/chromium/policies/managed/color.json >/dev/null" || true
-        q helium-browser --no-startup-window --refresh-platform-policy || true
-    fi
 }
 
 #──────────────────────────────────────────────────────────────────────────────
@@ -247,9 +171,9 @@ print_help() {
 Usage: system-refresh [command] [arguments]
 
 Commands:
-  all                Refresh everything (apps + theme) [default]
+  all                Refresh everything (apps + reload configs) [default]
   apps               Restart system applications
-  theme              Refresh theme and application themes
+  theme              Reload applications to pick up theme/config changes
   app NAME [ARGS]    Restart specific application with optional arguments
                      Options: --only-if-running (only restart if already running)
   help               Show this help
@@ -257,10 +181,12 @@ Commands:
 Examples:
   system-refresh                              # Refresh everything
   system-refresh apps                         # Just restart apps
-  system-refresh theme                        # Just refresh theme
+  system-refresh theme                        # Reload apps to pick up config changes
   system-refresh app waybar                   # Restart waybar
   system-refresh app --only-if-running waybar # Restart waybar only if running
   system-refresh app walker --gapplication-service
+
+Note: To set a theme, use 'system-theme set THEME' which will automatically refresh
 EOF
 }
 

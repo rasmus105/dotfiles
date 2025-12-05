@@ -181,16 +181,101 @@ set_theme() {
         return 1
     }
 
+    # Set theme symlink
     q ln -nsf "$THEMES_DIR/$theme_name" "$CURRENT_THEME_DIR"
     
-    # Apply theme to running applications
+    # Apply theme configurations
+    apply_theme_configs
+    
+    # Refresh applications to reload configurations
     if command -v system-refresh &>/dev/null; then
         system-refresh theme
     else
-        echo "Warning: system-refresh not found, theme set but not applied" >&2
+        echo "Warning: system-refresh not found, theme applied but apps not refreshed" >&2
     fi
 
     echo "Theme set to $theme_name"
+}
+
+apply_theme_configs() {
+    apply_nvim_theme
+    apply_zathura_theme
+    apply_gnome_theme
+    apply_browser_theme
+}
+
+apply_nvim_theme() {
+    local theme_neovim="$CURRENT_THEME_DIR/neovim.lua"
+    local nvim_theme_file="$HOME/.config/nvim/theme.lua"
+    
+    if [[ -f "$theme_neovim" ]]; then
+        q ln -sf "$theme_neovim" "$nvim_theme_file" || true
+    fi
+}
+
+apply_zathura_theme() {
+    local theme_zathura="$CURRENT_THEME_DIR/zathura.theme"
+    local zathura_theme_file="$HOME/.config/zathura/theme.zathurarc"
+    
+    if [[ -f "$theme_zathura" ]]; then
+        q ln -sf "$theme_zathura" "$zathura_theme_file" || true
+    fi
+}
+
+apply_gnome_theme() {
+    # Set color scheme based on light/dark mode
+    if [[ -f "$CURRENT_THEME_DIR/light.mode" ]]; then
+        q gsettings set org.gnome.desktop.interface color-scheme "prefer-light" || true
+        q gsettings set org.gnome.desktop.interface gtk-theme "Adwaita" || true
+    else
+        q gsettings set org.gnome.desktop.interface color-scheme "prefer-dark" || true
+        q gsettings set org.gnome.desktop.interface gtk-theme "Adwaita-dark" || true
+    fi
+    
+    # Set icon theme if specified
+    local icons_theme="$CURRENT_THEME_DIR/icons.theme"
+    if [[ -f "$icons_theme" ]]; then
+        q gsettings set org.gnome.desktop.interface icon-theme "$(<"$icons_theme")" || true
+    else
+        q gsettings set org.gnome.desktop.interface icon-theme "Yaru-blue" || true
+    fi
+}
+
+apply_browser_theme() {
+    local browser_theme="$CURRENT_THEME_DIR/browser.theme"
+    
+    # Only proceed if chromium or helium-browser is installed
+    if ! command -v chromium &>/dev/null && ! command -v helium-browser &>/dev/null; then
+        return 0
+    fi
+    
+    # Read theme color or use default
+    local theme_rgb_color theme_hex_color
+    if [[ -f "$browser_theme" ]]; then
+        theme_rgb_color=$(<"$browser_theme")
+        theme_hex_color=$(printf '#%02x%02x%02x' ${theme_rgb_color//,/ })
+    else
+        theme_rgb_color="28,32,39"
+        theme_hex_color="#1c2027"
+    fi
+    
+    # Update chromium
+    if command -v chromium &>/dev/null; then
+        q rm -f /etc/chromium/policies/managed/color.json || true
+        q chromium --no-startup-window --set-theme-color="$theme_rgb_color" || true
+        
+        if [[ -f "$CURRENT_THEME_DIR/light.mode" ]]; then
+            q chromium --no-startup-window --set-color-scheme="light" || true
+        else
+            q chromium --no-startup-window --set-color-scheme="dark" || true
+        fi
+    fi
+    
+    # Update helium-browser
+    if command -v helium-browser &>/dev/null; then
+        q bash -c "echo '{\"BrowserThemeColor\": \"$theme_hex_color\"}' | tee /etc/chromium/policies/managed/color.json >/dev/null" || true
+        q helium-browser --no-startup-window --refresh-platform-policy || true
+    fi
 }
 
 print_theme() {
