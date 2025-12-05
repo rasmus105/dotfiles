@@ -47,17 +47,20 @@ log_init() {
 
 # Setup terminal for non-blocking key detection
 _log_setup_terminal() {
-    # Save current terminal settings
-    SAVED_TTY_SETTINGS=$(stty -g)
-    
-    # Set terminal to raw mode (no echo, no line buffering)
-    stty -echo -icanon min 0 time 0
+    # Only setup terminal if we have a TTY
+    if [ -t 0 ]; then
+        # Save current terminal settings
+        SAVED_TTY_SETTINGS=$(stty -g)
+        
+        # Set terminal to raw mode (no echo, no line buffering)
+        stty -echo -icanon min 0 time 0
+    fi
 }
 
 # Restore terminal to normal mode
 _log_restore_terminal() {
-    # Restore original terminal settings
-    if [[ -n "$SAVED_TTY_SETTINGS" ]]; then
+    # Restore original terminal settings if we have a TTY
+    if [[ -n "$SAVED_TTY_SETTINGS" ]] && [ -t 0 ]; then
         stty "$SAVED_TTY_SETTINGS"
     fi
 }
@@ -266,6 +269,34 @@ log_run() {
         echo "---"
     } >>"$LOG_FILE"
 
+    # Check if we have a TTY - if not, use simple non-interactive mode
+    if [ ! -t 0 ] && [ ! -t 1 ]; then
+        # Non-interactive mode: just run the command and show simple output
+        echo "⋯ $title"
+        
+        # Run command and capture output to log
+        if eval "$cmd" >>"$LOG_FILE" 2>&1; then
+            _log_color "$LOG_COLOR_SUCCESS" "✓ $title"
+            echo
+            {
+                echo ">>> Success"
+                echo ""
+            } >>"$LOG_FILE"
+            return 0
+        else
+            local exit_code=$?
+            _log_color "$LOG_COLOR_ERROR" "✗ $title (failed)"
+            echo
+            {
+                echo ">>> Exit code: $exit_code"
+                echo ">>> FAILED"
+                echo ""
+            } >>"$LOG_FILE"
+            return $exit_code
+        fi
+    fi
+    
+    # Interactive mode with spinner and keypress detection
     # Setup terminal for key detection
     _log_setup_terminal
     

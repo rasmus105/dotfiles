@@ -44,3 +44,19 @@ command_exists() {
         return 0
     fi
 }
+
+# Quiet command execution helper
+# Suppresses stdout/stderr unless VERBOSE=1 or LOG_ENABLED=1
+# Usage: q command args...
+q() {
+    if [[ "${VERBOSE:-0}" == "1" ]]; then
+        # Verbose mode: show everything
+        "$@"
+    elif [[ "${LOG_ENABLED:-0}" == "1" ]] && [[ -n "${LOG_FILE:-}" ]] && [[ -f "$LOG_FILE" ]]; then
+        # Log mode: send to log file (only if explicitly enabled and file exists)
+        "$@" >> "$LOG_FILE" 2>&1
+    else
+        # Quiet mode: suppress output
+        "$@" >/dev/null 2>&1
+    fi
+}
