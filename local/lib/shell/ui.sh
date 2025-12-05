@@ -91,6 +91,10 @@ ui_init() {
     }
 
     # Setup terminal
+    # Switch to alternate screen buffer to preserve shell history
+    tput smcup 2>/dev/null || printf "\033[?1049h"
+    
+    # Hide cursor
     printf "%s" "$ANSI_HIDE_CURSOR"
 
     # Set up traps for cleanup
@@ -112,7 +116,7 @@ ui_run() {
     shift
 
     # Simple mode: just run it
-    if [ $UI_IS_TTY -eq 0 ] || [ $UI_ENABLED -eq 0 ]; then
+    if _ui_is_simple_mode; then
         echo "→ $desc"
         "$@"
         return $?
@@ -186,7 +190,7 @@ ui_run_or_prompt() {
     ui_run "$desc" "$@" || {
         local exit_code=$?
 
-        if [ $UI_IS_TTY -eq 0 ] || [ $UI_ENABLED -eq 0 ]; then
+        if _ui_is_simple_mode; then
             echo "Command failed with exit code $exit_code"
             echo "Continue anyway? (y/N)"
             read -r response
@@ -196,34 +200,37 @@ ui_run_or_prompt() {
             return 0
         fi
 
-        _ui_stop_monitor
+        # Handler function for prompt logic
+        _ui_prompt_failure_handler() {
+            echo ""
+            echo "Command failed with exit code $exit_code"
+            echo ""
 
-        echo ""
-        echo "Command failed with exit code $exit_code"
-        echo ""
+            # Show last 10 lines of output for context
+            echo "Last few lines of output:"
+            tail -n 10 "$UI_LOG_FILE" 2>/dev/null | sed 's/^/  /' || true
+            echo ""
 
-        # Show last 10 lines of output for context
-        echo "Last few lines of output:"
-        tail -n 10 "$UI_LOG_FILE" 2>/dev/null | sed 's/^/  /' || true
-        echo ""
+            local choice
+            if command -v gum &>/dev/null; then
+                choice=$(gum choose "Retry" "Continue anyway" "Abort" --header "What would you like to do?")
+            else
+                echo "1) Retry"
+                echo "2) Continue anyway"
+                echo "3) Abort"
+                read -p "Choice (1-3): " choice
+                case $choice in
+                1) choice="Retry" ;;
+                2) choice="Continue anyway" ;;
+                3) choice="Abort" ;;
+                *) choice="Abort" ;;
+                esac
+            fi
+            echo "$choice"
+        }
 
         local choice
-        if command -v gum &>/dev/null; then
-            choice=$(gum choose "Retry" "Continue anyway" "Abort" --header "What would you like to do?")
-        else
-            echo "1) Retry"
-            echo "2) Continue anyway"
-            echo "3) Abort"
-            read -p "Choice (1-3): " choice
-            case $choice in
-            1) choice="Retry" ;;
-            2) choice="Continue anyway" ;;
-            3) choice="Abort" ;;
-            *) choice="Abort" ;;
-            esac
-        fi
-
-        _ui_start_monitor
+        choice=$(_ui_with_monitor_stopped _ui_prompt_failure_handler)
 
         case "$choice" in
         "Retry")
@@ -248,27 +255,26 @@ ui_run_or_prompt() {
 ui_prompt_confirm() {
     local question="$1"
 
-    if [ $UI_IS_TTY -eq 0 ] || [ $UI_ENABLED -eq 0 ]; then
+    if _ui_is_simple_mode; then
         read -p "$question (y/N) " -n 1 -r
         echo
         [[ $REPLY =~ ^[Yy]$ ]]
         return $?
     fi
 
-    _ui_stop_monitor
+    # Handler function
+    _ui_confirm_handler() {
+        if command -v gum &>/dev/null; then
+            gum confirm "$question"
+        else
+            read -p "$question (y/N) " -n 1 -r
+            echo
+            [[ $REPLY =~ ^[Yy]$ ]]
+        fi
+    }
 
-    local result=1
-    if command -v gum &>/dev/null; then
-        gum confirm "$question" && result=0 || result=1
-    else
-        read -p "$question (y/N) " -n 1 -r
-        echo
-        [[ $REPLY =~ ^[Yy]$ ]] && result=0 || result=1
-    fi
-
-    _ui_start_monitor
-
-    return $result
+    _ui_with_monitor_stopped _ui_confirm_handler
+    return $?
 }
 
 # Prompt for selection from a list
@@ -278,7 +284,8 @@ ui_prompt_select() {
     shift
     local options=("$@")
 
-    if [ $UI_IS_TTY -eq 0 ] || [ $UI_ENABLED -eq 0 ]; then
+    # Simple mode fallback
+    _ui_select_fallback() {
         echo "$question"
         select opt in "${options[@]}"; do
             if [ -n "$opt" ]; then
@@ -287,26 +294,23 @@ ui_prompt_select() {
             fi
         done
         return 1
+    }
+
+    if _ui_is_simple_mode; then
+        _ui_select_fallback
+        return $?
     fi
 
-    _ui_stop_monitor
+    # Handler function
+    _ui_select_handler() {
+        if command -v gum &>/dev/null; then
+            gum choose "${options[@]}" --header "$question"
+        else
+            _ui_select_fallback
+        fi
+    }
 
-    local choice
-    if command -v gum &>/dev/null; then
-        choice=$(gum choose "${options[@]}" --header "$question")
-    else
-        echo "$question"
-        select opt in "${options[@]}"; do
-            if [ -n "$opt" ]; then
-                choice="$opt"
-                break
-            fi
-        done
-    fi
-
-    _ui_start_monitor
-
-    echo "$choice"
+    _ui_with_monitor_stopped _ui_select_handler
 }
 
 # Prompt for multiple selections
@@ -317,7 +321,8 @@ ui_prompt_multiselect() {
     shift
     local options=("$@")
 
-    if [ $UI_IS_TTY -eq 0 ] || [ $UI_ENABLED -eq 0 ]; then
+    # Fallback for multiselect (number-based selection)
+    _ui_multiselect_fallback() {
         echo "$question (enter numbers separated by spaces)"
         local i=1
         for opt in "${options[@]}"; do
@@ -330,32 +335,23 @@ ui_prompt_multiselect() {
                 echo "${options[$((sel - 1))]}"
             fi
         done
+    }
+
+    if _ui_is_simple_mode; then
+        _ui_multiselect_fallback
         return 0
     fi
 
-    _ui_stop_monitor
+    # Handler function
+    _ui_multiselect_handler() {
+        if command -v gum &>/dev/null; then
+            gum choose --no-limit "${options[@]}" --header "$question"
+        else
+            _ui_multiselect_fallback
+        fi
+    }
 
-    local choices
-    if command -v gum &>/dev/null; then
-        choices=$(gum choose --no-limit "${options[@]}" --header "$question")
-    else
-        echo "$question (enter numbers separated by spaces)"
-        local i=1
-        for opt in "${options[@]}"; do
-            echo "$i) $opt"
-            ((i++))
-        done
-        read -r -a selections
-        for sel in "${selections[@]}"; do
-            if [ "$sel" -ge 1 ] && [ "$sel" -le "${#options[@]}" ]; then
-                echo "${options[$((sel - 1))]}"
-            fi
-        done
-    fi
-
-    _ui_start_monitor
-
-    echo "$choices"
+    _ui_with_monitor_stopped _ui_multiselect_handler
 }
 
 # Prompt for text input
@@ -364,7 +360,8 @@ ui_prompt_input() {
     local question="$1"
     local default="${2:-}"
 
-    if [ $UI_IS_TTY -eq 0 ] || [ $UI_ENABLED -eq 0 ]; then
+    # Fallback for input
+    _ui_input_fallback() {
         if [ -n "$default" ]; then
             read -p "$question [$default]: " -r value
             echo "${value:-$default}"
@@ -372,30 +369,47 @@ ui_prompt_input() {
             read -p "$question: " -r value
             echo "$value"
         fi
+    }
+
+    if _ui_is_simple_mode; then
+        _ui_input_fallback
         return 0
     fi
 
+    # Handler function
+    _ui_input_handler() {
+        if command -v gum &>/dev/null; then
+            if [ -n "$default" ]; then
+                gum input --placeholder "$default" --prompt "$question: " --value "$default"
+            else
+                gum input --prompt "$question: "
+            fi
+        else
+            _ui_input_fallback
+        fi
+    }
+
+    _ui_with_monitor_stopped _ui_input_handler
+}
+
+# Check if we're in simple mode (no fancy UI)
+_ui_is_simple_mode() {
+    [ $UI_IS_TTY -eq 0 ] || [ $UI_ENABLED -eq 0 ]
+}
+
+# Wrapper to execute a function with monitor temporarily stopped
+# Usage: _ui_with_monitor_stopped function_name [args...]
+_ui_with_monitor_stopped() {
+    local func=$1
+    shift
+    
     _ui_stop_monitor
-
-    local value
-    if command -v gum &>/dev/null; then
-        if [ -n "$default" ]; then
-            value=$(gum input --placeholder "$default" --prompt "$question: " --value "$default")
-        else
-            value=$(gum input --prompt "$question: ")
-        fi
-    else
-        if [ -n "$default" ]; then
-            read -p "$question [$default]: " -r value
-            value="${value:-$default}"
-        else
-            read -p "$question: " -r value
-        fi
-    fi
-
+    local result
+    "$func" "$@"
+    result=$?
     _ui_start_monitor
-
-    echo "$value"
+    
+    return $result
 }
 
 # Cleanup and restore terminal
@@ -405,7 +419,14 @@ ui_cleanup() {
     fi
 
     _ui_stop_monitor
+    
+    # Show cursor
     printf "%s" "$ANSI_SHOW_CURSOR"
+    
+    # Restore original screen buffer (only if fancy UI was enabled)
+    if [ $UI_IS_TTY -eq 1 ]; then
+        tput rmcup 2>/dev/null || printf "\033[?1049l"
+    fi
 
     # Remove FIFO
     if [ -n "$UI_FIFO" ] && [ -p "$UI_FIFO" ]; then
@@ -494,14 +515,6 @@ _ui_start_monitor() {
         local local_term_lines=$UI_TERM_LINES
         local local_term_cols=$UI_TERM_COLS
 
-        # Copy color variables (these don't change)
-        local color_success=$UI_COLOR_SUCCESS
-        local color_error=$UI_COLOR_ERROR
-        local color_pending=$UI_COLOR_PENDING
-        local color_info=$UI_COLOR_INFO
-        local color_muted=$UI_COLOR_MUTED
-        local color_reset=$UI_COLOR_RESET
-
         while true; do
             # Read all pending updates from FIFO (non-blocking)
             while true; do
@@ -548,12 +561,6 @@ _ui_start_monitor() {
                 "$local_total_steps" \
                 "$local_term_lines" \
                 "$local_term_cols" \
-                "$color_success" \
-                "$color_error" \
-                "$color_pending" \
-                "$color_info" \
-                "$color_muted" \
-                "$color_reset" \
                 "${local_history[@]}"
 
             sleep 0.1
@@ -607,13 +614,7 @@ _ui_draw_screen_local() {
     local total_steps=$4
     local term_lines=$5
     local term_cols=$6
-    local color_success=$7
-    local color_error=$8
-    local color_pending=$9
-    local color_info=${10}
-    local color_muted=${11}
-    local color_reset=${12}
-    shift 12
+    shift 6
     local -a history=("$@")
 
     # Calculate region heights (as percentage of terminal)
@@ -625,27 +626,18 @@ _ui_draw_screen_local() {
     [ $history_lines -lt 3 ] && history_lines=3
     [ $output_lines -lt 5 ] && output_lines=5
 
-    # Build complete frame in memory
-    local frame=""
-    
-    # Accumulate all sections (command substitution strips trailing newlines, so add them during concatenation)
-    frame+="$(_ui_draw_history_local "$history_lines" "$current_cmd" "$current_start" \
-        "$term_cols" "$color_success" "$color_error" "$color_pending" "$color_reset" "${history[@]}")"
-    frame+=$'\n'
-    
-    frame+="$(_ui_draw_separator_local "$term_cols" "$color_muted" "$color_reset")"
-    frame+=$'\n'
-    
-    frame+="$(_ui_draw_output_local "$output_lines" "$term_cols" "$color_muted" "$color_reset")"
-    frame+=$'\n'
-    
-    frame+="$(_ui_draw_status_local "$current_step" "$total_steps" "$term_cols" \
-        "$color_info" "$color_reset" "$term_lines" "$color_muted")"
+    # Build complete frame using array-based assembly
+    local sections=(
+        "$(_ui_draw_history_local "$history_lines" "$current_cmd" "$current_start" "$term_cols" "${history[@]}")"
+        "$(_ui_draw_separator_local "$term_cols")"
+        "$(_ui_draw_output_local "$output_lines" "$term_cols")"
+        "$(_ui_draw_status_local "$current_step" "$total_steps" "$term_cols" "$term_lines")"
+    )
     
     # Atomic display: move to top, clear screen, print entire frame
     tput cup 0 0 2>/dev/null || printf "\033[H"
     tput ed 2>/dev/null || printf "\033[J"
-    printf "%s" "$frame"
+    printf '%s\n' "${sections[@]}"
 }
 
 # Draw command history region (with local state)
@@ -654,11 +646,7 @@ _ui_draw_history_local() {
     local current_cmd=$2
     local current_start=$3
     local term_cols=$4
-    local color_success=$5
-    local color_error=$6
-    local color_pending=$7
-    local color_reset=$8
-    shift 8
+    shift 4
     local -a history=("$@")
 
     local output=""
@@ -679,9 +667,9 @@ _ui_draw_history_local() {
         # Set color based on icon
         local color=""
         case $icon in
-        ✓) color="$color_success" ;;
-        ✗) color="$color_error" ;;
-        ⊙) color="$color_pending" ;;
+        ✓) color="$UI_COLOR_SUCCESS" ;;
+        ✗) color="$UI_COLOR_ERROR" ;;
+        ⊙) color="$UI_COLOR_PENDING" ;;
         esac
 
         # Format and truncate if needed
@@ -690,7 +678,7 @@ _ui_draw_history_local() {
             line="${line:0:$((term_cols - 3))}..."
         fi
 
-        output+="${color}${line}${color_reset}"$'\n'
+        output+="${color}${line}${UI_COLOR_RESET}"$'\n'
     done
 
     # Show current command if running
@@ -702,7 +690,7 @@ _ui_draw_history_local() {
         if [ ${#line} -gt $term_cols ]; then
             line="${line:0:$((term_cols - 3))}..."
         fi
-        output+="${color_pending}${line}${color_reset}"$'\n'
+        output+="${UI_COLOR_PENDING}${line}${UI_COLOR_RESET}"$'\n'
     fi
     
     printf "%s" "$output"
@@ -711,23 +699,14 @@ _ui_draw_history_local() {
 # Draw separator line (with local state)
 _ui_draw_separator_local() {
     local term_cols=$1
-    local color_muted=$2
-    local color_reset=$3
 
-    local output=""
-    output+="${color_muted}"
-    output+="$(printf "─%.0s" $(seq 1 $term_cols))"
-    output+="${color_reset}"$'\n'
-    
-    printf "%s" "$output"
+    printf "%s%s%s" "${UI_COLOR_MUTED}" "$(printf "─%.0s" $(seq 1 $term_cols))" "${UI_COLOR_RESET}"
 }
 
 # Draw command output region (with local state)
 _ui_draw_output_local() {
     local max_lines=$1
     local term_cols=$2
-    local color_muted=$3
-    local color_reset=$4
 
     local output=""
     
@@ -742,7 +721,7 @@ _ui_draw_output_local() {
             fi
 
             # Append to output string instead of printing
-            output+="${color_muted}  ${line}${color_reset}"$'\n'
+            output+="${UI_COLOR_MUTED}  ${line}${UI_COLOR_RESET}"$'\n'
         done
     fi
     
@@ -754,10 +733,7 @@ _ui_draw_status_local() {
     local current_step=$1
     local total_steps=$2
     local term_cols=$3
-    local color_info=$4
-    local color_reset=$5
-    local term_lines=$6
-    local color_muted=$7
+    local term_lines=$4
 
     local output=""
     
@@ -769,9 +745,9 @@ _ui_draw_status_local() {
     output+="$(tput cup $((term_lines - 3)) 0 2>/dev/null || printf "\033[%d;0H" $((term_lines - 2)))"
 
     # Draw bottom separator
-    output+="${color_muted}"
+    output+="${UI_COLOR_MUTED}"
     output+="$(printf "─%.0s" $(seq 1 $term_cols))"
-    output+="${color_reset}"$'\n'
+    output+="${UI_COLOR_RESET}"$'\n'
 
     # Progress bar (2nd line from bottom)
     output+="$(tput cup $((term_lines - 2)) 0 2>/dev/null || printf "\033[%d;0H" $((term_lines - 1)))"
@@ -787,14 +763,14 @@ _ui_draw_status_local() {
     local filled=$((bar_width * percent / 100))
     local empty=$((bar_width - filled))
 
-    output+="${color_info}"
+    output+="${UI_COLOR_INFO}"
     output+="$(printf "━%.0s" $(seq 1 $filled))"
     output+="$(printf "─%.0s" $(seq 1 $empty))"
-    output+=" $(printf "%3d" $percent)% (${current_step}/${total_steps})${color_reset}"$'\n'
+    output+=" $(printf "%3d" $percent)% (${current_step}/${total_steps})${UI_COLOR_RESET}"$'\n'
 
     # Keybindings (last line - bottom of terminal)
     output+="$(tput cup $((term_lines - 1)) 0 2>/dev/null || printf "\033[%d;0H" $term_lines)"
-    output+="${ANSI_DIM}^C Cancel  ^Z Background${color_reset}"
+    output+="${ANSI_DIM}^C Cancel  ^Z Background${UI_COLOR_RESET}"
     
     printf "%s" "$output"
 }
