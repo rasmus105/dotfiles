@@ -10,11 +10,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # DOTFILES_DIR is ~/.dotfiles (go up from ~/.local/bin to ~/.local, then find .dotfiles)
 DOTFILES_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Enable verbose output for UI layer to capture
-export VERBOSE=1
+# Disable verbose output by default
+VERBOSE="${VERBOSE:-0}"
 
 # Source common utilities (defines q() function that respects VERBOSE)
-source "${DOTFILES_DIR}/local/lib/shell/common.sh" 2>/dev/null || q() { "$@"; }
+source "${DOTFILES_DIR}/local/lib/shell/common.sh" # 2>/dev/null || q() { "$@"; }
+
+echo "VERBOSE=$VERBOSE"
+q echo "VERBOSE=$VERBOSE"
 
 VERSION_FILE="${DOTFILES_DIR}/.version"
 
@@ -427,7 +430,7 @@ install_paru() {
     # Clone and build paru
     local paru_dir="/tmp/paru-$$"
     q rm -rf "$paru_dir"
-    
+
     q git clone --depth=1 https://aur.archlinux.org/paru-bin.git "$paru_dir" || {
         echo "Error: Failed to clone paru repository" >&2
         [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
@@ -471,7 +474,7 @@ install_packages() {
         [[ -z "$line" || "$line" =~ ^[#//] ]] && continue
 
         packages+=("$line")
-    done < "$package_file"
+    done <"$package_file"
 
     if [[ ${#packages[@]} -eq 0 ]]; then
         echo "No packages found in $package_file"
@@ -503,7 +506,7 @@ install_packages() {
 
         # Install package
         echo "Installing $package..."
-        if q yes | paru -S --needed --noconfirm "$package"; then
+        if q bash -c "yes | paru -S --needed --noconfirm '$package'"; then
             # Verify installation
             if paru -Q "$package" &>/dev/null; then
                 installed=$((installed + 1))
@@ -520,7 +523,7 @@ install_packages() {
     done
 
     echo "Installation complete: $installed installed, $skipped already installed, $failed failed"
-    
+
     if [[ ${#failed_packages[@]} -gt 0 ]]; then
         echo "Failed packages: ${failed_packages[*]}" >&2
         [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
@@ -561,7 +564,7 @@ install_packages_from_list() {
 
         # Install package
         echo "Installing $package..."
-        if q yes | paru -S --needed --noconfirm "$package"; then
+        if q bash -c "yes | paru -S --needed --noconfirm '$package'"; then
             # Verify installation
             if paru -Q "$package" &>/dev/null; then
                 installed=$((installed + 1))
@@ -578,7 +581,7 @@ install_packages_from_list() {
     done
 
     echo "Installation complete: $installed installed, $skipped already installed, $failed failed"
-    
+
     if [[ ${#failed_packages[@]} -gt 0 ]]; then
         echo "Failed packages: ${failed_packages[*]}" >&2
         [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
@@ -658,7 +661,7 @@ copy_system_configs() {
 
 setup_dotfiles_env() {
     echo "Setting up dotfiles environment..."
-    echo "export DOTFILES_DIR=\"$DOTFILES_DIR\"" > "$HOME/.dotfiles_env" || {
+    echo "export DOTFILES_DIR=\"$DOTFILES_DIR\"" >"$HOME/.dotfiles_env" || {
         echo "Error: Failed to create .dotfiles_env" >&2
         [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
         return 1
@@ -675,12 +678,12 @@ configure_mimetypes() {
     command -v zathura &>/dev/null || missing_apps+=("zathura")
     command -v mpv &>/dev/null || missing_apps+=("mpv")
     command -v nvim &>/dev/null || missing_apps+=("nvim")
-    
+
     # Check for zen browser
     if [[ ! -f "$HOME/.local/share/applications/zen.desktop" ]] && [[ ! -f "/usr/share/applications/zen.desktop" ]]; then
         missing_apps+=("zen-browser")
     fi
-    
+
     if [[ ${#missing_apps[@]} -gt 0 ]]; then
         echo "Warning: Some applications are not installed: ${missing_apps[*]}" >&2
         echo "MIME type associations will be configured, but may not work until applications are installed"
@@ -730,7 +733,7 @@ configure_mimetypes() {
 
 setup_zsh() {
     local ZSH_PATH="/usr/bin/zsh"
-    
+
     if [[ ! -f "$ZSH_PATH" ]]; then
         echo "Error: zsh not found at $ZSH_PATH" >&2
         echo "Install zsh before running this command" >&2
@@ -775,7 +778,7 @@ setup_zsh() {
 
 setup_bash() {
     local BASH_PATH="/usr/bin/bash"
-    
+
     if [[ ! -f "$BASH_PATH" ]]; then
         echo "Error: bash not found at $BASH_PATH" >&2
         [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
@@ -803,7 +806,7 @@ setup_bash() {
 
 setup_fish() {
     local FISH_PATH="/usr/bin/fish"
-    
+
     if [[ ! -f "$FISH_PATH" ]]; then
         echo "Error: fish not found at $FISH_PATH" >&2
         echo "Install fish before running this command" >&2
@@ -859,7 +862,7 @@ setup_chromium_policies() {
         [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
         return 1
     }
-    
+
     q sudo chmod 755 /etc/chromium/policies/managed || {
         echo "Warning: Failed to set permissions on chromium policies directory" >&2
     }
@@ -909,7 +912,7 @@ write_version_file() {
         return 1
     }
 
-    echo "$commit_hash" > "$VERSION_FILE" || {
+    echo "$commit_hash" >"$VERSION_FILE" || {
         echo "Error: Failed to write version file" >&2
         [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
         return 1
@@ -928,7 +931,7 @@ get_current_version() {
 }
 
 run_pre_install_migrations() {
-    local migration_script="${SCRIPT_DIR}/pre-install.sh"
+    local migration_script="${DOTFILES_DIR}/install/pre-install.sh"
 
     if [[ ! -f "$migration_script" ]]; then
         echo "No pre-install migrations found, skipping"
@@ -988,7 +991,7 @@ run_all_setup() {
 
 print_help() {
     cat <<EOF
-Usage: system-setup.sh <command> [arguments]
+Usage: system-setup <command> [arguments]
 
 Commands:
   bootstrap          Bootstrap essentials (gum, paru)
@@ -1000,13 +1003,13 @@ Commands:
   all                Run complete setup (all steps in order)
   help               Show this help
 
-For command-specific help, use: system-setup.sh <command> help
+For command-specific help, use: system-setup <command> help
 
 Examples:
-  system-setup.sh bootstrap all
-  system-setup.sh packages install-list firefox neovim
-  system-setup.sh stow dotfiles
-  system-setup.sh configure zsh
+  system-setup bootstrap all
+  system-setup packages install-list firefox neovim
+  system-setup stow dotfiles
+  system-setup configure zsh
 
 Environment Variables:
   ABORT_ON_ERROR     Set to 1 to stop on first error (default: 0)
@@ -1036,7 +1039,7 @@ EOF
 
 print_packages_help() {
     cat <<EOF
-Usage: system-setup.sh packages <action> [arguments]
+Usage: system-setup packages <action> [arguments]
 
 Actions:
   install FILE       Install packages from file
@@ -1044,8 +1047,8 @@ Actions:
   help               Show this help
 
 Examples:
-  system-setup.sh packages install /path/to/packages.txt
-  system-setup.sh packages install-list firefox neovim git
+  system-setup packages install /path/to/packages.txt
+  system-setup packages install-list firefox neovim git
 EOF
 }
 
@@ -1077,7 +1080,7 @@ EOF
 
 print_configure_help() {
     cat <<EOF
-Usage: system-setup.sh configure <action> [arguments]
+Usage: system-setup configure <action> [arguments]
 
 Actions:
   env                Export DOTFILES_DIR to shell environment
@@ -1092,11 +1095,11 @@ Actions:
   help               Show this help
 
 Examples:
-  system-setup.sh configure mimetypes
-  system-setup.sh configure zsh
-  system-setup.sh configure bash
-  system-setup.sh configure theme rose-pine
-  system-setup.sh configure all
+  system-setup configure mimetypes
+  system-setup configure zsh
+  system-setup configure bash
+  system-setup configure theme rose-pine
+  system-setup configure all
 EOF
 }
 
