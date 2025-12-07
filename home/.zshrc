@@ -36,6 +36,7 @@ alias cd='z'  # Use zoxide for quick directory navigation
 alias cat='bat' # better 'cat'.
 alias g='lazygit'
 alias n='nvim'
+alias opencode-jail='firejail --private-tmp --private-dev --noroot opencode --config ~/.config/opencode/all-access.json'
 
 ls() { # better ls command
     command eza "$@" 
