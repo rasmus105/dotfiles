@@ -36,6 +36,8 @@ declare -g -A UI_STATE=(
 )
 
 # History stored as indexed array (bash doesn't support nested arrays)
+# Format: "type|description|extra"
+#   type: ok, err, input, select, confirm
 declare -g -a UI_HISTORY=()
 
 # ANSI escape codes
@@ -193,9 +195,23 @@ ui_run_or_prompt() {
         return 1
     fi
 
-    # Show prompt (switches to main screen temporarily)
+    # Show prompt in overlay
+    UI_STATE[in_prompt]=1
+    printf '%s' "$ANSI_SHOW_CURSOR"
+    
+    # Temporarily disable our signal handlers for clean Ctrl+C
+    trap - INT TERM
+    
     local choice
     choice=$(_ui_prompt_failure "$exit_code")
+    
+    # Restore signal handlers
+    trap '_ui_cleanup_handler; exit 130' INT
+    trap '_ui_cleanup_handler; exit 143' TERM
+    
+    printf '%s' "$ANSI_HIDE_CURSOR"
+    _ui_draw
+    UI_STATE[in_prompt]=0
 
     case "$choice" in
         retry)
@@ -224,7 +240,17 @@ ui_prompt_confirm() {
         return $?
     fi
 
-    _ui_with_prompt_mode _ui_do_confirm "$question"
+    local result
+    result=$(_ui_with_prompt_overlay _ui_do_confirm "$question")
+    
+    # Record in history
+    if [[ "$result" == "yes" ]]; then
+        UI_HISTORY+=("confirm|$question|Yes")
+        return 0
+    else
+        UI_HISTORY+=("confirm|$question|No")
+        return 1
+    fi
 }
 
 # Prompt for selection from a list
@@ -238,7 +264,12 @@ ui_prompt_select() {
         return $?
     fi
 
-    _ui_with_prompt_mode _ui_do_select "$question" "$@"
+    local result
+    result=$(_ui_with_prompt_overlay _ui_do_select "$question" "$@")
+    
+    # Record in history and output
+    UI_HISTORY+=("select|$question|$result")
+    echo "$result"
 }
 
 # Prompt for multiple selections
@@ -252,7 +283,14 @@ ui_prompt_multiselect() {
         return $?
     fi
 
-    _ui_with_prompt_mode _ui_do_multiselect "$question" "$@"
+    local result
+    result=$(_ui_with_prompt_overlay _ui_do_multiselect "$question" "$@")
+    
+    # Record in history (join multiple selections with comma for display)
+    local display_result
+    display_result=$(echo "$result" | tr '\n' ',' | sed 's/,$//')
+    UI_HISTORY+=("select|$question|$display_result")
+    echo "$result"
 }
 
 # Prompt for text input
@@ -266,7 +304,12 @@ ui_prompt_input() {
         return $?
     fi
 
-    _ui_with_prompt_mode _ui_do_input "$question" "$default"
+    local result
+    result=$(_ui_with_prompt_overlay _ui_do_input "$question" "$default")
+    
+    # Record in history and output
+    UI_HISTORY+=("input|$question|$result")
+    echo "$result"
 }
 
 # Cleanup and restore terminal
@@ -340,23 +383,35 @@ _ui_render_history() {
     local start=0
     (( count > max_lines )) && start=$(( count - max_lines ))
 
-    # Render completed commands
+    # Render completed commands and prompts
     local lines_used=0
     for (( i = start; i < count && lines_used < max_lines; i++ )); do
         local entry="${UI_HISTORY[$i]}"
-        local status="${entry%%|*}"
+        local type="${entry%%|*}"
         local rest="${entry#*|}"
         local desc="${rest%%|*}"
-        local duration="${rest#*|}"
+        local extra="${rest#*|}"
 
-        local icon color
-        case "$status" in
-            ok)  icon="✓"; color="$UI_C_OK" ;;
-            err) icon="✗"; color="$UI_C_ERR" ;;
-            *)   icon="?"; color="$UI_C_RST" ;;
+        local icon color line
+        case "$type" in
+            ok)
+                icon="✓"; color="$UI_C_OK"
+                line="$icon $desc ($extra)"
+                ;;
+            err)
+                icon="✗"; color="$UI_C_ERR"
+                line="$icon $desc ($extra)"
+                ;;
+            confirm|select|input)
+                icon="›"; color="$UI_C_INFO"
+                line="$icon $desc: $extra"
+                ;;
+            *)
+                icon="·"; color="$UI_C_RST"
+                line="$icon $desc"
+                ;;
         esac
 
-        local line="$icon $desc ($duration)"
         (( ${#line} > cols )) && line="${line:0:cols-3}..."
 
         out+="${color}${line}${UI_C_RST}"
@@ -491,20 +546,33 @@ _ui_run_with_output() {
 # Internal: Prompts
 #──────────────────────────────────────────────────────────────────────────────
 
-# Execute a function in prompt mode (main screen, cursor visible)
-_ui_with_prompt_mode() {
+# Execute a prompt function with a centered overlay (stays in alt buffer)
+# All drawing goes to /dev/tty, only the prompt result goes to stdout
+_ui_with_prompt_overlay() {
     local func="$1"
     shift
 
     UI_STATE[in_prompt]=1
 
-    # Switch to main screen, show cursor
-    printf '%s%s' "$ANSI_SHOW_CURSOR" "$ANSI_MAIN_SCREEN"
+    # Clear screen and position cursor at center for gum
+    # This gives gum a clean slate to render from
+    local lines=${UI_STATE[term_lines]}
+    local cols=${UI_STATE[term_cols]}
+    local center_row=$(( lines / 3 ))  # Upper third looks better for prompts
+    
+    {
+        # Clear screen
+        printf '%s%s' "$ANSI_HOME" "$ANSI_CLEAR"
+        # Position cursor
+        printf "${ESC}[%d;1H" "$center_row"
+        # Show cursor
+        printf '%s' "$ANSI_SHOW_CURSOR"
+    } >/dev/tty
 
     # Temporarily disable our signal handlers for clean Ctrl+C in prompts
     trap - INT TERM
 
-    # Run the prompt function
+    # Run the prompt function - stdout captured by caller
     local result=0
     "$func" "$@" || result=$?
 
@@ -512,9 +580,11 @@ _ui_with_prompt_mode() {
     trap '_ui_cleanup_handler; exit 130' INT
     trap '_ui_cleanup_handler; exit 143' TERM
 
-    # Switch back to alt screen, hide cursor, redraw
-    printf '%s%s' "$ANSI_ALT_SCREEN" "$ANSI_HIDE_CURSOR"
-    _ui_draw
+    # Hide cursor and redraw the full UI
+    {
+        printf '%s' "$ANSI_HIDE_CURSOR"
+    } >/dev/tty
+    _ui_draw >/dev/tty
 
     UI_STATE[in_prompt]=0
 
@@ -522,24 +592,36 @@ _ui_with_prompt_mode() {
 }
 
 # Prompt after command failure
+# Shows error info and asks user what to do
 _ui_prompt_failure() {
     local exit_code=$1
-
-    echo ""
-    echo "Command failed with exit code $exit_code"
-    echo ""
-    echo "Last output:"
-    tail -n 10 "$UI_LOG_FILE" 2>/dev/null | sed 's/^/  /' || true
-    echo ""
+    local lines=${UI_STATE[term_lines]}
+    
+    # Clear screen and show failure info
+    {
+        printf '%s%s' "$ANSI_HOME" "$ANSI_CLEAR"
+        printf "${ESC}[3;1H"  # Start at row 3
+        printf '%s' "$ANSI_SHOW_CURSOR"
+        
+        printf "${UI_C_ERR}Command failed with exit code %d${UI_C_RST}\n\n" "$exit_code"
+        printf "${UI_C_DIM}Last output:${UI_C_RST}\n"
+    } >/dev/tty
+    
+    # Show last few lines of output
+    tail -n 8 "$UI_LOG_FILE" 2>/dev/null | while IFS= read -r line; do
+        printf "  ${UI_C_DIM}%s${UI_C_RST}\n" "$line"
+    done >/dev/tty
+    
+    printf "\n" >/dev/tty
 
     local choice
     if command -v gum &>/dev/null; then
-        choice=$(gum choose "Retry" "Continue anyway" "Abort" --header "What would you like to do?")
+        choice=$(gum choose "Retry" "Continue anyway" "Abort" --header "What would you like to do?" --height=4)
     else
-        echo "1) Retry"
-        echo "2) Continue anyway"
-        echo "3) Abort"
-        read -rp "Choice (1-3): " num
+        {
+            printf "1) Retry  2) Continue  3) Abort\n"
+        } >/dev/tty
+        read -rp "Choice (1-3): " num </dev/tty
         case "$num" in
             1) choice="Retry" ;;
             2) choice="Continue anyway" ;;
@@ -555,14 +637,26 @@ _ui_prompt_failure() {
 }
 
 # Confirm prompt implementation
+# Outputs "yes" or "no" to stdout based on user choice
 _ui_do_confirm() {
     local question="$1"
     if command -v gum &>/dev/null; then
-        gum confirm "$question"
+        # gum confirm uses exit code: 0=yes, 1=no
+        # gum handles tty internally for rendering
+        if gum confirm "$question" --timeout=0; then
+            echo "yes"
+        else
+            echo "no"
+        fi
     else
-        read -rp "$question (y/N) " -n 1 reply
-        echo
-        [[ "$reply" =~ ^[Yy]$ ]]
+        # Fallback: read from tty directly
+        read -rp "$question (y/N) " -n 1 reply </dev/tty
+        echo >/dev/tty  # newline
+        if [[ "$reply" =~ ^[Yy]$ ]]; then
+            echo "yes"
+        else
+            echo "no"
+        fi
     fi
 }
 
@@ -571,7 +665,7 @@ _ui_do_select() {
     local question="$1"
     shift
     if command -v gum &>/dev/null; then
-        gum choose "$@" --header "$question"
+        gum choose "$@" --header "$question" --height=8
     else
         _ui_select_fallback "$question" "$@"
     fi
@@ -582,7 +676,7 @@ _ui_do_multiselect() {
     local question="$1"
     shift
     if command -v gum &>/dev/null; then
-        gum choose --no-limit "$@" --header "$question"
+        gum choose --no-limit "$@" --header "$question" --height=8
     else
         _ui_multiselect_fallback "$question" "$@"
     fi
@@ -594,9 +688,9 @@ _ui_do_input() {
     local default="$2"
     if command -v gum &>/dev/null; then
         if [[ -n "$default" ]]; then
-            gum input --placeholder "$default" --prompt "$question: " --value "$default"
+            gum input --placeholder "$default" --header "$question" --value "$default" --width=50
         else
-            gum input --prompt "$question: "
+            gum input --header "$question" --width=50
         fi
     else
         _ui_input_fallback "$question" "$default"
@@ -724,19 +818,29 @@ _ui_print_summary() {
     echo "──────────────────────────────────────"
 
     for entry in "${UI_HISTORY[@]}"; do
-        local status="${entry%%|*}"
+        local type="${entry%%|*}"
         local rest="${entry#*|}"
         local desc="${rest%%|*}"
-        local duration="${rest#*|}"
+        local extra="${rest#*|}"
 
         local icon color
-        case "$status" in
-            ok)  icon="✓"; color="$UI_C_OK" ;;
-            err) icon="✗"; color="$UI_C_ERR" ;;
-            *)   icon="?"; color="$UI_C_RST" ;;
+        case "$type" in
+            ok)      icon="✓"; color="$UI_C_OK" ;;
+            err)     icon="✗"; color="$UI_C_ERR" ;;
+            confirm) icon="?"; color="$UI_C_INFO" ;;
+            select)  icon="›"; color="$UI_C_INFO" ;;
+            input)   icon="›"; color="$UI_C_INFO" ;;
+            *)       icon="·"; color="$UI_C_RST" ;;
         esac
 
-        printf '%s%s %s (%s)%s\n' "$color" "$icon" "$desc" "$duration" "$UI_C_RST"
+        case "$type" in
+            ok|err)
+                printf '%s%s %s (%s)%s\n' "$color" "$icon" "$desc" "$extra" "$UI_C_RST"
+                ;;
+            confirm|select|input)
+                printf '%s%s %s: %s%s\n' "$color" "$icon" "$desc" "$extra" "$UI_C_RST"
+                ;;
+        esac
     done
 
     echo "──────────────────────────────────────"
