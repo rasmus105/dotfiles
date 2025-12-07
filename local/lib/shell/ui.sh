@@ -379,13 +379,19 @@ _ui_render_history() {
     local cols=$2
     local out=""
 
+    # Reserve a line for current command if one is running
+    local history_max=$max_lines
+    if [[ -n "${UI_STATE[current_cmd]}" ]]; then
+        (( history_max-- ))
+    fi
+
     local count=${#UI_HISTORY[@]}
     local start=0
-    (( count > max_lines )) && start=$(( count - max_lines ))
+    (( count > history_max )) && start=$(( count - history_max ))
 
     # Render completed commands and prompts
     local lines_used=0
-    for (( i = start; i < count && lines_used < max_lines; i++ )); do
+    for (( i = start; i < count && lines_used < history_max; i++ )); do
         local entry="${UI_HISTORY[$i]}"
         local type="${entry%%|*}"
         local rest="${entry#*|}"
