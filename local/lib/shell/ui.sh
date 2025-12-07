@@ -403,10 +403,26 @@ _ui_with_monitor_stopped() {
     local func=$1
     shift
     
+    # Save current trap handlers for INT and TERM
+    local old_int_trap=$(trap -p INT)
+    local old_term_trap=$(trap -p TERM)
+    
+    # Stop the monitor (switches to main screen, shows cursor)
     _ui_stop_monitor
+    
+    # Temporarily restore default signal handlers so Ctrl+C works in prompts
+    trap - INT TERM
+    
+    # Execute the handler function
     local result
     "$func" "$@"
     result=$?
+    
+    # Restore our trap handlers
+    eval "$old_int_trap"
+    eval "$old_term_trap"
+    
+    # Restart the monitor (switches back to alternate screen, hides cursor)
     _ui_start_monitor
     
     return $result
@@ -496,10 +512,41 @@ _ui_send_update() {
     echo "$1" >"$UI_FIFO" 2>/dev/null || true
 }
 
+# Force a complete redraw by sending all current state to monitor
+_ui_force_redraw() {
+    # Send current step and total
+    _ui_send_update "STEP|$UI_CURRENT_STEP|$UI_TOTAL_STEPS"
+    
+    # Send terminal dimensions
+    _ui_send_update "RESIZE|$UI_TERM_LINES|$UI_TERM_COLS"
+    
+    # Resend all history entries
+    for entry in "${UI_HISTORY[@]}"; do
+        _ui_send_update "HISTORY|$entry"
+    done
+    
+    # Send current command if one is running
+    if [ -n "$UI_CURRENT_CMD" ]; then
+        _ui_send_update "CMD|$UI_CURRENT_CMD|$UI_CURRENT_START"
+    fi
+}
+
 # Start background monitor process
 _ui_start_monitor() {
-    if [ $UI_IS_TTY -eq 0 ] || [ -n "$UI_MONITOR_PID" ]; then
+    if [ $UI_IS_TTY -eq 0 ]; then
         return
+    fi
+    
+    # Check if this is a restart (monitor was previously running)
+    # This must be checked BEFORE we set UI_MONITOR_PID
+    local is_restart=0
+    if [ -z "$UI_MONITOR_PID" ] && [ "$UI_ENABLED" -eq 1 ]; then
+        # UI was enabled but monitor PID is empty - this is after first init
+        is_restart=0
+    elif [ -n "${UI_MONITOR_WAS_RUNNING:-}" ]; then
+        # Flag indicates we're restarting after a stop
+        is_restart=1
+        unset UI_MONITOR_WAS_RUNNING
     fi
 
     (
@@ -570,6 +617,16 @@ _ui_start_monitor() {
 
     # Give monitor time to open FIFO for reading
     sleep 0.05
+    
+    # If this is a restart, hide cursor and force redraw (stay in alternate buffer)
+    if [ $is_restart -eq 1 ]; then
+        # Send terminal commands to /dev/tty to avoid contaminating stdout
+        {
+            printf "%s" "$ANSI_HIDE_CURSOR"
+        } >/dev/tty 2>&1
+        # Force a complete redraw by sending all current state
+        _ui_force_redraw
+    fi
 }
 
 # Stop background monitor process
@@ -581,10 +638,19 @@ _ui_stop_monitor() {
         # Wait for monitor to exit gracefully
         sleep 0.1
         wait "$UI_MONITOR_PID" 2>/dev/null || true
+        
+        # Mark that monitor was running (for restart detection)
+        UI_MONITOR_WAS_RUNNING=1
         UI_MONITOR_PID=""
 
-        # Clear the screen
-        clear
+        # Clear screen and show cursor (stay in alternate buffer)
+        if [ $UI_IS_TTY -eq 1 ]; then
+            # Send terminal commands to /dev/tty to avoid contaminating stdout
+            {
+                clear
+                printf "%s" "$ANSI_SHOW_CURSOR"
+            } >/dev/tty 2>&1
+        fi
     fi
 }
 
@@ -635,9 +701,12 @@ _ui_draw_screen_local() {
     )
     
     # Atomic display: move to top, clear screen, print entire frame
-    tput cup 0 0 2>/dev/null || printf "\033[H"
-    tput ed 2>/dev/null || printf "\033[J"
-    printf '%s\n' "${sections[@]}"
+    # Redirect to /dev/tty to ensure output goes to terminal, not stdout
+    {
+        tput cup 0 0 2>/dev/null || printf "\033[H"
+        tput ed 2>/dev/null || printf "\033[J"
+        printf '%s\n' "${sections[@]}"
+    } >/dev/tty 2>&1
 }
 
 # Draw command history region (with local state)
