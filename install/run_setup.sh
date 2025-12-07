@@ -18,7 +18,7 @@ source "${DOTFILES_DIR}/local/lib/shell/common.sh" 2>/dev/null || true
 PACKAGES_FILE="${SCRIPT_DIR}/packages.txt"
 DEFAULT_THEME="gruvbox"
 NON_INTERACTIVE=0
-SYSTEM_SETUP="${DOTFILES_DIR}/local/bin/system-setup.sh"
+SYSTEM_SETUP="${DOTFILES_DIR}/local/bin/system-setup"
 
 #──────────────────────────────────────────────────────────────────────────────
 # Argument Parsing
@@ -81,7 +81,16 @@ read_packages() {
 #──────────────────────────────────────────────────────────────────────────────
 
 main() {
+    export VERBOSE=1
     parse_args "$@"
+
+    # Cache sudo credentials
+    if ! sudo -v; then
+        echo "Error: Failed to obtain sudo credentials" >&2
+        return 1
+    fi
+
+    while sleep 100; do sudo -v; done &
 
     # Initialize UI with 9 steps
     ui_init 9 "basic"
