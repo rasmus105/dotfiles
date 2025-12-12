@@ -12,7 +12,7 @@
 @define-color success-color rgba(100, 255, 100, 0.9);
 
 * {
-    font-family: "Hack", monospace;
+    font-family: "Hack Nerd Font", monospace;
     font-size: 14px;
     border: none;
     border-radius: 0;
