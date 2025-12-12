@@ -19,7 +19,7 @@ xdg-desktop-portal-hyprland
 # ============================================================
 waybar
 mako
-walker
+walker-bin
 swayosd
 grim
 slurp

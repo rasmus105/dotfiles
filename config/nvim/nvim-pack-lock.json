@@ -34,7 +34,6 @@
       "src": "https://github.com/ThePrimeagen/harpoon",
       "version": "'harpoon2'"
     },
-    "harpoon2": [],
     "kanagawa.nvim": {
       "rev": "aef7f5c",
       "src": "https://github.com/rebelot/kanagawa.nvim"
@@ -127,7 +126,6 @@
       "rev": "25de223",
       "src": "https://github.com/mrcjkb/rustaceanvim"
     },
-    "rustaceanvim?tab=readme-ov-file": [],
     "tabby.nvim": {
       "rev": "b3affa6",
       "src": "https://github.com/nanozuki/tabby.nvim"

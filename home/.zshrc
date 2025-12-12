@@ -15,7 +15,7 @@ setopt HIST_VERIFY           # Show command before executing from history
 # ===============================
 # Path Configuration
 # ===============================
-wmname LG3D  # Needed for Ghidra, Maple, and other Java-based software
+# wmname LG3D  # Needed for Ghidra, Maple, and other Java-based software
 
 # ===============================
 # Exports
@@ -67,7 +67,7 @@ bindkey -e # force emacs mode (i.e. <C-w> = delete word, <C-e> = end of line, <C
 # ===============================
 # Plugin Management (Antidote)
 # ===============================
-source ~/.antidote/antidote.zsh  # Load Antidote
+source "/usr/share/zsh-antidote/antidote.zsh"  # Load Antidote
 antidote load ${ZDOTDIR:-$HOME}/.zsh_plugins.txt  # Load plugins from file
 
 # ===============================

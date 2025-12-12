@@ -9,7 +9,7 @@ window {
 }
 
 label {
-    font-family: "Hack";
+    font-family: "Hack Nerd Font";
     font-size: 12pt;
     color: @label;
 }

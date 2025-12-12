@@ -3,7 +3,7 @@ config-file = ?"~/.config/theme/ghostty.conf"
 
 # Basic Options
 shell-integration = zsh
-font-family = Hack
+font-family = Hack Nerd Font
 theme = Gruvbox Dark
 mouse-hide-while-typing = true
 confirm-close-surface = true
