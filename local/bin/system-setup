@@ -15,9 +15,6 @@ VERBOSE="${VERBOSE:-0}"
 # Source common utilities (defines q() function that respects VERBOSE)
 source "${DOTFILES_DIR}/local/lib/shell/common.sh" # 2>/dev/null || q() { "$@"; }
 
-echo "VERBOSE=$VERBOSE"
-q echo "VERBOSE=$VERBOSE"
-
 VERSION_FILE="${DOTFILES_DIR}/.version"
 
 #──────────────────────────────────────────────────────────────────────────────
@@ -505,7 +502,8 @@ install_packages() {
 
         # Install package
         echo "Installing $package..."
-        if q bash -c "yes | paru -S --needed --noconfirm '$package'"; then
+        q paru -S --needed --noconfirm "$package"
+        if $?; then
             # Verify installation
             if paru -Q "$package" &>/dev/null; then
                 installed=$((installed + 1))
@@ -546,7 +544,17 @@ install_packages_from_list() {
     local skipped=0
     local -a failed_packages=()
 
+    echo "Installing ${#packages[@]} packages..."
+
     for package in "${packages[@]}"; do
+        # Check if already installed (this is A LOT faster than -Si or -Sg, so
+        # important to do first)
+        if paru -Q "$package" &>/dev/null; then
+            skipped=$((skipped + 1))
+            echo "$package is already installed."
+            continue
+        fi
+
         # Check if package exists in repos
         if ! paru -Si "$package" &>/dev/null && ! paru -Sg "$package" &>/dev/null; then
             echo "Package not found: $package"
@@ -555,15 +563,10 @@ install_packages_from_list() {
             continue
         fi
 
-        # Check if already installed (idempotent)
-        if paru -Q "$package" &>/dev/null; then
-            skipped=$((skipped + 1))
-            continue
-        fi
-
         # Install package
         echo "Installing $package..."
-        if q bash -c "yes | paru -S --needed --noconfirm '$package'"; then
+        q paru -S --needed --noconfirm "$package"
+        if $?; then
             # Verify installation
             if paru -Q "$package" &>/dev/null; then
                 installed=$((installed + 1))
