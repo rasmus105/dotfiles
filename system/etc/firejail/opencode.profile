@@ -58,3 +58,19 @@ whitelist ~/.m2
 
 # General development
 whitelist ~/.local/bin
+
+# Neovim
+whitelist ~/.config/nvim
+read-write ~/.local/share/nvim
+whitelist ~/.local/share/nvim
+
+read-write ~/.local/state/nvim
+whitelist ~/.local/state/nvim
+
+read-write ~/.cache/nvim
+whitelist ~/.cache/nvim
+
+read-write /usr/share/nvim/
+whitelist /usr/share/nvim/
+
+
