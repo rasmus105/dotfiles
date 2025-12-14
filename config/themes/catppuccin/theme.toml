@@ -1,0 +1,83 @@
+# Catppuccin Mocha Theme
+# https://github.com/catppuccin/catppuccin
+
+name = "catppuccin"
+mode = "dark"
+
+#──────────────────────────────────────────────────────────────────────────────
+# App-specific theme names (for apps with built-in themes)
+#──────────────────────────────────────────────────────────────────────────────
+
+[apps]
+neovim = "catppuccin"
+ghostty = "Catppuccin Mocha"
+vscode_name = "Catppuccin Mocha"
+vscode_extension = "catppuccin.catppuccin-vsc"
+icons = "Yaru-blue"
+
+#──────────────────────────────────────────────────────────────────────────────
+# Core colors
+#──────────────────────────────────────────────────────────────────────────────
+
+[colors]
+# Base colors
+background = "#1e1e2e"
+foreground = "#cdd6f4"
+dim_foreground = "#7f849c"
+bright_foreground = "#cdd6f4"
+
+# UI colors
+surface = "#181824"
+surface_alt = "#24273a"
+overlay = "#51576d"
+accent = "#89b4fa"
+border = "#c6d0f5"
+cursor = "#f5e0dc"
+selection = "#f5e0dc"
+
+#──────────────────────────────────────────────────────────────────────────────
+# ANSI colors (normal)
+#──────────────────────────────────────────────────────────────────────────────
+
+black = "#45475a"
+red = "#f38ba8"
+green = "#a6e3a1"
+yellow = "#f9e2af"
+blue = "#89b4fa"
+magenta = "#f5c2e7"
+cyan = "#94e2d5"
+white = "#bac2de"
+
+#──────────────────────────────────────────────────────────────────────────────
+# ANSI colors (bright)
+#──────────────────────────────────────────────────────────────────────────────
+
+bright_black = "#585b70"
+bright_red = "#f38ba8"
+bright_green = "#a6e3a1"
+bright_yellow = "#f9e2af"
+bright_blue = "#89b4fa"
+bright_magenta = "#f5c2e7"
+bright_cyan = "#94e2d5"
+bright_white = "#a6adc8"
+
+#──────────────────────────────────────────────────────────────────────────────
+# Extended colors
+#──────────────────────────────────────────────────────────────────────────────
+
+orange = "#fab387"
+extra = "#f5e0dc"
+
+#──────────────────────────────────────────────────────────────────────────────
+# Btop-specific colors (optional overrides)
+#──────────────────────────────────────────────────────────────────────────────
+
+btop_title = "#c6d0f5"
+btop_highlight = "#8caaee"
+btop_cpu_box = "#ca9ee6"
+btop_mem_box = "#a6d189"
+btop_net_box = "#ea999c"
+btop_proc_box = "#8caaee"
+btop_cpu_start = "#81c8be"
+btop_cpu_mid = "#85c1dc"
+btop_cpu_end = "#babbf1"

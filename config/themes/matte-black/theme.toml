@@ -1,0 +1,54 @@
+# Matte Black Theme
+# A minimal dark theme with red/amber accents
+
+name = "matte-black"
+mode = "dark"
+
+[apps]
+neovim = "matteblack"
+# No named ghostty theme - will generate from colors
+vscode_name = "Matte Black"
+vscode_extension = "TahaYVR.matteblack"
+icons = "Yaru-red"
+
+[colors]
+# Base colors
+background = "#121212"
+foreground = "#bebebe"
+dim_foreground = "#8a8a8d"
+bright_foreground = "#eaeaea"
+
+# Surface colors
+surface = "#1e1e1e"
+surface_alt = "#252525"
+overlay = "#333333"
+
+# Accent colors
+accent = "#FFC107"
+border = "#bebebe"
+cursor = "#eaeaea"
+selection = "#333333"
+
+# ANSI colors (normal)
+black = "#333333"
+red = "#D35F5F"
+green = "#FFC107"
+yellow = "#b91c1c"
+blue = "#e68e0d"
+magenta = "#D35F5F"
+cyan = "#bebebe"
+white = "#bebebe"
+
+# ANSI colors (bright)
+bright_black = "#8a8a8d"
+bright_red = "#B91C1C"
+bright_green = "#FFC107"
+bright_yellow = "#b90a0a"
+bright_blue = "#f59e0b"
+bright_magenta = "#B91C1C"
+bright_cyan = "#eaeaea"
+bright_white = "#ffffff"
+
+# Btop overrides
+btop_highlight = "#FFC107"
+btop_title = "#bebebe"

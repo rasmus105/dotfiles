@@ -1,0 +1,56 @@
+# Gruvbox Theme
+# https://github.com/morhetz/gruvbox
+
+name = "gruvbox"
+mode = "dark"
+
+[apps]
+neovim = "gruvbox"
+ghostty = "Gruvbox Dark"
+vscode_name = "Gruvbox Dark Medium"
+vscode_extension = "jdinhlife.gruvbox"
+icons = "Yaru-olive"
+
+[colors]
+# Base colors
+background = "#282828"
+foreground = "#d4be98"
+dim_foreground = "#a89984"
+
+# Surface colors
+surface = "#282828"
+surface_alt = "#3c3836"
+overlay = "#504945"
+
+# Accent colors
+accent = "#fabd2f"
+border = "#a89984"
+cursor = "#d4be98"
+selection = "#504945"
+
+# Extended colors
+orange = "#fe8019"
+
+# ANSI colors (normal)
+black = "#3c3836"
+red = "#ea6962"
+green = "#a9b665"
+yellow = "#d8a657"
+blue = "#7daea3"
+magenta = "#d3869b"
+cyan = "#89b482"
+white = "#d4be98"
+
+# ANSI colors (bright - same as normal for gruvbox)
+bright_black = "#3c3836"
+bright_red = "#ea6962"
+bright_green = "#a9b665"
+bright_yellow = "#d8a657"
+bright_blue = "#7daea3"
+bright_magenta = "#d3869b"
+bright_cyan = "#89b482"
+bright_white = "#d4be98"
+
+# Btop overrides
+btop_highlight = "#d79921"
+btop_title = "#ebdbb2"

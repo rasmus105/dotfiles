@@ -1,0 +1,53 @@
+# Flexoki Light Theme
+# https://stephango.com/flexoki
+
+name = "flexoki-light"
+mode = "light"
+
+[apps]
+neovim = "flexoki-light"
+ghostty = "Flexoki Light"
+vscode_name = "Flexoki Light"
+vscode_extension = "shadesOfBuntu.flexoki-light"
+icons = "Yaru-blue"
+
+[colors]
+# Base colors (light theme)
+background = "#FFFCF0"
+foreground = "#100F0F"
+dim_foreground = "#6F6E69"
+
+# Surface colors
+surface = "#FFFCF0"
+surface_alt = "#F2F0E5"
+overlay = "#E6E4D9"
+
+# Accent colors
+accent = "#205EA6"
+border = "#100F0F"
+cursor = "#100F0F"
+selection = "#E6E4D9"
+
+# ANSI colors (same for normal/bright in this theme)
+black = "#100F0F"
+red = "#D14D41"
+green = "#879A39"
+yellow = "#D0A215"
+blue = "#205EA6"
+magenta = "#CE5D97"
+cyan = "#3AA99F"
+white = "#FFFCF0"
+
+# ANSI colors (bright)
+bright_black = "#100F0F"
+bright_red = "#D14D41"
+bright_green = "#879A39"
+bright_yellow = "#D0A215"
+bright_blue = "#205EA6"
+bright_magenta = "#CE5D97"
+bright_cyan = "#3AA99F"
+bright_white = "#FFFCF0"
+
+# Btop overrides
+btop_highlight = "#205EA6"
+btop_title = "#100F0F"

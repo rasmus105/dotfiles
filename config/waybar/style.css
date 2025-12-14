@@ -1,15 +1,6 @@
 /* Waybar - Minimalistic Rectangular Style */
-/* Color agnostic - uses system colors */
-
-/* Variables for easy customization - GTK CSS syntax */
-@define-color bg-base rgba(0, 0, 0, 0.00);
-@define-color fg-primary rgba(255, 255, 255, 0.9);
-@define-color fg-secondary rgba(255, 255, 255, 0.5);
-@define-color fg-muted rgba(255, 255, 255, 0.4);
-@define-color hover-overlay rgba(255, 255, 255, 0.1);
-@define-color warning-color rgba(255, 200, 100, 1);
-@define-color critical-color rgba(255, 100, 100, 1);
-@define-color success-color rgba(100, 255, 100, 0.9);
+/* Import theme colors */
+@import url("file:///home/rasmus105/.config/theme/waybar.css");
 
 * {
     font-family: "Hack Nerd Font", monospace;

@@ -4,3 +4,23 @@ test/vm/.vm
 
 # Installation logs
 install/logs/
+
+# Docker test package cache (11GB, not checked into git)
+.cache/
+
+# Generated theme files (created from theme.toml by generator.sh)
+config/themes/*/alacritty.toml
+config/themes/*/browser.theme
+config/themes/*/btop.theme
+config/themes/*/ghostty.conf
+config/themes/*/hyprland.conf
+config/themes/*/hyprlock.conf
+config/themes/*/icons.theme
+config/themes/*/mako.ini
+config/themes/*/neovim.lua
+config/themes/*/swayosd.css
+config/themes/*/vscode.json
+config/themes/*/walker.css
+config/themes/*/waybar.css
+config/themes/*/zathura.theme
+config/themes/*/light.mode

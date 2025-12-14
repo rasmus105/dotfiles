@@ -1,0 +1,53 @@
+# Everforest Theme
+# https://github.com/sainnhe/everforest
+
+name = "everforest"
+mode = "dark"
+
+[apps]
+neovim = "everforest"
+ghostty = "Everforest Dark Hard"
+vscode_name = "Everforest Dark"
+vscode_extension = "sainnhe.everforest"
+icons = "Yaru-sage"
+
+[colors]
+# Base colors
+background = "#2d353b"
+foreground = "#d3c6aa"
+dim_foreground = "#859289"
+
+# Surface colors
+surface = "#2d353b"
+surface_alt = "#343f44"
+overlay = "#475258"
+
+# Accent colors
+accent = "#a7c080"
+border = "#d3c6aa"
+cursor = "#d3c6aa"
+selection = "#475258"
+
+# ANSI colors (normal)
+black = "#475258"
+red = "#e67e80"
+green = "#a7c080"
+yellow = "#dbbc7f"
+blue = "#7fbbb3"
+magenta = "#d699b6"
+cyan = "#83c092"
+white = "#d3c6aa"
+
+# ANSI colors (bright - same as normal for everforest)
+bright_black = "#475258"
+bright_red = "#e67e80"
+bright_green = "#a7c080"
+bright_yellow = "#dbbc7f"
+bright_blue = "#7fbbb3"
+bright_magenta = "#d699b6"
+bright_cyan = "#83c092"
+bright_white = "#d3c6aa"
+
+# Btop overrides
+btop_highlight = "#a7c080"
+btop_title = "#d3c6aa"

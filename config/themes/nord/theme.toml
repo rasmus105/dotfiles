@@ -1,0 +1,63 @@
+# Nord Theme
+# https://www.nordtheme.com
+
+name = "nord"
+mode = "dark"
+
+[apps]
+neovim = "nordfox"
+ghostty = "Nord"
+vscode_name = "Nord"
+vscode_extension = "arcticicestudio.nord-visual-studio-code"
+icons = "Yaru-blue"
+
+[colors]
+# Base colors
+background = "#2E3440"
+foreground = "#D8DEE9"
+dim_foreground = "#A5ABB6"
+
+# Surface colors
+surface = "#2E3440"
+surface_alt = "#3B4252"
+overlay = "#4C566A"
+
+# Accent colors
+accent = "#88C0D0"
+border = "#D8DEE9"
+cursor = "#D8DEE9"
+selection = "#4C566A"
+
+# ANSI colors (normal)
+black = "#3B4252"
+red = "#BF616A"
+green = "#A3BE8C"
+yellow = "#EBCB8B"
+blue = "#81A1C1"
+magenta = "#B48EAD"
+cyan = "#88C0D0"
+white = "#E5E9F0"
+
+# ANSI colors (bright)
+bright_black = "#4C566A"
+bright_red = "#BF616A"
+bright_green = "#A3BE8C"
+bright_yellow = "#EBCB8B"
+bright_blue = "#81A1C1"
+bright_magenta = "#B48EAD"
+bright_cyan = "#8FBCBB"
+bright_white = "#ECEFF4"
+
+# ANSI colors (dim)
+dim_black = "#373E4D"
+dim_red = "#94545D"
+dim_green = "#809575"
+dim_yellow = "#B29E75"
+dim_blue = "#68809A"
+dim_magenta = "#8C738C"
+dim_cyan = "#6D96A5"
+dim_white = "#AEB3BB"
+
+# Btop overrides
+btop_title = "#8FBCBB"
+btop_highlight = "#5E81AC"
