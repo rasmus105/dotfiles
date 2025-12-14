@@ -4,7 +4,7 @@ icon = " "
 
 [[entries]]
 text = "Set System Theme"
-icon = ""
+icon = ""
 actions = { "set-system-theme" = "bash ~/.config/elephant/menus/set-system-theme.sh" }
 
 [[entries]]
