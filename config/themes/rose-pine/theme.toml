@@ -1,0 +1,61 @@
+# Rose Pine Dawn Theme (Light)
+# https://rosepinetheme.com
+
+name = "rose-pine"
+mode = "light"
+
+[apps]
+neovim = "rose-pine-dawn"
+ghostty = "Rose Pine Dawn"
+vscode_name = "Rosé Pine Dawn"
+vscode_extension = "mvllow.rose-pine"
+icons = "Yaru-blue"
+
+[colors]
+# Base colors (light theme)
+background = "#faf4ed"
+foreground = "#575279"
+dim_foreground = "#797593"
+
+# Surface colors
+surface = "#faf4ed"
+surface_alt = "#fffaf3"
+overlay = "#f2e9e1"
+
+# Accent colors
+accent = "#d7827e"
+border = "#575279"
+cursor = "#cecacd"
+selection = "#dfdad9"
+
+# Extended palette
+orange = "#ea9d34"
+extra = "#ebbcba"
+
+# ANSI colors (normal)
+black = "#f2e9e1"
+red = "#b4637a"
+green = "#286983"
+yellow = "#ea9d34"
+blue = "#56949f"
+magenta = "#907aa9"
+cyan = "#d7827e"
+white = "#575279"
+
+# ANSI colors (bright)
+bright_black = "#9893a5"
+bright_red = "#b4637a"
+bright_green = "#286983"
+bright_yellow = "#ea9d34"
+bright_blue = "#56949f"
+bright_magenta = "#907aa9"
+bright_cyan = "#d7827e"
+bright_white = "#575279"
+
+# Btop overrides
+btop_title = "#908caa"
+btop_highlight = "#e0def4"
+btop_cpu_box = "#ebbcba"
+btop_mem_box = "#31748f"
+btop_net_box = "#c4a7e7"
+btop_proc_box = "#eb6f92"

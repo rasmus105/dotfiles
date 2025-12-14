@@ -1,0 +1,61 @@
+# Catppuccin Latte Theme (Light)
+# https://github.com/catppuccin/catppuccin
+
+name = "catppuccin-latte"
+mode = "light"
+
+[apps]
+neovim = "catppuccin-latte"
+ghostty = "Catppuccin Latte"
+vscode_name = "Catppuccin Latte"
+vscode_extension = "catppuccin.catppuccin-vsc"
+icons = "Yaru-blue"
+
+[colors]
+# Base colors (light theme)
+background = "#eff1f5"
+foreground = "#4c4f69"
+dim_foreground = "#8c8fa1"
+
+# Surface colors
+surface = "#eff1f5"
+surface_alt = "#dce0e8"
+overlay = "#bcc0cc"
+
+# Accent colors
+accent = "#1e66f5"
+border = "#1e66f5"
+cursor = "#dc8a78"
+selection = "#dc8a78"
+
+# Extended palette
+orange = "#fe640b"
+extra = "#dc8a78"
+
+# ANSI colors (normal)
+black = "#bcc0cc"
+red = "#d20f39"
+green = "#40a02b"
+yellow = "#df8e1d"
+blue = "#1e66f5"
+magenta = "#ea76cb"
+cyan = "#179299"
+white = "#5c5f77"
+
+# ANSI colors (bright)
+bright_black = "#acb0be"
+bright_red = "#d20f39"
+bright_green = "#40a02b"
+bright_yellow = "#df8e1d"
+bright_blue = "#1e66f5"
+bright_magenta = "#ea76cb"
+bright_cyan = "#179299"
+bright_white = "#6c6f85"
+
+# Btop overrides
+btop_highlight = "#7287fd"
+btop_title = "#4c4f69"
+btop_cpu_box = "#8839ef"
+btop_mem_box = "#40a02b"
+btop_net_box = "#e64553"
+btop_proc_box = "#1e66f5"

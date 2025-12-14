@@ -1,0 +1,53 @@
+# Osaka Jade Theme
+# A green-focused dark theme
+
+name = "osaka-jade"
+mode = "dark"
+
+[apps]
+neovim = "bamboo"
+ghostty = "Bamboo"
+vscode_name = "Ocean Green: Dark"
+vscode_extension = "jovejonovski.ocean-green"
+icons = "Yaru-sage"
+
+[colors]
+# Base colors
+background = "#111c18"
+foreground = "#C1C497"
+dim_foreground = "#53685B"
+
+# Surface colors
+surface = "#11221C"
+surface_alt = "#23372B"
+overlay = "#364538"
+
+# Accent colors
+accent = "#71CEAD"
+border = "#214237"
+cursor = "#D7C995"
+selection = "#364538"
+
+# ANSI colors (normal)
+black = "#23372B"
+red = "#FF5345"
+green = "#549e6a"
+yellow = "#459451"
+blue = "#509475"
+magenta = "#D2689C"
+cyan = "#2DD5B7"
+white = "#F6F5DD"
+
+# ANSI colors (bright)
+bright_black = "#53685B"
+bright_red = "#db9f9c"
+bright_green = "#63b07a"
+bright_yellow = "#E5C736"
+bright_blue = "#ACD4CF"
+bright_magenta = "#75bbb3"
+bright_cyan = "#8CD3CB"
+bright_white = "#9eebb3"
+
+# Btop overrides
+btop_highlight = "#E67D64"
+btop_title = "#D6D5BC"

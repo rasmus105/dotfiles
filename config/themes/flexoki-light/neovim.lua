@@ -1,3 +1,0 @@
-return {
-	colorscheme = "flexoki-light",
-}

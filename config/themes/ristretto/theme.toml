@@ -1,0 +1,53 @@
+# Ristretto Theme
+# A warm, coffee-inspired dark theme
+
+name = "ristretto"
+mode = "dark"
+
+[apps]
+neovim = "ristretto"
+ghostty = "Ristretto"
+vscode_name = "Ristretto"
+vscode_extension = "foxundermoon.ristretto"
+icons = "Yaru-brown"
+
+[colors]
+# Base colors
+background = "#2c2525"
+foreground = "#e6d9db"
+dim_foreground = "#948a8b"
+
+# Surface colors
+surface = "#2c2525"
+surface_alt = "#3d2f2a"
+overlay = "#5b4a45"
+
+# Accent colors
+accent = "#fd6883"
+border = "#e6d9db"
+cursor = "#c3b7b8"
+selection = "#403e41"
+
+# ANSI colors (normal)
+black = "#72696a"
+red = "#fd6883"
+green = "#adda78"
+yellow = "#f9cc6c"
+blue = "#f38d70"
+magenta = "#a8a9eb"
+cyan = "#85dacc"
+white = "#e6d9db"
+
+# ANSI colors (bright)
+bright_black = "#948a8b"
+bright_red = "#ff8297"
+bright_green = "#c8e292"
+bright_yellow = "#fcd675"
+bright_blue = "#f8a788"
+bright_magenta = "#bebffd"
+bright_cyan = "#9bf1e1"
+bright_white = "#f1e5e7"
+
+# Btop overrides
+btop_highlight = "#fd6883"
+btop_title = "#e6d9db"
