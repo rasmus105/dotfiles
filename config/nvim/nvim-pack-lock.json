@@ -1,24 +1,59 @@
 {
   "plugins": {
+    "bamboo.nvim": [],
+    "blink.cmp": {
+      "version": "1.0.0 - 2.0.0"
+    },
+    "everforest-nvim": [],
+    "flexoki-neovim": [],
+    "fzf-lua": [],
+    "grug-far.nvim": [],
+    "gruvbox.nvim": [],
+    "harpoon": {
+      "version": "'harpoon2'"
+    },
+    "kanagawa.nvim": [],
+    "lualine.nvim": [],
     "markview.nvim": {
       "rev": "89405b5",
       "src": "https://github.com/OXY2DEV/markview.nvim"
     },
+    "mason-lspconfig.nvim": [],
+    "mason-tool-installer.nvim": [],
+    "mason.nvim": [],
+    "matteblack.nvim": [],
+    "mini.cursorword": [],
+    "mini.icons": [],
     "mini.pick": {
       "rev": "96ee37d",
       "src": "https://github.com/nvim-mini/mini.pick"
     },
+    "mini.surround": [],
     "minimal.nvim": {
       "rev": "22d837b",
       "src": "https://github.com/Yazeed1s/minimal.nvim"
     },
+    "monokai-pro.nvim": [],
+    "neovim": [],
+    "nightfox.nvim": [],
+    "nvim": [],
+    "nvim-lspconfig": [],
+    "nvim-notify": [],
     "nvim-spectre": {
       "rev": "72f56f7",
       "src": "https://github.com/nvim-pack/nvim-spectre"
     },
+    "nvim-treesitter": [],
+    "plenary.nvim": [],
+    "render-markdown.nvim": [],
+    "rustaceanvim": [],
+    "tabby.nvim": [],
+    "tokyonight.nvim": [],
     "vague.nvim": {
       "rev": "25107de",
       "src": "https://github.com/vague2k/vague.nvim"
-    }
+    },
+    "which-key.nvim": [],
+    "yazi.nvim": []
   }
 }
