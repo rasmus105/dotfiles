@@ -24,29 +24,44 @@ parse_args() {
         refresh_all
         exit 0
     fi
-    
+
     local action="$1"
     shift
-    
+
     case "$action" in
     all)
-        [[ $# -eq 0 ]] || { echo "Error: all takes no arguments" >&2; exit 1; }
+        [[ $# -eq 0 ]] || {
+            echo "Error: all takes no arguments" >&2
+            exit 1
+        }
         refresh_all
         ;;
     apps)
-        [[ $# -eq 0 ]] || { echo "Error: apps takes no arguments" >&2; exit 1; }
+        [[ $# -eq 0 ]] || {
+            echo "Error: apps takes no arguments" >&2
+            exit 1
+        }
         refresh_apps
         ;;
     theme)
-        [[ $# -eq 0 ]] || { echo "Error: theme takes no arguments" >&2; exit 1; }
+        [[ $# -eq 0 ]] || {
+            echo "Error: theme takes no arguments" >&2
+            exit 1
+        }
         refresh_theme
         ;;
     app)
-        [[ $# -ge 1 ]] || { echo "Error: app requires application name" >&2; exit 1; }
+        [[ $# -ge 1 ]] || {
+            echo "Error: app requires application name" >&2
+            exit 1
+        }
         restart_app "$@"
         ;;
     --help | -h | help)
-        [[ $# -eq 0 ]] || { echo "Error: help takes no arguments" >&2; exit 1; }
+        [[ $# -eq 0 ]] || {
+            echo "Error: help takes no arguments" >&2
+            exit 1
+        }
         print_help
         ;;
     *)
@@ -64,10 +79,10 @@ parse_args() {
 refresh_all() {
     refresh_apps
     refresh_theme
-    
+
     # Sync filesystem to ensure clean state
     q sync
-    
+
     echo "System refreshed"
 }
 
@@ -76,15 +91,14 @@ refresh_apps() {
     restart_app elephant || true
     restart_app walker --gapplication-service || true
     restart_app mako || true
-    restart_app --only-if-running waybar || true
-    
+
     echo "Apps refreshed"
 }
 
 restart_app() {
     # Parse options
     local only_if_running=false
-    
+
     while [[ $# -gt 0 ]]; do
         case "$1" in
         --only-if-running)
@@ -96,55 +110,57 @@ restart_app() {
             ;;
         esac
     done
-    
+
     # Check if app name is provided
     if [[ $# -eq 0 ]]; then
         echo "Error: No application name provided" >&2
         return 1
     fi
-    
+
     local app_name="$1"
     shift # Remove app name, leaving optional args in $@
-    
+
     # Check if app is currently running
     local is_running=false
     if pgrep -x "$app_name" >/dev/null 2>&1; then
         is_running=true
     fi
-    
+
     # If --only-if-running is set and app is not running, exit silently
     if [[ "$only_if_running" == true ]] && [[ "$is_running" == false ]]; then
         return 0
     fi
-    
+
     # Kill the app if it's running
     if [[ "$is_running" == true ]]; then
         q pkill -x "$app_name" || true
     fi
-    
+
     # Start the app with any additional arguments
     q setsid uwsm app -- "$app_name" "$@" &
-    
+
     echo "Restarted $app_name"
 }
 
 refresh_theme() {
+    restart_app --only-if-running waybar || true
+
     # Reload compositor
     q hyprctl reload || true
-    
+
     # Reload system services
     restart_app swayosd-server || true
     q makoctl reload || true
-    
+
     # Reload terminals (picks up all config changes including theme)
     reload_terminals
-    
+
     # Reload btop
     q pkill -SIGUSR2 btop || true
-    
+
     # Shuffle background
     q system-theme background shuffle || true
-    
+
     echo "Theme refreshed"
 }
 
@@ -157,7 +173,7 @@ reload_terminals() {
     if [[ -f "$HOME/.config/alacritty/alacritty.toml" ]]; then
         q touch "$HOME/.config/alacritty/alacritty.toml" || true
     fi
-    
+
     # Ghostty: send SIGUSR2 to reload configuration
     q killall -SIGUSR2 ghostty || true
 }

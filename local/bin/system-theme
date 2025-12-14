@@ -12,7 +12,7 @@ THEMES_DIR="$HOME/.config/themes"
 CURRENT_THEME_DIR="$HOME/.config/theme"
 THEME_BACKGROUNDS="$HOME/.config/theme/backgrounds"
 HYPR_BACKGROUND="$HOME/.config/hypr/background.jpg"
-THEME_GENERATOR="${SCRIPT_DIR}/../lib/theme-generator/generator.sh"
+THEME_GENERATOR="${SCRIPT_DIR}/theme-generator"
 
 #──────────────────────────────────────────────────────────────────────────────
 # Functions
@@ -59,6 +59,13 @@ parse_args() {
             exit 1
         }
         generate_theme "${1:-}"
+        ;;
+    preview)
+        [[ $# -le 1 ]] || {
+            echo "Error: preview takes at most one theme name" >&2
+            exit 1
+        }
+        generate_preview "${1:-}"
         ;;
     background | bg)
         parse_background_args "$@"
@@ -208,7 +215,7 @@ set_theme() {
     # Check if this is a new-style theme with theme.toml
     if [[ -f "$theme_toml" ]]; then
         echo "Generating theme configs from theme.toml..."
-        if ! "$THEME_GENERATOR" "$theme_toml" "$theme_dir"; then
+        if ! "$THEME_GENERATOR" generate "$theme_toml" "$theme_dir"; then
             echo "Error: Theme generation failed" >&2
             return 1
         fi
@@ -290,9 +297,9 @@ apply_browser_theme() {
     # Update browser theme via policy (works for chromium-based browsers)
     local policy_dir="/etc/chromium/policies/managed"
     local policy_file="$policy_dir/color.json"
-    
+
     if [[ -d "$policy_dir" ]] && [[ -w "$policy_dir" ]]; then
-        echo "{\"BrowserThemeColor\": \"$theme_hex_color\"}" > "$policy_file" 2>/dev/null || true
+        echo "{\"BrowserThemeColor\": \"$theme_hex_color\"}" >"$policy_file" 2>/dev/null || true
     fi
 
     # Refresh helium-browser policy if installed and running
@@ -321,11 +328,11 @@ list_themes() {
         [[ -d "$theme_dir" ]] || continue
         local theme_name
         theme_name=$(basename "$theme_dir")
-        
+
         # Check if it has theme.toml (new style) or not (legacy)
         local style="legacy"
         [[ -f "$theme_dir/theme.toml" ]] && style="toml"
-        
+
         # Mark current theme
         if [[ "$theme_name" == "$current_theme" ]]; then
             echo "* $theme_name ($style)"
@@ -337,7 +344,7 @@ list_themes() {
 
 generate_theme() {
     local theme_name="$1"
-    
+
     # If no theme specified, use current theme
     if [[ -z "$theme_name" ]]; then
         if [[ -L "$CURRENT_THEME_DIR" ]]; then
@@ -347,27 +354,56 @@ generate_theme() {
             return 1
         fi
     fi
-    
+
     local theme_dir="$THEMES_DIR/$theme_name"
     local theme_toml="$theme_dir/theme.toml"
-    
+
     [[ -d "$theme_dir" ]] || {
         echo "Error: Theme '$theme_name' not found" >&2
         return 1
     }
-    
+
     [[ -f "$theme_toml" ]] || {
         echo "Error: Theme '$theme_name' has no theme.toml (legacy theme)" >&2
         return 1
     }
-    
+
     echo "Generating theme configs for $theme_name..."
-    if "$THEME_GENERATOR" "$theme_toml" "$theme_dir"; then
+    if "$THEME_GENERATOR" generate "$theme_toml" "$theme_dir"; then
         echo "Theme configs generated successfully"
     else
         echo "Error: Theme generation failed" >&2
         return 1
     fi
+}
+
+generate_preview() {
+    local theme_name="$1"
+
+    # If no theme specified, use current theme
+    if [[ -z "$theme_name" ]]; then
+        if [[ -L "$CURRENT_THEME_DIR" ]]; then
+            theme_name=$(basename "$(readlink "$CURRENT_THEME_DIR")")
+        else
+            echo "Error: No theme specified and no current theme set" >&2
+            return 1
+        fi
+    fi
+
+    local theme_dir="$THEMES_DIR/$theme_name"
+
+    [[ -d "$theme_dir" ]] || {
+        echo "Error: Theme '$theme_name' not found" >&2
+        return 1
+    }
+
+    [[ -f "$theme_dir/theme.toml" ]] || {
+        echo "Error: Theme '$theme_name' has no theme.toml (legacy theme)" >&2
+        return 1
+    }
+
+    echo "Generating preview for $theme_name..."
+    "$THEME_GENERATOR" preview "$theme_dir"
 }
 
 #──────────────────────────────────────────────────────────────────────────────
@@ -624,6 +660,7 @@ Commands:
   get                Print current theme name
   list               List available themes
   generate [THEME]   Regenerate configs from theme.toml (current theme if not specified)
+  preview [THEME]    Generate preview.png screenshot (current theme if not specified)
   background, bg     Manage background images (see 'system-theme background help')
   font               Manage fonts (see 'system-theme font help')
   nightlight         Toggle nightlight mode (changes screen temperature)
@@ -639,6 +676,7 @@ Examples:
   system-theme get
   system-theme list
   system-theme generate
+  system-theme preview nord
   system-theme background shuffle
   system-theme font set "JetBrains Mono"
 EOF
