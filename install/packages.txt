@@ -42,7 +42,7 @@ qt5-wayland
 qt6-wayland
 xorg-xwayland
 kanshi
-awww
+awww-git
 xmlstarlet
 
 # ============================================================
@@ -60,7 +60,7 @@ github-cli
 lazygit
 neovim
 visual-studio-code-bin
-cargo
+rustup
 base-devel
 usbutils
 
