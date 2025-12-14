@@ -16,7 +16,7 @@ set -euo pipefail
 
 readonly UI_MIN_LINES=15
 readonly UI_MIN_COLS=60
-readonly UI_REFRESH_INTERVAL=0.1  # Seconds between redraws during command execution
+readonly UI_REFRESH_INTERVAL=0.1 # Seconds between redraws during command execution
 readonly UI_LOG_FILE="/tmp/dotfiles-output.log"
 
 #──────────────────────────────────────────────────────────────────────────────
@@ -52,18 +52,19 @@ declare -g -r ANSI_RESET="${ESC}[0m"
 declare -g -r ANSI_DIM="${ESC}[2m"
 
 # Colors (initialized in ui_init)
-declare -g UI_C_OK=""      # Green - success
-declare -g UI_C_ERR=""     # Red - error
-declare -g UI_C_WARN=""    # Yellow - in progress
-declare -g UI_C_INFO=""    # Cyan - info
-declare -g UI_C_DIM=""     # Gray - muted
-declare -g UI_C_RST=""     # Reset
+declare -g UI_C_OK=""   # Green - success
+declare -g UI_C_ERR=""  # Red - error
+declare -g UI_C_WARN="" # Yellow - in progress
+declare -g UI_C_INFO="" # Cyan - info
+declare -g UI_C_DIM=""  # Gray - muted
+declare -g UI_C_RST=""  # Reset
 
 #──────────────────────────────────────────────────────────────────────────────
 # Public API
 #──────────────────────────────────────────────────────────────────────────────
 
-# Initialize the UI system
+# Initialize the UI system (total steps is used to draw progress bar at the
+# bottom)
 # Usage: ui_init <total_steps> [color_scheme]
 ui_init() {
     local total_steps=${1:-1}
@@ -74,17 +75,18 @@ ui_init() {
     UI_STATE[enabled]=1
     UI_HISTORY=()
 
-    # Check if stdout is a terminal
+    # Check if stdout is a terminal (if it is not a terminal,
+    # the ui is vastly simplified)
     if [[ ! -t 1 ]]; then
         UI_STATE[is_tty]=0
         return
     fi
 
-    # Get terminal dimensions
+    # Get terminal dimensions and save them to the UI state.
     _ui_update_dimensions
 
     # Check minimum size
-    if (( UI_STATE[term_lines] < UI_MIN_LINES || UI_STATE[term_cols] < UI_MIN_COLS )); then
+    if ((UI_STATE[term_lines] < UI_MIN_LINES || UI_STATE[term_cols] < UI_MIN_COLS)); then
         UI_STATE[is_tty]=0
         echo "Terminal too small for TUI mode (need ${UI_MIN_COLS}x${UI_MIN_LINES}), using simple mode" >&2
         return
@@ -94,9 +96,9 @@ ui_init() {
     _ui_init_colors "$color_scheme"
 
     # Clear/create log file
-    : > "$UI_LOG_FILE"
+    : >"$UI_LOG_FILE"
 
-    # Setup terminal
+    # Setup terminal (go to ALT screen, hide cursor, and clear screen)
     printf '%s%s%s' "$ANSI_ALT_SCREEN" "$ANSI_HIDE_CURSOR" "$ANSI_CLEAR"
 
     # Setup signal handlers
@@ -127,7 +129,7 @@ ui_run() {
     UI_STATE[current_start]=$(_ui_time_ms)
 
     # Clear log for this command
-    : > "$UI_LOG_FILE"
+    : >"$UI_LOG_FILE"
 
     # Draw initial state
     _ui_draw
@@ -138,18 +140,18 @@ ui_run() {
 
     # Calculate duration
     local end_time=$(_ui_time_ms)
-    local duration=$(( end_time - UI_STATE[current_start] ))
+    local duration=$((end_time - UI_STATE[current_start]))
     local duration_str=$(_ui_format_duration "$duration")
 
     # Update history
-    if (( exit_code == 0 )); then
+    if ((exit_code == 0)); then
         UI_HISTORY+=("ok|$desc|$duration_str")
     else
         UI_HISTORY+=("err|$desc|$duration_str")
     fi
 
     # Update state
-    (( UI_STATE[current_step]++ )) || true
+    ((UI_STATE[current_step]++)) || true
     UI_STATE[current_cmd]=""
     UI_STATE[current_start]=0
 
@@ -198,33 +200,33 @@ ui_run_or_prompt() {
     # Show prompt in overlay
     UI_STATE[in_prompt]=1
     printf '%s' "$ANSI_SHOW_CURSOR"
-    
+
     # Temporarily disable our signal handlers for clean Ctrl+C
     trap - INT TERM
-    
+
     local choice
     choice=$(_ui_prompt_failure "$exit_code")
-    
+
     # Restore signal handlers
     trap '_ui_cleanup_handler; exit 130' INT
     trap '_ui_cleanup_handler; exit 143' TERM
-    
+
     printf '%s' "$ANSI_HIDE_CURSOR"
     _ui_draw
     UI_STATE[in_prompt]=0
 
     case "$choice" in
-        retry)
-            ui_run_or_prompt "$desc" "$@"
-            return $?
-            ;;
-        continue)
-            return 0
-            ;;
-        *)
-            ui_cleanup
-            exit 1
-            ;;
+    retry)
+        ui_run_or_prompt "$desc" "$@"
+        return $?
+        ;;
+    continue)
+        return 0
+        ;;
+    *)
+        ui_cleanup
+        exit 1
+        ;;
     esac
 }
 
@@ -242,7 +244,7 @@ ui_prompt_confirm() {
 
     local result
     result=$(_ui_with_prompt_overlay _ui_do_confirm "$question")
-    
+
     # Record in history
     if [[ "$result" == "yes" ]]; then
         UI_HISTORY+=("confirm|$question|Yes")
@@ -266,7 +268,7 @@ ui_prompt_select() {
 
     local result
     result=$(_ui_with_prompt_overlay _ui_do_select "$question" "$@")
-    
+
     # Record in history and output
     UI_HISTORY+=("select|$question|$result")
     echo "$result"
@@ -285,7 +287,7 @@ ui_prompt_multiselect() {
 
     local result
     result=$(_ui_with_prompt_overlay _ui_do_multiselect "$question" "$@")
-    
+
     # Record in history (join multiple selections with comma for display)
     local display_result
     display_result=$(echo "$result" | tr '\n' ',' | sed 's/,$//')
@@ -306,7 +308,7 @@ ui_prompt_input() {
 
     local result
     result=$(_ui_with_prompt_overlay _ui_do_input "$question" "$default")
-    
+
     # Record in history and output
     UI_HISTORY+=("input|$question|$result")
     echo "$result"
@@ -314,10 +316,10 @@ ui_prompt_input() {
 
 # Cleanup and restore terminal
 ui_cleanup() {
-    (( UI_STATE[enabled] == 0 )) && return
+    ((UI_STATE[enabled] == 0)) && return
 
     # Restore terminal
-    if (( UI_STATE[is_tty] == 1 )); then
+    if ((UI_STATE[is_tty] == 1)); then
         printf '%s%s' "$ANSI_SHOW_CURSOR" "$ANSI_MAIN_SCREEN"
     fi
 
@@ -325,7 +327,7 @@ ui_cleanup() {
     trap - EXIT INT TERM WINCH
 
     # Show summary
-    if (( ${#UI_HISTORY[@]} > 0 && UI_STATE[is_tty] == 1 )); then
+    if ((${#UI_HISTORY[@]} > 0 && UI_STATE[is_tty] == 1)); then
         _ui_print_summary
     fi
 
@@ -338,18 +340,18 @@ ui_cleanup() {
 
 # Main draw function - renders entire screen
 _ui_draw() {
-    (( UI_STATE[is_tty] == 0 )) && return
+    ((UI_STATE[is_tty] == 0)) && return
 
     local lines=${UI_STATE[term_lines]}
     local cols=${UI_STATE[term_cols]}
 
     # Calculate layout
-    local history_height=$(( lines * 20 / 100 ))
-    (( history_height < 3 )) && history_height=3
+    local history_height=$((lines * 20 / 100))
+    ((history_height < 3)) && history_height=3
 
     local status_height=3
-    local output_height=$(( lines - history_height - status_height - 2 ))  # -2 for separators
-    (( output_height < 3 )) && output_height=3
+    local output_height=$((lines - history_height - status_height - 2)) # -2 for separators
+    ((output_height < 3)) && output_height=3
 
     # Build frame
     local frame=""
@@ -382,16 +384,16 @@ _ui_render_history() {
     # Reserve a line for current command if one is running
     local history_max=$max_lines
     if [[ -n "${UI_STATE[current_cmd]}" ]]; then
-        (( history_max-- ))
+        ((history_max--))
     fi
 
     local count=${#UI_HISTORY[@]}
     local start=0
-    (( count > history_max )) && start=$(( count - history_max ))
+    ((count > history_max)) && start=$((count - history_max))
 
     # Render completed commands and prompts
     local lines_used=0
-    for (( i = start; i < count && lines_used < history_max; i++ )); do
+    for ((i = start; i < count && lines_used < history_max; i++)); do
         local entry="${UI_HISTORY[$i]}"
         local type="${entry%%|*}"
         local rest="${entry#*|}"
@@ -400,49 +402,53 @@ _ui_render_history() {
 
         local icon color line
         case "$type" in
-            ok)
-                icon="✓"; color="$UI_C_OK"
-                line="$icon $desc ($extra)"
-                ;;
-            err)
-                icon="✗"; color="$UI_C_ERR"
-                line="$icon $desc ($extra)"
-                ;;
-            confirm|select|input)
-                icon="›"; color="$UI_C_INFO"
-                line="$icon $desc: $extra"
-                ;;
-            *)
-                icon="·"; color="$UI_C_RST"
-                line="$icon $desc"
-                ;;
+        ok)
+            icon="✓"
+            color="$UI_C_OK"
+            line="$icon $desc ($extra)"
+            ;;
+        err)
+            icon="✗"
+            color="$UI_C_ERR"
+            line="$icon $desc ($extra)"
+            ;;
+        confirm | select | input)
+            icon="›"
+            color="$UI_C_INFO"
+            line="$icon $desc: $extra"
+            ;;
+        *)
+            icon="·"
+            color="$UI_C_RST"
+            line="$icon $desc"
+            ;;
         esac
 
-        (( ${#line} > cols )) && line="${line:0:cols-3}..."
+        ((${#line} > cols)) && line="${line:0:cols-3}..."
 
         out+="${color}${line}${UI_C_RST}"
-        out+="${ESC}[K"  # Clear to end of line
+        out+="${ESC}[K" # Clear to end of line
         out+=$'\n'
-        (( lines_used++ ))
+        ((lines_used++))
     done
 
     # Render current command if running
     if [[ -n "${UI_STATE[current_cmd]}" ]]; then
-        local elapsed=$(( $(_ui_time_ms) - UI_STATE[current_start] ))
+        local elapsed=$(($(_ui_time_ms) - UI_STATE[current_start]))
         local elapsed_str=$(_ui_format_duration "$elapsed")
         local line="⊙ ${UI_STATE[current_cmd]} ($elapsed_str)"
-        (( ${#line} > cols )) && line="${line:0:cols-3}..."
+        ((${#line} > cols)) && line="${line:0:cols-3}..."
 
         out+="${UI_C_WARN}${line}${UI_C_RST}"
         out+="${ESC}[K"
         out+=$'\n'
-        (( lines_used++ ))
+        ((lines_used++))
     fi
 
     # Fill remaining lines
-    while (( lines_used < max_lines )); do
+    while ((lines_used < max_lines)); do
         out+="${ESC}[K"$'\n'
-        (( lines_used++ ))
+        ((lines_used++))
     done
 
     printf '%s' "$out"
@@ -452,7 +458,7 @@ _ui_render_history() {
 _ui_render_separator() {
     local cols=$1
     local line=""
-    for (( i = 0; i < cols; i++ )); do
+    for ((i = 0; i < cols; i++)); do
         line+="─"
     done
     printf '%s%s%s%s\n' "$UI_C_DIM" "$line" "$UI_C_RST" "${ESC}[K"
@@ -473,15 +479,15 @@ _ui_render_output() {
     local lines_used=0
     for line in "${log_lines[@]}"; do
         # Truncate long lines
-        (( ${#line} > cols - 2 )) && line="${line:0:cols-5}..."
+        ((${#line} > cols - 2)) && line="${line:0:cols-5}..."
         out+="${UI_C_DIM}  ${line}${UI_C_RST}${ESC}[K"$'\n'
-        (( lines_used++ ))
+        ((lines_used++))
     done
 
     # Fill remaining lines
-    while (( lines_used < max_lines )); do
+    while ((lines_used < max_lines)); do
         out+="${ESC}[K"$'\n'
-        (( lines_used++ ))
+        ((lines_used++))
     done
 
     printf '%s' "$out"
@@ -498,7 +504,7 @@ _ui_render_status() {
 
     # Bottom separator
     local sep=""
-    for (( i = 0; i < cols; i++ )); do
+    for ((i = 0; i < cols; i++)); do
         sep+="─"
     done
     out+="${UI_C_DIM}${sep}${UI_C_RST}${ESC}[K"$'\n'
@@ -507,17 +513,17 @@ _ui_render_status() {
     local step=${UI_STATE[current_step]}
     local total=${UI_STATE[total_steps]}
     local percent=0
-    (( total > 0 )) && percent=$(( step * 100 / total ))
+    ((total > 0)) && percent=$((step * 100 / total))
 
-    local bar_width=$(( cols - 20 ))
-    (( bar_width < 10 )) && bar_width=10
+    local bar_width=$((cols - 20))
+    ((bar_width < 10)) && bar_width=10
 
-    local filled=$(( bar_width * percent / 100 ))
-    local empty=$(( bar_width - filled ))
+    local filled=$((bar_width * percent / 100))
+    local empty=$((bar_width - filled))
 
     out+="$UI_C_INFO"
-    for (( i = 0; i < filled; i++ )); do out+="━"; done
-    for (( i = 0; i < empty; i++ )); do out+="─"; done
+    for ((i = 0; i < filled; i++)); do out+="━"; done
+    for ((i = 0; i < empty; i++)); do out+="─"; done
     out+="$(printf ' %3d%% (%d/%d)' "$percent" "$step" "$total")"
     out+="$UI_C_RST${ESC}[K"$'\n'
 
@@ -534,7 +540,7 @@ _ui_render_status() {
 # Run command with periodic output refresh
 _ui_run_with_output() {
     # Start command in background, redirect output to log
-    "$@" >> "$UI_LOG_FILE" 2>&1 &
+    "$@" >>"$UI_LOG_FILE" 2>&1 &
     local cmd_pid=$!
 
     # Poll for completion while refreshing display
@@ -564,8 +570,8 @@ _ui_with_prompt_overlay() {
     # This gives gum a clean slate to render from
     local lines=${UI_STATE[term_lines]}
     local cols=${UI_STATE[term_cols]}
-    local center_row=$(( lines / 3 ))  # Upper third looks better for prompts
-    
+    local center_row=$((lines / 3)) # Upper third looks better for prompts
+
     {
         # Clear screen
         printf '%s%s' "$ANSI_HOME" "$ANSI_CLEAR"
@@ -602,22 +608,22 @@ _ui_with_prompt_overlay() {
 _ui_prompt_failure() {
     local exit_code=$1
     local lines=${UI_STATE[term_lines]}
-    
+
     # Clear screen and show failure info
     {
         printf '%s%s' "$ANSI_HOME" "$ANSI_CLEAR"
-        printf "${ESC}[3;1H"  # Start at row 3
+        printf "${ESC}[3;1H" # Start at row 3
         printf '%s' "$ANSI_SHOW_CURSOR"
-        
+
         printf "${UI_C_ERR}Command failed with exit code %d${UI_C_RST}\n\n" "$exit_code"
         printf "${UI_C_DIM}Last output:${UI_C_RST}\n"
     } >/dev/tty
-    
+
     # Show last few lines of output
     tail -n 8 "$UI_LOG_FILE" 2>/dev/null | while IFS= read -r line; do
         printf "  ${UI_C_DIM}%s${UI_C_RST}\n" "$line"
     done >/dev/tty
-    
+
     printf "\n" >/dev/tty
 
     local choice
@@ -629,16 +635,16 @@ _ui_prompt_failure() {
         } >/dev/tty
         read -rp "Choice (1-3): " num </dev/tty
         case "$num" in
-            1) choice="Retry" ;;
-            2) choice="Continue anyway" ;;
-            *) choice="Abort" ;;
+        1) choice="Retry" ;;
+        2) choice="Continue anyway" ;;
+        *) choice="Abort" ;;
         esac
     fi
 
     case "$choice" in
-        "Retry") echo "retry" ;;
-        "Continue anyway") echo "continue" ;;
-        *) echo "abort" ;;
+    "Retry") echo "retry" ;;
+    "Continue anyway") echo "continue" ;;
+    *) echo "abort" ;;
     esac
 }
 
@@ -657,7 +663,7 @@ _ui_do_confirm() {
     else
         # Fallback: read from tty directly
         read -rp "$question (y/N) " -n 1 reply </dev/tty
-        echo >/dev/tty  # newline
+        echo >/dev/tty # newline
         if [[ "$reply" =~ ^[Yy]$ ]]; then
             echo "yes"
         else
@@ -726,11 +732,11 @@ _ui_multiselect_fallback() {
     local i=1
     for opt in "${options[@]}"; do
         echo "$i) $opt"
-        (( i++ ))
+        ((i++))
     done
     read -ra selections
     for sel in "${selections[@]}"; do
-        if (( sel >= 1 && sel <= ${#options[@]} )); then
+        if ((sel >= 1 && sel <= ${#options[@]})); then
             echo "${options[$((sel - 1))]}"
         fi
     done
@@ -755,25 +761,25 @@ _ui_input_fallback() {
 
 # Check if in simple mode
 _ui_is_simple() {
-    (( UI_STATE[is_tty] == 0 || UI_STATE[enabled] == 0 ))
+    ((UI_STATE[is_tty] == 0 || UI_STATE[enabled] == 0))
 }
 
 # Get time in milliseconds
 _ui_time_ms() {
-    echo $(( $(date +%s%N) / 1000000 ))
+    echo $(($(date +%s%N) / 1000000))
 }
 
 # Format duration
 _ui_format_duration() {
     local ms=$1
-    if (( ms < 1000 )); then
+    if ((ms < 1000)); then
         echo "${ms}ms"
-    elif (( ms < 60000 )); then
+    elif ((ms < 60000)); then
         printf "%.1fs" "$(echo "scale=1; $ms / 1000" | bc)"
     else
-        local secs=$(( ms / 1000 ))
-        local mins=$(( secs / 60 ))
-        secs=$(( secs % 60 ))
+        local secs=$((ms / 1000))
+        local mins=$((secs / 60))
+        secs=$((secs % 60))
         echo "${mins}m ${secs}s"
     fi
 }
@@ -788,20 +794,20 @@ _ui_update_dimensions() {
 _ui_init_colors() {
     local scheme=${1:-basic}
     # Basic ANSI colors work everywhere
-    UI_C_OK=$'\033[32m'    # Green
-    UI_C_ERR=$'\033[31m'   # Red
-    UI_C_WARN=$'\033[33m'  # Yellow
-    UI_C_INFO=$'\033[36m'  # Cyan
-    UI_C_DIM=$'\033[90m'   # Gray
-    UI_C_RST=$'\033[0m'    # Reset
+    UI_C_OK=$'\033[32m'   # Green
+    UI_C_ERR=$'\033[31m'  # Red
+    UI_C_WARN=$'\033[33m' # Yellow
+    UI_C_INFO=$'\033[36m' # Cyan
+    UI_C_DIM=$'\033[90m'  # Gray
+    UI_C_RST=$'\033[0m'   # Reset
 }
 
 # Handle terminal resize
 _ui_handle_resize() {
     _ui_update_dimensions
 
-    if (( UI_STATE[term_lines] < UI_MIN_LINES || UI_STATE[term_cols] < UI_MIN_COLS )); then
-        if (( UI_STATE[is_tty] == 1 )); then
+    if ((UI_STATE[term_lines] < UI_MIN_LINES || UI_STATE[term_cols] < UI_MIN_COLS)); then
+        if ((UI_STATE[is_tty] == 1)); then
             UI_STATE[is_tty]=0
             printf '%s%s' "$ANSI_SHOW_CURSOR" "$ANSI_MAIN_SCREEN"
             echo "Terminal too small, switching to simple mode" >&2
@@ -831,21 +837,39 @@ _ui_print_summary() {
 
         local icon color
         case "$type" in
-            ok)      icon="✓"; color="$UI_C_OK" ;;
-            err)     icon="✗"; color="$UI_C_ERR" ;;
-            confirm) icon="?"; color="$UI_C_INFO" ;;
-            select)  icon="›"; color="$UI_C_INFO" ;;
-            input)   icon="›"; color="$UI_C_INFO" ;;
-            *)       icon="·"; color="$UI_C_RST" ;;
+        ok)
+            icon="✓"
+            color="$UI_C_OK"
+            ;;
+        err)
+            icon="✗"
+            color="$UI_C_ERR"
+            ;;
+        confirm)
+            icon="?"
+            color="$UI_C_INFO"
+            ;;
+        select)
+            icon="›"
+            color="$UI_C_INFO"
+            ;;
+        input)
+            icon="›"
+            color="$UI_C_INFO"
+            ;;
+        *)
+            icon="·"
+            color="$UI_C_RST"
+            ;;
         esac
 
         case "$type" in
-            ok|err)
-                printf '%s%s %s (%s)%s\n' "$color" "$icon" "$desc" "$extra" "$UI_C_RST"
-                ;;
-            confirm|select|input)
-                printf '%s%s %s: %s%s\n' "$color" "$icon" "$desc" "$extra" "$UI_C_RST"
-                ;;
+        ok | err)
+            printf '%s%s %s (%s)%s\n' "$color" "$icon" "$desc" "$extra" "$UI_C_RST"
+            ;;
+        confirm | select | input)
+            printf '%s%s %s: %s%s\n' "$color" "$icon" "$desc" "$extra" "$UI_C_RST"
+            ;;
         esac
     done
 
