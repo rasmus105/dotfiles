@@ -33,6 +33,8 @@ declare -g -A UI_STATE=(
     [term_lines]=24
     [term_cols]=80
     [in_prompt]=0
+    [spinner_frame]=0
+    [total_duration]=0
 )
 
 # History stored as indexed array (bash doesn't support nested arrays)
@@ -50,6 +52,9 @@ declare -g -r ANSI_CLEAR="${ESC}[2J"
 declare -g -r ANSI_HOME="${ESC}[H"
 declare -g -r ANSI_RESET="${ESC}[0m"
 declare -g -r ANSI_DIM="${ESC}[2m"
+
+# Spinner frames (Braille dots animation)
+declare -g -r -a UI_SPINNER_FRAMES=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
 
 # Colors (initialized in ui_init)
 declare -g UI_C_OK=""    # Green - success
@@ -145,6 +150,9 @@ ui_run() {
     local end_time=$(_ui_time_ms)
     local duration=$((end_time - UI_STATE[current_start]))
     local duration_str=$(_ui_format_duration "$duration")
+
+    # Accumulate total duration
+    ((UI_STATE[total_duration] += duration))
 
     # Update history
     if ((exit_code == 0)); then
@@ -348,6 +356,9 @@ _ui_draw() {
     local lines=${UI_STATE[term_lines]}
     local cols=${UI_STATE[term_cols]}
 
+    # Advance spinner frame (do this in main process so it persists)
+    UI_STATE[spinner_frame]=$(( (UI_STATE[spinner_frame] + 1) % ${#UI_SPINNER_FRAMES[@]} ))
+
     # Calculate layout
     local history_height=$((lines * 20 / 100))
     ((history_height < 3)) && history_height=3
@@ -457,7 +468,11 @@ _ui_render_history() {
     if [[ -n "${UI_STATE[current_cmd]}" ]]; then
         local elapsed=$(($(_ui_time_ms) - UI_STATE[current_start]))
         local elapsed_str=$(_ui_format_duration "$elapsed")
-        local base_line="⊙ ${UI_STATE[current_cmd]}"
+        
+        # Get current spinner frame (advanced in _ui_draw)
+        local spinner="${UI_SPINNER_FRAMES[${UI_STATE[spinner_frame]}]}"
+        
+        local base_line="$spinner ${UI_STATE[current_cmd]}"
         local time_part=" ($elapsed_str)"
         local full_len=$((${#base_line} + ${#time_part}))
         if ((full_len > cols)); then
@@ -467,7 +482,7 @@ _ui_render_history() {
         out+="${UI_C_WARN}${base_line}${UI_C_MUTED}${time_part}${UI_C_RST}"
         out+="${ESC}[K"
         out+=$'\n'
-        ((lines_used++))
+        ((lines_used++)) || true
     fi
 
     # Fill remaining lines
@@ -506,13 +521,13 @@ _ui_render_output() {
         # Truncate long lines
         ((${#line} > cols - 2)) && line="${line:0:cols-5}..."
         out+="${UI_C_DIM}  ${line}${UI_C_RST}${ESC}[K"$'\n'
-        ((lines_used++))
+        ((lines_used++)) || true
     done
 
     # Fill remaining lines
     while ((lines_used < max_lines)); do
         out+="${ESC}[K"$'\n'
-        ((lines_used++))
+        ((lines_used++)) || true
     done
 
     printf '%s' "$out"
@@ -917,9 +932,26 @@ _ui_calculate_summary_width() {
 
 # Print summary after completion
 _ui_print_summary() {
-    # Calculate separator width
+    # Count passed and failed
+    local passed=0 failed=0
+    for entry in "${UI_HISTORY[@]}"; do
+        local type="${entry%%|*}"
+        case "$type" in
+        ok) ((passed++)) || true ;;
+        err) ((failed++)) || true ;;
+        esac
+    done
+
+    # Calculate separator width (account for stats line)
+    local total_time_str
+    total_time_str=$(_ui_format_duration "${UI_STATE[total_duration]}")
+    local stats_line="${passed} passed, ${failed} failed | Total: ${total_time_str}"
+    local stats_len=${#stats_line}
+
     local sep_width
     sep_width=$(_ui_calculate_summary_width)
+    # Ensure separator is at least as wide as stats line
+    ((stats_len > sep_width)) && sep_width=$stats_len
 
     # Build separator string
     local separator=""
@@ -977,6 +1009,12 @@ _ui_print_summary() {
     done
 
     echo "$separator"
+    # Print statistics line with colors
+    printf '%s%d passed%s, %s%d failed%s %s|%s Total: %s%s%s\n' \
+        "$UI_C_OK" "$passed" "$UI_C_RST" \
+        "$UI_C_ERR" "$failed" "$UI_C_RST" \
+        "$UI_C_MUTED" "$UI_C_RST" \
+        "$UI_C_BOLD" "$total_time_str" "$UI_C_RST"
 }
 
 #──────────────────────────────────────────────────────────────────────────────
