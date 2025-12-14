@@ -16,26 +16,26 @@ declare -A THEME
 parse_toml() {
     local file="$1"
     local current_section=""
-    
+
     while IFS= read -r line || [[ -n "$line" ]]; do
         # Skip empty lines and comments
         [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-        
+
         # Remove leading/trailing whitespace
         line="${line#"${line%%[![:space:]]*}"}"
         line="${line%"${line##*[![:space:]]}"}"
-        
+
         # Section header [section] or [section.subsection]
         if [[ "$line" =~ ^\[([a-zA-Z0-9._-]+)\]$ ]]; then
             current_section="${BASH_REMATCH[1]}"
             continue
         fi
-        
+
         # Key-value pair: key = "value" or key = value
         if [[ "$line" =~ ^([a-zA-Z0-9_-]+)[[:space:]]*=[[:space:]]*\"?([^\"]*)\"?$ ]]; then
             local key="${BASH_REMATCH[1]}"
             local value="${BASH_REMATCH[2]}"
-            
+
             # Build full key path
             if [[ -n "$current_section" ]]; then
                 THEME["${current_section}.${key}"]="$value"
@@ -43,7 +43,7 @@ parse_toml() {
                 THEME["$key"]="$value"
             fi
         fi
-    done < "$file"
+    done <"$file"
 }
 
 get() {
@@ -86,7 +86,7 @@ strip_hash() {
 
 generate_alacritty() {
     local output="$1"
-    cat > "$output" << EOF
+    cat >"$output" <<EOF
 [colors.primary]
 background = "$(get colors.background)"
 foreground = "$(get colors.foreground)"
@@ -148,7 +148,7 @@ EOF
 
     # Add dim colors if any are defined
     if has colors.dim_black; then
-        cat >> "$output" << EOF
+        cat >>"$output" <<EOF
 
 [colors.dim]
 black = "$(get colors.dim_black)"
@@ -164,7 +164,7 @@ EOF
 
     # Add indexed colors if defined
     if has colors.orange; then
-        cat >> "$output" << EOF
+        cat >>"$output" <<EOF
 
 [[colors.indexed_colors]]
 index = 16
@@ -173,7 +173,7 @@ EOF
     fi
 
     if has colors.extra; then
-        cat >> "$output" << EOF
+        cat >>"$output" <<EOF
 
 [[colors.indexed_colors]]
 index = 17
@@ -184,12 +184,12 @@ EOF
 
 generate_ghostty() {
     local output="$1"
-    
+
     if has apps.ghostty; then
-        echo "theme = $(get apps.ghostty)" > "$output"
+        echo "theme = $(get apps.ghostty)" >"$output"
     else
         # Generate from colors
-        cat > "$output" << EOF
+        cat >"$output" <<EOF
 background = $(strip_hash "$(get colors.background)")
 foreground = $(strip_hash "$(get colors.foreground)")
 cursor-color = $(strip_hash "$(get colors.cursor "$(get colors.foreground)")")
@@ -218,13 +218,13 @@ EOF
 
 generate_neovim() {
     local output="$1"
-    
+
     if ! has apps.neovim; then
         echo "Error: apps.neovim is required (neovim colorscheme name)" >&2
         return 1
     fi
-    
-    cat > "$output" << EOF
+
+    cat >"$output" <<EOF
 return {
 	colorscheme = "$(get apps.neovim)",
 }
@@ -241,8 +241,8 @@ generate_waybar() {
     red=$(get colors.red)
     yellow=$(get colors.yellow)
     green=$(get colors.green)
-    
-    cat > "$output" << EOF
+
+    cat >"$output" <<EOF
 /* Theme colors - imported by style.css */
 @define-color foreground $fg;
 @define-color background $bg;
@@ -263,7 +263,7 @@ generate_walker() {
     local output="$1"
     local surface
     surface=$(get colors.surface_alt "$(get colors.surface "$(get colors.background)")")
-    cat > "$output" << EOF
+    cat >"$output" <<EOF
 @define-color selected-text $(get colors.accent);
 @define-color text $(get colors.foreground);
 @define-color base $surface;
@@ -277,7 +277,7 @@ generate_swayosd() {
     local output="$1"
     local surface
     surface=$(get colors.surface_alt "$(get colors.surface "$(get colors.background)")")
-    cat > "$output" << EOF
+    cat >"$output" <<EOF
 @define-color background-color $surface;
 @define-color border-color $(get colors.border "$(get colors.foreground)");
 @define-color label $(get colors.foreground);
@@ -290,8 +290,8 @@ generate_hyprland() {
     local output="$1"
     local border_color
     border_color=$(strip_hash "$(get colors.border "$(get colors.foreground)")")
-    
-    cat > "$output" << EOF
+
+    cat >"$output" <<EOF
 \$activeBorderColor = rgb($border_color)
 
 general {
@@ -310,8 +310,8 @@ generate_hyprlock() {
     bg=$(get colors.background)
     fg=$(get colors.foreground)
     accent=$(get colors.accent)
-    
-    cat > "$output" << EOF
+
+    cat >"$output" <<EOF
 \$color = $(hex_to_rgba "$bg" 1.0)
 \$inner_color = $(hex_to_rgba "$bg" 0.8)
 \$outer_color = $(hex_to_rgba "$fg" 1.0)
@@ -326,8 +326,8 @@ generate_mako() {
     bg=$(strip_hash "$(get colors.surface_alt "$(get colors.surface "$(get colors.background)")")")
     fg=$(strip_hash "$(get colors.foreground)")
     border=$(strip_hash "$(get colors.border "$(get colors.accent)")")
-    
-    cat > "$output" << EOF
+
+    cat >"$output" <<EOF
 text-color=#$fg
 border-color=#$border
 background-color=#${bg}95
@@ -344,8 +344,8 @@ generate_zathura() {
     red=$(get colors.red)
     yellow=$(get colors.yellow)
     accent=$(get colors.accent)
-    
-    cat > "$output" << EOF
+
+    cat >"$output" <<EOF
 set default-fg                $(hex_to_rgba "$fg" 1)
 set default-bg                $(hex_to_rgba "$bg" 0.8)
 
@@ -390,25 +390,25 @@ generate_btop() {
     local bg fg surface overlay accent
     local red green yellow blue magenta cyan
     local title highlight
-    
+
     bg=$(get colors.background)
     fg=$(get colors.foreground)
     surface=$(get colors.surface "$bg")
     overlay=$(get colors.overlay "$surface")
     accent=$(get colors.accent)
-    
+
     red=$(get colors.red)
     green=$(get colors.green)
     yellow=$(get colors.yellow)
     blue=$(get colors.blue)
     magenta=$(get colors.magenta)
     cyan=$(get colors.cyan)
-    
+
     # Btop-specific colors with fallbacks
     title=$(get colors.btop_title "$fg")
     highlight=$(get colors.btop_highlight "$accent")
-    
-    cat > "$output" << EOF
+
+    cat >"$output" <<EOF
 # Main background, empty for terminal default, need to be empty if you want transparent background
 theme[main_bg]="$bg"
 
@@ -499,18 +499,18 @@ generate_browser() {
     local output="$1"
     local bg
     bg=$(get colors.surface "$(get colors.background)")
-    hex_to_rgb "$bg" > "$output"
+    hex_to_rgb "$bg" >"$output"
 }
 
 generate_vscode() {
     local output="$1"
-    
+
     if ! has apps.vscode_name || ! has apps.vscode_extension; then
         echo "Error: apps.vscode_name and apps.vscode_extension are required" >&2
         return 1
     fi
-    
-    cat > "$output" << EOF
+
+    cat >"$output" <<EOF
 {
   "name": "$(get apps.vscode_name)",
   "extension": "$(get apps.vscode_extension)"
@@ -522,19 +522,237 @@ generate_icons() {
     local output="$1"
     local icons
     icons=$(get apps.icons "Yaru-blue")
-    echo "$icons" > "$output"
+    echo "$icons" >"$output"
 }
 
 generate_lightmode() {
     local output="$1"
     local mode
     mode=$(get mode "dark")
-    
+
     if [[ "$mode" == "light" ]]; then
         touch "$output"
     elif [[ -f "$output" ]]; then
         rm -f "$output"
     fi
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Preview Generation
+#──────────────────────────────────────────────────────────────────────────────
+
+# Window identifiers for cleanup
+PREVIEW_BTOP_TITLE="preview-btop-$$"
+PREVIEW_NVIM_TITLE="preview-nvim-$$"
+PREVIEW_PIDS=()
+
+cleanup_preview_windows() {
+    # Close windows by title
+    for title in "$PREVIEW_BTOP_TITLE" "$PREVIEW_NVIM_TITLE"; do
+        local addr
+        addr=$(hyprctl clients -j | jq -r ".[] | select(.title == \"$title\") | .address" 2>/dev/null || true)
+        if [[ -n "$addr" ]]; then
+            hyprctl dispatch closewindow "address:$addr" &>/dev/null || true
+        fi
+    done
+
+    # Close walker if open
+    pkill -x walker 2>/dev/null || true
+
+    # Kill any remaining processes we spawned
+    for pid in "${PREVIEW_PIDS[@]}"; do
+        kill "$pid" 2>/dev/null || true
+    done
+}
+
+generate_preview() {
+    local theme_dir="$1"
+    local theme_toml="$theme_dir/theme.toml"
+    local output="$theme_dir/preview.png"
+
+    echo "Generating preview image..."
+
+    # Validate requirements
+    local missing_deps=()
+    command -v grim &>/dev/null || missing_deps+=("grim")
+    command -v hyprctl &>/dev/null || missing_deps+=("hyprctl")
+    command -v alacritty &>/dev/null || missing_deps+=("alacritty")
+    command -v walker &>/dev/null || missing_deps+=("walker")
+    command -v btop &>/dev/null || missing_deps+=("btop")
+    command -v nvim &>/dev/null || missing_deps+=("nvim")
+    command -v jq &>/dev/null || missing_deps+=("jq")
+
+    if [[ ${#missing_deps[@]} -gt 0 ]]; then
+        echo "Error: Missing required dependencies: ${missing_deps[*]}" >&2
+        return 1
+    fi
+
+    if [[ ! -f "$theme_toml" ]]; then
+        echo "Error: theme.toml not found in $theme_dir" >&2
+        return 1
+    fi
+
+    # Apply the theme first so all windows are correctly themed
+    local theme_name
+    theme_name=$(basename "$theme_dir")
+    echo "  Applying theme: $theme_name"
+    if command -v system-theme &>/dev/null; then
+        system-theme set "$theme_name" >/dev/null 2>&1 || {
+            echo "Error: Failed to apply theme" >&2
+            return 1
+        }
+    fi
+
+    # Set up cleanup trap
+    trap cleanup_preview_windows EXIT
+
+    # Get focused monitor info
+    local monitor_info
+    monitor_info=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true)')
+    if [[ -z "$monitor_info" ]]; then
+        echo "Error: Could not get focused monitor info" >&2
+        return 1
+    fi
+
+    local mon_name mon_width mon_height mon_x mon_y
+    mon_name=$(echo "$monitor_info" | jq -r '.name')
+    mon_width=$(echo "$monitor_info" | jq -r '.width')
+    mon_height=$(echo "$monitor_info" | jq -r '.height')
+    mon_x=$(echo "$monitor_info" | jq -r '.x')
+    mon_y=$(echo "$monitor_info" | jq -r '.y')
+
+    echo "  Monitor: $mon_name (${mon_width}x${mon_height} at ${mon_x},${mon_y})"
+
+    # Switch to an empty workspace (use workspace 99 as a temporary preview workspace)
+    local preview_workspace=99
+    echo "  Switching to empty workspace $preview_workspace"
+    hyprctl dispatch workspace "$preview_workspace" &>/dev/null
+    sleep 0.3
+
+    # Calculate window positions
+    # Layout:
+    #   - Walker: center-left area (auto-positioned by walker)
+    #   - btop: top-right
+    #   - neovim: bottom-right
+    # Account for waybar at top and margins
+    local waybar_height=10
+    local margin=40
+    local gap=10
+
+    # Window sizes (45% width, 45% height each - leaving room for walker)
+    local win_width=$((mon_width * 25 / 100))
+    local win_height=$(((mon_height - waybar_height - margin * 2 - gap) / 3))
+
+    # Positions are relative to monitor (hyprctl move uses absolute screen coords)
+    # btop: top-right
+    # local btop_x=$((mon_x + mon_width - win_width - margin))
+    # local btop_y=$((mon_y + waybar_height + margin))
+
+    local btop_x=$((margin))
+    local btop_y=$((waybar_height + margin))
+
+    # neovim: bottom-right (below btop)
+    local nvim_x=$btop_x
+    local nvim_y=$((btop_y + win_height + gap))
+
+    echo "  Window layout: ${win_width}x${win_height}"
+    echo "  btop position: ${btop_x},${btop_y}"
+    echo "  nvim position: ${nvim_x},${nvim_y}"
+
+    echo "  Spawning preview windows..."
+
+    # Helper function to position a window after it spawns
+    position_window() {
+        local title="$1"
+        local width="$2"
+        local height="$3"
+        local x="$4"
+        local y="$5"
+
+        echo "    Waiting for window: $title"
+
+        # Disable strict mode for this function (loops with counters can fail)
+        set +e
+
+        # Wait for window to appear (max 6 seconds)
+        local attempts=0
+        while [[ $attempts -lt 60 ]]; do
+            if hyprctl clients -j | jq -e ".[] | select(.title == \"$title\")" &>/dev/null; then
+                echo "    Window appeared after $((attempts * 100))ms"
+                break
+            fi
+            sleep 0.1
+            attempts=$((attempts + 1))
+        done
+
+        if [[ $attempts -ge 60 ]]; then
+            echo "    Warning: Window '$title' did not appear after 6 seconds" >&2
+            set -e
+            return 0 # Don't fail the script, just continue
+        fi
+
+        # Small delay to let window fully initialize
+        sleep 0.2
+
+        # Apply positioning via dispatch commands
+        echo "    Positioning: ${width}x${height} at ${x},${y}"
+        hyprctl dispatch setfloating "title:^${title}$"
+        sleep 0.1
+        hyprctl dispatch resizewindowpixel "exact ${width} ${height},title:^${title}$"
+        sleep 0.1
+        hyprctl dispatch movewindowpixel "exact ${x} ${y},title:^${title}$"
+        echo "    Window positioned"
+
+        set -e
+    }
+
+    # Spawn btop
+    echo "  Spawning btop..."
+    alacritty --title "$PREVIEW_BTOP_TITLE" -e btop &
+    local btop_pid=$!
+    PREVIEW_PIDS+=($btop_pid)
+    sleep 0.3
+    if ! kill -0 "$btop_pid" 2>/dev/null; then
+        echo "    Error: btop process died immediately" >&2
+    fi
+    position_window "$PREVIEW_BTOP_TITLE" "$win_width" "$win_height" "$btop_x" "$btop_y"
+
+    # Spawn neovim with theme.toml open in two tabs
+    echo "  Spawning neovim..."
+    alacritty --title "$PREVIEW_NVIM_TITLE" -e nvim "$theme_toml" -c "tabnew $theme_toml" -c "tabfirst" &
+    local nvim_pid=$!
+    PREVIEW_PIDS+=($nvim_pid)
+    sleep 0.3
+    if ! kill -0 "$nvim_pid" 2>/dev/null; then
+        echo "    Error: nvim process died immediately" >&2
+    fi
+    position_window "$PREVIEW_NVIM_TITLE" "$win_width" "$win_height" "$nvim_x" "$nvim_y"
+
+    # Wait for terminals to render content
+    echo "  Waiting for content to render..."
+    sleep 0.5
+
+    # Spawn walker (default view - shows apps list, auto-positions itself)
+    echo "  Spawning walker..."
+    walker &
+    PREVIEW_PIDS+=($!)
+
+    # Wait for everything to render fully
+    echo "  Waiting for final render..."
+    sleep 1.0
+
+    # Take screenshot
+    echo "  Taking screenshot..."
+    if ! grim -o "$mon_name" "$output"; then
+        echo "Error: Failed to take screenshot" >&2
+        return 1
+    fi
+
+    # Cleanup
+    cleanup_preview_windows
+    trap - EXIT
+
+    echo "  Preview saved: $output"
 }
 
 #──────────────────────────────────────────────────────────────────────────────
@@ -544,40 +762,40 @@ generate_lightmode() {
 generate_theme() {
     local theme_toml="$1"
     local output_dir="$2"
-    
+
     if [[ ! -f "$theme_toml" ]]; then
         echo "Error: Theme file not found: $theme_toml" >&2
         return 1
     fi
-    
+
     # Parse the theme file
     parse_toml "$theme_toml"
-    
+
     # Validate required fields
     local required_colors=(
         "colors.background" "colors.foreground" "colors.accent"
         "colors.black" "colors.red" "colors.green" "colors.yellow"
         "colors.blue" "colors.magenta" "colors.cyan" "colors.white"
     )
-    
+
     for key in "${required_colors[@]}"; do
         if ! has "$key"; then
             echo "Error: Missing required color: $key" >&2
             return 1
         fi
     done
-    
+
     if ! has "apps.neovim"; then
         echo "Error: Missing required field: apps.neovim" >&2
         return 1
     fi
-    
+
     # Create output directory
     mkdir -p "$output_dir"
-    
+
     # Generate all config files
     echo "Generating theme configs in $output_dir..."
-    
+
     generate_alacritty "$output_dir/alacritty.toml"
     generate_ghostty "$output_dir/ghostty.conf"
     generate_neovim "$output_dir/neovim.lua"
@@ -592,20 +810,57 @@ generate_theme() {
     generate_browser "$output_dir/browser.theme"
     generate_icons "$output_dir/icons.theme"
     generate_lightmode "$output_dir/light.mode"
-    
+
     # Generate vscode.json only if both fields are present
     if has apps.vscode_name && has apps.vscode_extension; then
         generate_vscode "$output_dir/vscode.json"
     fi
-    
+
     echo "Theme generation complete!"
+}
+
+show_usage() {
+    cat <<EOF
+Usage: $0 <command> [args]
+
+Commands:
+    generate <theme.toml> <output_dir>    Generate app configs from theme.toml
+    preview <theme_dir>                   Generate preview.png for a theme
+
+Examples:
+    $0 generate ~/.config/themes/nord/theme.toml ~/.config/themes/nord
+    $0 preview ~/.config/themes/nord
+EOF
 }
 
 # Allow sourcing for testing individual functions
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    if [[ $# -lt 2 ]]; then
-        echo "Usage: $0 <theme.toml> <output_dir>" >&2
+    if [[ $# -lt 1 ]]; then
+        show_usage
         exit 1
     fi
-    generate_theme "$1" "$2"
+
+    case "$1" in
+    generate)
+        if [[ $# -lt 3 ]]; then
+            echo "Error: generate requires <theme.toml> and <output_dir>" >&2
+            show_usage
+            exit 1
+        fi
+        generate_theme "$2" "$3"
+        ;;
+    preview)
+        if [[ $# -lt 2 ]]; then
+            echo "Error: preview requires <theme_dir>" >&2
+            show_usage
+            exit 1
+        fi
+        generate_preview "$2"
+        ;;
+    *)
+        echo "Error: Unknown command: $1" >&2
+        show_usage
+        exit 1
+        ;;
+    esac
 fi
