@@ -52,12 +52,15 @@ declare -g -r ANSI_RESET="${ESC}[0m"
 declare -g -r ANSI_DIM="${ESC}[2m"
 
 # Colors (initialized in ui_init)
-declare -g UI_C_OK=""   # Green - success
-declare -g UI_C_ERR=""  # Red - error
-declare -g UI_C_WARN="" # Yellow - in progress
-declare -g UI_C_INFO="" # Cyan - info
-declare -g UI_C_DIM=""  # Gray - muted
-declare -g UI_C_RST=""  # Reset
+declare -g UI_C_OK=""    # Green - success
+declare -g UI_C_ERR=""   # Red - error
+declare -g UI_C_WARN=""  # Yellow - in progress
+declare -g UI_C_INFO=""  # Cyan - info
+declare -g UI_C_DIM=""   # Gray - muted
+declare -g UI_C_RST=""   # Reset
+declare -g UI_C_BOLD=""  # Bold - for headers
+declare -g UI_C_MUTED="" # Muted - for timestamps (subtle in 256-color)
+declare -g UI_C_HINT=""  # Hint - for keybindings (very subtle)
 
 #──────────────────────────────────────────────────────────────────────────────
 # Public API
@@ -405,28 +408,46 @@ _ui_render_history() {
         ok)
             icon="✓"
             color="$UI_C_OK"
-            line="$icon $desc ($extra)"
             ;;
         err)
             icon="✗"
             color="$UI_C_ERR"
-            line="$icon $desc ($extra)"
             ;;
         confirm | select | input)
             icon="›"
             color="$UI_C_INFO"
-            line="$icon $desc: $extra"
             ;;
         *)
             icon="·"
             color="$UI_C_RST"
-            line="$icon $desc"
             ;;
         esac
 
-        ((${#line} > cols)) && line="${line:0:cols-3}..."
-
-        out+="${color}${line}${UI_C_RST}"
+        # Build line with muted timestamps for ok/err types
+        case "$type" in
+        ok | err)
+            local base_line="$icon $desc"
+            local time_part=" ($extra)"
+            local full_len=$((${#base_line} + ${#time_part}))
+            if ((full_len > cols)); then
+                line="${base_line:0:cols-${#time_part}-3}...${time_part}"
+            else
+                line="$base_line"
+            fi
+            # Render with muted time
+            out+="${color}${line}${UI_C_MUTED}${time_part}${UI_C_RST}"
+            ;;
+        confirm | select | input)
+            line="$icon $desc: $extra"
+            ((${#line} > cols)) && line="${line:0:cols-3}..."
+            out+="${color}${line}${UI_C_RST}"
+            ;;
+        *)
+            line="$icon $desc"
+            ((${#line} > cols)) && line="${line:0:cols-3}..."
+            out+="${color}${line}${UI_C_RST}"
+            ;;
+        esac
         out+="${ESC}[K" # Clear to end of line
         out+=$'\n'
         ((lines_used++))
@@ -436,10 +457,14 @@ _ui_render_history() {
     if [[ -n "${UI_STATE[current_cmd]}" ]]; then
         local elapsed=$(($(_ui_time_ms) - UI_STATE[current_start]))
         local elapsed_str=$(_ui_format_duration "$elapsed")
-        local line="⊙ ${UI_STATE[current_cmd]} ($elapsed_str)"
-        ((${#line} > cols)) && line="${line:0:cols-3}..."
+        local base_line="⊙ ${UI_STATE[current_cmd]}"
+        local time_part=" ($elapsed_str)"
+        local full_len=$((${#base_line} + ${#time_part}))
+        if ((full_len > cols)); then
+            base_line="${base_line:0:cols-${#time_part}-3}..."
+        fi
 
-        out+="${UI_C_WARN}${line}${UI_C_RST}"
+        out+="${UI_C_WARN}${base_line}${UI_C_MUTED}${time_part}${UI_C_RST}"
         out+="${ESC}[K"
         out+=$'\n'
         ((lines_used++))
@@ -522,13 +547,14 @@ _ui_render_status() {
     local empty=$((bar_width - filled))
 
     out+="$UI_C_INFO"
-    for ((i = 0; i < filled; i++)); do out+="━"; done
-    for ((i = 0; i < empty; i++)); do out+="─"; done
+    for ((i = 0; i < filled; i++)); do out+="█"; done
+    out+="$UI_C_DIM"
+    for ((i = 0; i < empty; i++)); do out+="░"; done
     out+="$(printf ' %3d%% (%d/%d)' "$percent" "$step" "$total")"
     out+="$UI_C_RST${ESC}[K"$'\n'
 
     # Keybindings hint
-    out+="${ANSI_DIM}^C Cancel${UI_C_RST}${ESC}[K"
+    out+="${UI_C_HINT}^C Cancel${UI_C_RST}${ESC}[K"
 
     printf '%s' "$out"
 }
@@ -790,9 +816,23 @@ _ui_update_dimensions() {
     UI_STATE[term_cols]=$(tput cols 2>/dev/null || echo 80)
 }
 
+# Detect color scheme based on terminal capabilities
+_ui_detect_color_scheme() {
+    # Check for 256-color support
+    local colors
+    colors=$(tput colors 2>/dev/null || echo 8)
+
+    if ((colors >= 256)); then
+        echo "256"
+    else
+        echo "basic"
+    fi
+}
+
 # Initialize colors
 _ui_init_colors() {
-    local scheme=${1:-basic}
+    local scheme=${1:-$(_ui_detect_color_scheme)}
+
     # Basic ANSI colors work everywhere
     UI_C_OK=$'\033[32m'   # Green
     UI_C_ERR=$'\033[31m'  # Red
@@ -800,6 +840,17 @@ _ui_init_colors() {
     UI_C_INFO=$'\033[36m' # Cyan
     UI_C_DIM=$'\033[90m'  # Gray
     UI_C_RST=$'\033[0m'   # Reset
+    UI_C_BOLD=$'\033[1m'  # Bold
+
+    # Extended colors for 256-color terminals
+    if [[ "$scheme" == "256" ]]; then
+        UI_C_MUTED=$'\033[38;5;245m' # Subtle gray for timestamps
+        UI_C_HINT=$'\033[38;5;240m'  # Very subtle for keybindings
+    else
+        # Fallback to dim for basic terminals
+        UI_C_MUTED="$UI_C_DIM"
+        UI_C_HINT="$UI_C_DIM"
+    fi
 }
 
 # Handle terminal resize
@@ -822,12 +873,64 @@ _ui_cleanup_handler() {
     ui_cleanup
 }
 
+# Calculate the width needed for summary separators
+# Returns min(max_line_length, terminal_width)
+_ui_calculate_summary_width() {
+    local max_width=0
+    local term_width=${UI_STATE[term_cols]:-80}
+
+    for entry in "${UI_HISTORY[@]}"; do
+        local type="${entry%%|*}"
+        local rest="${entry#*|}"
+        local desc="${rest%%|*}"
+        local extra="${rest#*|}"
+
+        local line_length
+        case "$type" in
+        ok | err)
+            # Format: "✓ description (extra)"
+            line_length=$((2 + ${#desc} + 2 + ${#extra} + 1))
+            ;;
+        confirm | select | input)
+            # Format: "› description: extra"
+            line_length=$((2 + ${#desc} + 2 + ${#extra}))
+            ;;
+        *)
+            line_length=$((2 + ${#desc}))
+            ;;
+        esac
+
+        ((line_length > max_width)) && max_width=$line_length
+    done
+
+    # Also consider "Summary" header length
+    local header_len=7
+    ((header_len > max_width)) && max_width=$header_len
+
+    # Return the minimum of max_width and terminal width
+    if ((max_width > term_width)); then
+        echo "$term_width"
+    else
+        echo "$max_width"
+    fi
+}
+
 # Print summary after completion
 _ui_print_summary() {
+    # Calculate separator width
+    local sep_width
+    sep_width=$(_ui_calculate_summary_width)
+
+    # Build separator string
+    local separator=""
+    for ((i = 0; i < sep_width; i++)); do
+        separator+="─"
+    done
+
     echo ""
-    echo "──────────────────────────────────────"
-    echo "Summary:"
-    echo "──────────────────────────────────────"
+    echo "$separator"
+    echo "${UI_C_BOLD}Summary${UI_C_RST}"
+    echo "$separator"
 
     for entry in "${UI_HISTORY[@]}"; do
         local type="${entry%%|*}"
@@ -865,7 +968,7 @@ _ui_print_summary() {
 
         case "$type" in
         ok | err)
-            printf '%s%s %s (%s)%s\n' "$color" "$icon" "$desc" "$extra" "$UI_C_RST"
+            printf '%s%s %s %s(%s)%s\n' "$color" "$icon" "$desc" "$UI_C_MUTED" "$extra" "$UI_C_RST"
             ;;
         confirm | select | input)
             printf '%s%s %s: %s%s\n' "$color" "$icon" "$desc" "$extra" "$UI_C_RST"
@@ -873,7 +976,7 @@ _ui_print_summary() {
         esac
     done
 
-    echo "──────────────────────────────────────"
+    echo "$separator"
 }
 
 #──────────────────────────────────────────────────────────────────────────────
