@@ -36,7 +36,7 @@ alias cd='z'  # Use zoxide for quick directory navigation
 alias cat='bat' # better 'cat'.
 alias g='lazygit'
 alias n='nvim'
-alias opencode-jail='firejail --profile=opencode --whitelist=$(pwd) opencode --config ~/.config/opencode/all-access.json'
+alias opencode-jail='OPENCODE_CONFIG=~/.config/opencode/all-access.json firejail --profile=opencode --whitelist=$(pwd) opencode'
 
 ls() { # better ls command
     command eza "$@" 
@@ -67,7 +67,8 @@ bindkey -e # force emacs mode (i.e. <C-w> = delete word, <C-e> = end of line, <C
 # ===============================
 # Plugin Management (Antidote)
 # ===============================
-source "/usr/share/zsh-antidote/antidote.zsh"  # Load Antidote
+[ -f "/usr/share/zsh-antidote/antidote.zsh" ] && source "/usr/share/zsh-antidote/antidote.zsh"  # Load Antidote
+[ -f "$HOME/.antidote/antidote.zsh" ] && source "$HOME/.antidote/antidote.zsh"  # Load Antidote
 antidote load ${ZDOTDIR:-$HOME}/.zsh_plugins.txt  # Load plugins from file
 
 # ===============================

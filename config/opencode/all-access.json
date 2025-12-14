@@ -1,5 +1,6 @@
 {
     "$schema": "https://opencode.ai/config.json",
+    "theme": "system",
     "keybinds": {
         "leader": "ctrl+/"
     },
@@ -11,10 +12,6 @@
             "git push -f": "deny"
         },
         "edit": "allow",
-        "read": "allow",
-        "write": "allow",
-        "glob": "allow",
-        "grep": "allow",
         "webfetch": "allow"
     }
 }
