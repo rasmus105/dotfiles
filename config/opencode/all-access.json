@@ -5,12 +5,7 @@
         "leader": "ctrl+/"
     },
     "permission": {
-        "bash": {
-            "*": "allow",
-            "git push": "deny",
-            "git push --force": "deny",
-            "git push -f": "deny"
-        },
+        "bash": "allow",
         "edit": "allow",
         "webfetch": "allow"
     }
