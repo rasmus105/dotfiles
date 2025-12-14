@@ -35,6 +35,7 @@ declare -g -A UI_STATE=(
     [in_prompt]=0
     [spinner_frame]=0
     [total_duration]=0
+    [wait_for_keypress]=1
 )
 
 # History stored as indexed array (bash doesn't support nested arrays)
@@ -66,6 +67,7 @@ declare -g UI_C_RST=""   # Reset
 declare -g UI_C_BOLD=""  # Bold - for headers
 declare -g UI_C_MUTED="" # Muted - for timestamps (subtle in 256-color)
 declare -g UI_C_HINT=""  # Hint - for keybindings (very subtle)
+declare -g UI_C_PINK=""  # Pink - for "Done!" screen
 
 #──────────────────────────────────────────────────────────────────────────────
 # Public API
@@ -73,14 +75,17 @@ declare -g UI_C_HINT=""  # Hint - for keybindings (very subtle)
 
 # Initialize the UI system (total steps is used to draw progress bar at the
 # bottom)
-# Usage: ui_init <total_steps> [color_scheme]
+# Usage: ui_init <total_steps> [color_scheme] [wait_for_keypress]
+#   wait_for_keypress: 1 (default) = show "Done!" screen, 0 = skip directly to summary
 ui_init() {
     local total_steps=${1:-1}
     local color_scheme=${2:-basic}
+    local wait_for_keypress=${3:-1}
 
     UI_STATE[total_steps]=$total_steps
     UI_STATE[current_step]=0
     UI_STATE[enabled]=1
+    UI_STATE[wait_for_keypress]=$wait_for_keypress
     UI_HISTORY=()
 
     # Check if stdout is a terminal (if it is not a terminal,
@@ -329,6 +334,11 @@ ui_prompt_input() {
 ui_cleanup() {
     ((UI_STATE[enabled] == 0)) && return
 
+    # Show "Done!" screen and wait for keypress (if enabled and in TUI mode)
+    if ((UI_STATE[is_tty] == 1 && UI_STATE[wait_for_keypress] == 1)); then
+        _ui_wait_for_keypress
+    fi
+
     # Restore terminal
     if ((UI_STATE[is_tty] == 1)); then
         printf '%s%s' "$ANSI_SHOW_CURSOR" "$ANSI_MAIN_SCREEN"
@@ -555,7 +565,13 @@ _ui_render_status() {
     local percent=0
     ((total > 0)) && percent=$((step * 100 / total))
 
-    local bar_width=$((cols - 20))
+    # Calculate suffix length dynamically: " XXX% (X/Y)"
+    local suffix
+    suffix=$(printf ' %3d%% (%d/%d)' "$percent" "$step" "$total")
+    local suffix_len=${#suffix}
+
+    # Bar width = terminal width - suffix length - 1 (avoid line wrap)
+    local bar_width=$((cols - suffix_len - 1))
     ((bar_width < 10)) && bar_width=10
 
     local filled=$((bar_width * percent / 100))
@@ -565,13 +581,137 @@ _ui_render_status() {
     for ((i = 0; i < filled; i++)); do out+="█"; done
     out+="$UI_C_DIM"
     for ((i = 0; i < empty; i++)); do out+="░"; done
-    out+="$(printf ' %3d%% (%d/%d)' "$percent" "$step" "$total")"
+    out+="${suffix}"
     out+="$UI_C_RST${ESC}[K"$'\n'
 
     # Keybindings hint
     out+="${UI_C_HINT}^C Cancel${UI_C_RST}${ESC}[K"
 
     printf '%s' "$out"
+}
+
+# Draw the "Done!" screen with pink spinner
+# Layout: History at top, "Done!" line right below, progress bar at bottom
+_ui_draw_done_screen() {
+    local lines=${UI_STATE[term_lines]}
+    local cols=${UI_STATE[term_cols]}
+
+    # Advance spinner frame
+    UI_STATE[spinner_frame]=$(( (UI_STATE[spinner_frame] + 1) % ${#UI_SPINNER_FRAMES[@]} ))
+
+    local frame=""
+    frame+="${ANSI_HOME}"
+
+    # Calculate how many history lines we have
+    local history_count=${#UI_HISTORY[@]}
+    
+    # Render history entries
+    for ((i = 0; i < history_count; i++)); do
+        local entry="${UI_HISTORY[$i]}"
+        local type="${entry%%|*}"
+        local rest="${entry#*|}"
+        local desc="${rest%%|*}"
+        local extra="${rest#*|}"
+
+        local icon color
+        case "$type" in
+        ok)
+            icon="✓"
+            color="$UI_C_OK"
+            ;;
+        err)
+            icon="✗"
+            color="$UI_C_ERR"
+            ;;
+        confirm | select | input)
+            icon="›"
+            color="$UI_C_INFO"
+            ;;
+        *)
+            icon="·"
+            color="$UI_C_RST"
+            ;;
+        esac
+
+        case "$type" in
+        ok | err)
+            local base_line="$icon $desc"
+            local time_part=" ($extra)"
+            frame+="${color}${base_line}${UI_C_MUTED}${time_part}${UI_C_RST}${ESC}[K"$'\n'
+            ;;
+        *)
+            local line="$icon $desc: $extra"
+            ((${#line} > cols)) && line="${line:0:cols-3}..."
+            frame+="${color}${line}${UI_C_RST}${ESC}[K"$'\n'
+            ;;
+        esac
+    done
+
+    # Empty line separator
+    frame+="${ESC}[K"$'\n'
+
+    # "Done!" line with spinner
+    local spinner="${UI_SPINNER_FRAMES[${UI_STATE[spinner_frame]}]}"
+    frame+="${UI_C_PINK}${spinner} Done! Press any key to continue${UI_C_RST}${ESC}[K"$'\n'
+
+    # Fill remaining space until progress bar (leave 2 lines at bottom)
+    local used_lines=$((history_count + 2)) # history + empty + done line
+    local fill_lines=$((lines - used_lines - 2))
+    for ((i = 0; i < fill_lines; i++)); do
+        frame+="${ESC}[K"$'\n'
+    done
+
+    # Progress bar at bottom (last 2 lines)
+    frame+="$(_ui_render_done_progress_bar "$cols")"
+
+    printf '%s' "$frame"
+}
+
+# Render progress bar for done screen (no separator, just bar)
+_ui_render_done_progress_bar() {
+    local cols=$1
+    local out=""
+
+    local step=${UI_STATE[current_step]}
+    local total=${UI_STATE[total_steps]}
+    
+    # Calculate suffix length dynamically: " 100% (X/Y)" 
+    local suffix
+    suffix=$(printf ' %3d%% (%d/%d)' 100 "$step" "$total")
+    local suffix_len=${#suffix}
+    
+    # Bar width = terminal width - suffix length - 1 (avoid line wrap)
+    local bar_width=$((cols - suffix_len - 1))
+    ((bar_width < 10)) && bar_width=10
+
+    out+="$UI_C_INFO"
+    for ((i = 0; i < bar_width; i++)); do out+="█"; done
+    out+="${suffix}"
+    out+="$UI_C_RST${ESC}[K"$'\n'
+
+    # Empty line (where keybindings hint normally goes)
+    out+="${ESC}[K"
+
+    printf '%s' "$out"
+}
+
+# Wait for user keypress with animated "Done!" screen
+_ui_wait_for_keypress() {
+    ((UI_STATE[is_tty] == 0)) && return
+    ((UI_STATE[wait_for_keypress] == 0)) && return
+
+    # Draw initial done screen
+    _ui_draw_done_screen
+
+    # Animate spinner while waiting for keypress
+    while true; do
+        # Check for keypress (non-blocking with 0.1s timeout)
+        if read -rsn1 -t 0.1 2>/dev/null; then
+            break
+        fi
+        # Update spinner animation
+        _ui_draw_done_screen
+    done
 }
 
 #──────────────────────────────────────────────────────────────────────────────
@@ -599,7 +739,8 @@ _ui_run_with_output() {
 # Internal: Prompts
 #──────────────────────────────────────────────────────────────────────────────
 
-# Execute a prompt function with a centered overlay (stays in alt buffer)
+# Execute a prompt function with history preserved at top
+# Draws history + separator, then lets gum render below
 # All drawing goes to /dev/tty, only the prompt result goes to stdout
 _ui_with_prompt_overlay() {
     local func="$1"
@@ -607,18 +748,25 @@ _ui_with_prompt_overlay() {
 
     UI_STATE[in_prompt]=1
 
-    # Clear screen and position cursor at center for gum
-    # This gives gum a clean slate to render from
     local lines=${UI_STATE[term_lines]}
     local cols=${UI_STATE[term_cols]}
-    local center_row=$((lines / 3)) # Upper third looks better for prompts
+
+    # Calculate history height (same logic as _ui_draw)
+    local history_height=$((lines * 20 / 100))
+    ((history_height < 3)) && history_height=3
 
     {
-        # Clear screen
+        # Clear screen and go to top
         printf '%s%s' "$ANSI_HOME" "$ANSI_CLEAR"
-        # Position cursor
-        printf "${ESC}[%d;1H" "$center_row"
-        # Show cursor
+
+        # Render history section (without current command since we're prompting)
+        _ui_render_history_for_prompt "$history_height" "$cols"
+
+        # Render separator
+        _ui_render_separator "$cols"
+
+        # Cursor is now positioned right after separator - gum renders here
+        # Show cursor for gum input
         printf '%s' "$ANSI_SHOW_CURSOR"
     } >/dev/tty
 
@@ -642,6 +790,84 @@ _ui_with_prompt_overlay() {
     UI_STATE[in_prompt]=0
 
     return $result
+}
+
+# Render history section for prompt overlay (no current command spinner)
+_ui_render_history_for_prompt() {
+    local max_lines=$1
+    local cols=$2
+    local out=""
+
+    local count=${#UI_HISTORY[@]}
+    local start=0
+    ((count > max_lines)) && start=$((count - max_lines))
+
+    # Render completed commands and prompts
+    local lines_used=0
+    for ((i = start; i < count && lines_used < max_lines; i++)); do
+        local entry="${UI_HISTORY[$i]}"
+        local type="${entry%%|*}"
+        local rest="${entry#*|}"
+        local desc="${rest%%|*}"
+        local extra="${rest#*|}"
+
+        local icon color line
+        case "$type" in
+        ok)
+            icon="✓"
+            color="$UI_C_OK"
+            ;;
+        err)
+            icon="✗"
+            color="$UI_C_ERR"
+            ;;
+        confirm | select | input)
+            icon="›"
+            color="$UI_C_INFO"
+            ;;
+        *)
+            icon="·"
+            color="$UI_C_RST"
+            ;;
+        esac
+
+        # Build line with muted timestamps for ok/err types
+        case "$type" in
+        ok | err)
+            local base_line="$icon $desc"
+            local time_part=" ($extra)"
+            local full_len=$((${#base_line} + ${#time_part}))
+            if ((full_len > cols)); then
+                line="${base_line:0:cols-${#time_part}-3}...${time_part}"
+            else
+                line="$base_line"
+            fi
+            # Render with muted time
+            out+="${color}${line}${UI_C_MUTED}${time_part}${UI_C_RST}"
+            ;;
+        confirm | select | input)
+            line="$icon $desc: $extra"
+            ((${#line} > cols)) && line="${line:0:cols-3}..."
+            out+="${color}${line}${UI_C_RST}"
+            ;;
+        *)
+            line="$icon $desc"
+            ((${#line} > cols)) && line="${line:0:cols-3}..."
+            out+="${color}${line}${UI_C_RST}"
+            ;;
+        esac
+        out+="${ESC}[K" # Clear to end of line
+        out+=$'\n'
+        ((lines_used++))
+    done
+
+    # Fill remaining lines
+    while ((lines_used < max_lines)); do
+        out+="${ESC}[K"$'\n'
+        ((lines_used++))
+    done
+
+    printf '%s' "$out"
 }
 
 # Prompt after command failure
@@ -861,10 +1087,12 @@ _ui_init_colors() {
     if [[ "$scheme" == "256" ]]; then
         UI_C_MUTED=$'\033[38;5;245m' # Subtle gray for timestamps
         UI_C_HINT=$'\033[38;5;240m'  # Very subtle for keybindings
+        UI_C_PINK=$'\033[38;5;212m'  # Pink for "Done!" screen (gum-style)
     else
         # Fallback to dim for basic terminals
         UI_C_MUTED="$UI_C_DIM"
         UI_C_HINT="$UI_C_DIM"
+        UI_C_PINK=$'\033[35m'        # Magenta fallback for basic terminals
     fi
 }
 
