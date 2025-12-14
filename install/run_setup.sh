@@ -93,7 +93,12 @@ main() {
     while sleep 100; do sudo -v; done &
 
     # Initialize UI with 9 steps
-    ui_init 9 "basic"
+    # In non-interactive mode, skip the "Done!" wait screen
+    local wait_for_keypress=1
+    if [[ $NON_INTERACTIVE -eq 1 ]]; then
+        wait_for_keypress=0
+    fi
+    ui_init 9 "basic" "$wait_for_keypress"
 
     # Read packages from file
     local -a packages=()

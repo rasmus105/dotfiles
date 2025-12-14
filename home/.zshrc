@@ -44,7 +44,7 @@ ls() { # better ls command
 
 opencode-jail() {
     readonly workdir="$(pwd)"
-    OPENCODE_CONFIG=~/.config/opencode/all-access.json firejail --profile=opencode --whitelist="$workdir" --read-write="$workdir" opencode "$@"
+    OPENCODE_CONFIG=~/.config/opencode/all-access.json firejail --profile=opencode --whitelist="$workdir" --read-write="$workdir" opencode $@
 }
 
 # Specific
