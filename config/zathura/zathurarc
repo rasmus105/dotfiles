@@ -3,7 +3,6 @@ set window-height 3000
 set window-width 1000
 set statusbar-h-padding 0
 set statusbar-v-padding 0
-set page-padding 10
 set window-title-page true
 set guioptions vc
 
