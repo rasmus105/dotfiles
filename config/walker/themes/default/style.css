@@ -47,7 +47,7 @@ scrollbar {
 
 .input {
     caret-color: @selected-text;
-    background: darker(alpha(@background, 0.6));
+    background: darker(alpha(@background, 0.8));
     padding: 10px;
 }
 
@@ -79,7 +79,7 @@ child {}
 
 child:hover .item-box,
 child:selected .item-box {
-    background: darker(alpha(@background, 0.6));
+    background: darker(alpha(@background, 0.8));
 }
 
 .item-text-box {}
