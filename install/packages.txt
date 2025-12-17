@@ -165,3 +165,4 @@ elephant-symbols
 # ============================================================
 localsend-bin
 stow
+poweralertd
