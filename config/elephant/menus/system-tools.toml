@@ -40,7 +40,7 @@ actions = { "remove-package" = "ghostty --class=TUI.float -e ~/.local/bin/dotfil
 [[entries]]
 text = "Update System"
 icon = "󰚰"
-actions = { "update-system" = "ghostty --class=TUI.float -e ~/.local/bin/system-perform-update" }
+actions = { "update-system" = "ghostty --class=TUI.float -e ~/.local/bin/run-update" }
 
 [[entries]]
 text = "Toggle Nightlight"
