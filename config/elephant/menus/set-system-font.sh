@@ -17,6 +17,5 @@ FONT_OPTIONS=$(echo "$ALL_FONTS" | sed "s/^${CURRENT_FONT}$/${SELECTED_PREFIX}${
 SELECTED=$(menu "$PROMPT" "$FONT_OPTIONS")
 
 if [ -n "$SELECTED" ] && ! echo "$SELECTED" | grep -q "$SELECTED_PREFIX"; then
-    echo "selected: $SELECTED"
-    bash -c "$HOME/.local/bin/system-theme font set '$SELECTED'"
+    run-notify system-theme font set "$SELECTED"
 fi
