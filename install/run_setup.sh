@@ -106,27 +106,27 @@ main() {
 
     # Step 1: Install gum (UI toolkit) - critical for rest of setup
     run_step "Installing gum (UI toolkit)" \
-        "$SYSTEM_SETUP" bootstrap gum
+        "$SYSTEM_SETUP" deps gum
 
     # Step 2: Install paru (AUR helper) - needed for package installation
     run_step "Installing paru (AUR helper)" \
-        "$SYSTEM_SETUP" bootstrap paru
+        "$SYSTEM_SETUP" deps paru
 
     # Step 3: Install packages from list
     if [[ ${#packages[@]} -gt 0 ]]; then
         run_step "Installing ${#packages[@]} packages" \
-            "$SYSTEM_SETUP" packages install-list "${packages[@]}"
+            "$SYSTEM_SETUP" deps packages-list "${packages[@]}"
     else
         run_step "No packages to install" true
     fi
 
     # Step 4: Stow dotfiles (config, home, local directories)
     run_step "Stowing dotfiles" \
-        "$SYSTEM_SETUP" stow dotfiles
+        "$SYSTEM_SETUP" deploy home
 
     # Step 5: Copy system configurations (requires sudo)
     run_step "Copying system configurations" \
-        "$SYSTEM_SETUP" system copy-configs
+        "$SYSTEM_SETUP" deploy system
 
     # Step 6: Configure MIME types (default applications)
     run_step "Configuring MIME types" \
@@ -138,7 +138,7 @@ main() {
         shell_choice=$(ui_prompt_select "Choose your default shell" zsh bash fish)
     fi
     run_step "Setting up $shell_choice" \
-        "$SYSTEM_SETUP" configure "$shell_choice"
+        "$SYSTEM_SETUP" shell "$shell_choice"
 
     # Step 8: Setup systemd services
     run_step "Enabling systemd services" \
