@@ -811,6 +811,9 @@ setup_fish() {
 setup_systemd_services() {
     echo "Setting up systemd services..."
 
+    # Reload systemd user daemon to pick up new unit files
+    q systemctl --user daemon-reload
+
     # Enable battery monitor timer if it exists
     if systemctl --user list-unit-files battery-monitor.timer &>/dev/null; then
         q systemctl --user enable --now battery-monitor.timer || {
@@ -819,6 +822,16 @@ setup_systemd_services() {
         echo "battery-monitor.timer enabled"
     else
         echo "battery-monitor.timer not found, skipping"
+    fi
+
+    # Enable downloads cleanup timer if it exists
+    if systemctl --user list-unit-files downloads-cleanup.timer &>/dev/null; then
+        q systemctl --user enable --now downloads-cleanup.timer || {
+            echo "Warning: Failed to enable downloads-cleanup.timer" >&2
+        }
+        echo "downloads-cleanup.timer enabled"
+    else
+        echo "downloads-cleanup.timer not found, skipping"
     fi
 
     echo "Systemd services configured"

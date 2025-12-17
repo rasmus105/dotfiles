@@ -1,0 +1,15 @@
+[Unit]
+Description=Downloads Folder Cleanup Timer
+Documentation=man:systemd.timer(5)
+Requires=downloads-cleanup.service
+
+[Timer]
+# Run on boot if last run was >24h ago (Persistent handles this)
+OnBootSec=2min
+# Run every 24 hours after boot
+OnUnitActiveSec=24h
+# Catch up on missed runs (e.g., laptop was off)
+Persistent=true
+
+[Install]
+WantedBy=timers.target

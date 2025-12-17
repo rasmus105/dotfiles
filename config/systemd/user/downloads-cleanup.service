@@ -1,0 +1,8 @@
+[Unit]
+Description=Downloads Folder Cleanup
+Documentation=man:systemd.service(5)
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/system-downloads-cleanup --force
+# No notifications needed - silent operation
