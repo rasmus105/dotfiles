@@ -1,0 +1,413 @@
+#!/usr/bin/env bash
+#
+# system-downloads-cleanup - Automatically organize Downloads folder
+#
+# Structure:
+#   ~/Downloads/
+#   ├── <files>           # Downloaded < 24 hours ago (untouched)
+#   ├── new/              # 24 hours to 7 days old
+#   ├── old/              # 7 days to 2 months old (sorted by type)
+#   │   ├── images/
+#   │   ├── documents/
+#   │   ├── archives/
+#   │   ├── videos/
+#   │   ├── audio/
+#   │   ├── installers/
+#   │   ├── folders/
+#   │   └── misc/
+#   └── ancient/          # 2+ months old (sorted by type)
+#       └── (same structure as old/)
+#
+# This script is designed to run silently without user interaction.
+# Typically triggered by systemd timer on boot and every 24 hours.
+
+set -euo pipefail
+
+#──────────────────────────────────────────────────────────────────────────────
+# Setup
+#──────────────────────────────────────────────────────────────────────────────
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source common utilities (defines q() function that respects VERBOSE)
+source "${SCRIPT_DIR}/../lib/shell/common.sh"
+
+#──────────────────────────────────────────────────────────────────────────────
+# Configuration (hardcoded, adjustable via environment variables)
+#──────────────────────────────────────────────────────────────────────────────
+
+DOWNLOADS_DIR="${DOWNLOADS_DIR:-$HOME/Downloads}"
+STATE_DIR="${STATE_DIR:-$HOME/.local/state/downloads-cleanup}"
+LAST_RUN_FILE="$STATE_DIR/last-run"
+
+# Age thresholds in days
+AGE_NEW=1          # Files older than 1 day go to new/
+AGE_OLD=7          # Files older than 7 days go to old/
+AGE_ANCIENT=60     # Files older than 60 days (2 months) go to ancient/
+
+# Managed directories (these are created and managed by the script)
+MANAGED_DIRS=("new" "old" "ancient")
+
+# File type mappings (extension -> category)
+# Categories: images, documents, archives, videos, audio, installers, folders, misc
+declare -A FILE_CATEGORIES=(
+    # Images
+    ["png"]="images" ["jpg"]="images" ["jpeg"]="images" ["gif"]="images"
+    ["svg"]="images" ["webp"]="images" ["ico"]="images" ["bmp"]="images"
+    ["tiff"]="images" ["tif"]="images"
+    
+    # Documents
+    ["pdf"]="documents" ["doc"]="documents" ["docx"]="documents"
+    ["odt"]="documents" ["txt"]="documents" ["rtf"]="documents"
+    ["xls"]="documents" ["xlsx"]="documents" ["ods"]="documents"
+    ["ppt"]="documents" ["pptx"]="documents" ["odp"]="documents"
+    ["md"]="documents" ["csv"]="documents" ["epub"]="documents"
+    
+    # Archives
+    ["zip"]="archives" ["tar"]="archives" ["gz"]="archives"
+    ["xz"]="archives" ["bz2"]="archives" ["7z"]="archives"
+    ["rar"]="archives" ["tgz"]="archives"
+    
+    # Videos
+    ["mp4"]="videos" ["mkv"]="videos" ["webm"]="videos" ["avi"]="videos"
+    ["mov"]="videos" ["flv"]="videos" ["wmv"]="videos"
+    
+    # Audio
+    ["mp3"]="audio" ["flac"]="audio" ["wav"]="audio" ["ogg"]="audio"
+    ["m4a"]="audio" ["aac"]="audio" ["opus"]="audio"
+    
+    # Installers
+    ["deb"]="installers" ["rpm"]="installers" ["appimage"]="installers"
+    ["flatpakref"]="installers" ["snap"]="installers"
+)
+
+# Special multi-part extensions (checked first)
+MULTI_PART_EXTENSIONS=(
+    "pkg.tar.zst:installers"
+    "pkg.tar.xz:installers"
+    "tar.gz:archives"
+    "tar.xz:archives"
+    "tar.bz2:archives"
+)
+
+#──────────────────────────────────────────────────────────────────────────────
+# Helper Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+# Log message (only shown when VERBOSE=1, via q function behavior)
+log() {
+    q echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+}
+
+# Get file age in days based on modification time
+get_age_days() {
+    local path="$1"
+    local mtime
+    mtime=$(stat -c %Y "$path" 2>/dev/null) || return 1
+    local now
+    now=$(date +%s)
+    echo $(( (now - mtime) / 86400 ))
+}
+
+# Determine category for a file based on extension
+get_file_category() {
+    local filename="$1"
+    local lower_filename="${filename,,}"  # lowercase
+    
+    # Check multi-part extensions first
+    for mapping in "${MULTI_PART_EXTENSIONS[@]}"; do
+        local ext="${mapping%%:*}"
+        local category="${mapping##*:}"
+        if [[ "$lower_filename" == *".$ext" ]]; then
+            echo "$category"
+            return
+        fi
+    done
+    
+    # Get simple extension
+    local ext="${lower_filename##*.}"
+    
+    # Look up in category map
+    if [[ -n "${FILE_CATEGORIES[$ext]:-}" ]]; then
+        echo "${FILE_CATEGORIES[$ext]}"
+    else
+        echo "misc"
+    fi
+}
+
+# Generate unique filename if conflict exists
+get_unique_path() {
+    local dest_dir="$1"
+    local filename="$2"
+    local dest_path="$dest_dir/$filename"
+    
+    if [[ ! -e "$dest_path" ]]; then
+        echo "$dest_path"
+        return
+    fi
+    
+    # Extract base and extension
+    local base="${filename%.*}"
+    local ext="${filename##*.}"
+    
+    # Handle files without extension or where base equals ext
+    if [[ "$base" == "$filename" ]] || [[ "$base" == "" ]]; then
+        base="$filename"
+        ext=""
+    fi
+    
+    # Find unique name with counter
+    local counter=1
+    while true; do
+        if [[ -n "$ext" && "$ext" != "$filename" ]]; then
+            dest_path="$dest_dir/${base}_${counter}.${ext}"
+        else
+            dest_path="$dest_dir/${base}_${counter}"
+        fi
+        
+        if [[ ! -e "$dest_path" ]]; then
+            echo "$dest_path"
+            return
+        fi
+        ((counter++))
+    done
+}
+
+# Move item to destination, handling conflicts
+move_item() {
+    local src="$1"
+    local dest_dir="$2"
+    local filename
+    filename=$(basename "$src")
+    
+    mkdir -p "$dest_dir"
+    
+    local dest_path
+    dest_path=$(get_unique_path "$dest_dir" "$filename")
+    
+    mv "$src" "$dest_path"
+    log "Moved: $src -> $dest_path"
+}
+
+# Check if path is a managed directory
+is_managed_dir() {
+    local name="$1"
+    for managed in "${MANAGED_DIRS[@]}"; do
+        if [[ "$name" == "$managed" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Core Logic
+#──────────────────────────────────────────────────────────────────────────────
+
+# Ensure required directories exist
+setup_directories() {
+    mkdir -p "$STATE_DIR"
+    mkdir -p "$DOWNLOADS_DIR"
+    
+    # Create managed directories and their subdirectories
+    for dir in old ancient; do
+        for subdir in images documents archives videos audio installers folders misc; do
+            mkdir -p "$DOWNLOADS_DIR/$dir/$subdir"
+        done
+    done
+    
+    mkdir -p "$DOWNLOADS_DIR/new"
+}
+
+# Process items in root Downloads directory
+process_root_items() {
+    local item
+    
+    # Process all non-hidden items in root (excluding managed dirs)
+    for item in "$DOWNLOADS_DIR"/*; do
+        [[ -e "$item" ]] || continue  # Skip if glob didn't match
+        
+        local name
+        name=$(basename "$item")
+        
+        # Skip managed directories
+        if is_managed_dir "$name"; then
+            continue
+        fi
+        
+        local age
+        age=$(get_age_days "$item") || continue
+        
+        if [[ $age -ge $AGE_ANCIENT ]]; then
+            # 2+ months old -> ancient/ (sorted)
+            if [[ -d "$item" ]]; then
+                move_item "$item" "$DOWNLOADS_DIR/ancient/folders"
+            else
+                local category
+                category=$(get_file_category "$name")
+                move_item "$item" "$DOWNLOADS_DIR/ancient/$category"
+            fi
+        elif [[ $age -ge $AGE_OLD ]]; then
+            # 7 days to 2 months -> old/ (sorted)
+            if [[ -d "$item" ]]; then
+                move_item "$item" "$DOWNLOADS_DIR/old/folders"
+            else
+                local category
+                category=$(get_file_category "$name")
+                move_item "$item" "$DOWNLOADS_DIR/old/$category"
+            fi
+        elif [[ $age -ge $AGE_NEW ]]; then
+            # 1 to 7 days -> new/
+            move_item "$item" "$DOWNLOADS_DIR/new"
+        fi
+        # Less than 1 day old -> stays in root
+    done
+}
+
+# Process items in new/ directory (may need to move to old/)
+process_new_items() {
+    local item
+    
+    for item in "$DOWNLOADS_DIR/new"/*; do
+        [[ -e "$item" ]] || continue
+        
+        local name
+        name=$(basename "$item")
+        local age
+        age=$(get_age_days "$item") || continue
+        
+        if [[ $age -ge $AGE_ANCIENT ]]; then
+            # 2+ months -> ancient/ (sorted)
+            if [[ -d "$item" ]]; then
+                move_item "$item" "$DOWNLOADS_DIR/ancient/folders"
+            else
+                local category
+                category=$(get_file_category "$name")
+                move_item "$item" "$DOWNLOADS_DIR/ancient/$category"
+            fi
+        elif [[ $age -ge $AGE_OLD ]]; then
+            # 7+ days -> old/ (sorted)
+            if [[ -d "$item" ]]; then
+                move_item "$item" "$DOWNLOADS_DIR/old/folders"
+            else
+                local category
+                category=$(get_file_category "$name")
+                move_item "$item" "$DOWNLOADS_DIR/old/$category"
+            fi
+        fi
+        # Less than 7 days -> stays in new/
+    done
+}
+
+# Process items in old/ subdirectories (may need to move to ancient/)
+process_old_items() {
+    local subdir item
+    
+    for subdir in images documents archives videos audio installers folders misc; do
+        local dir_path="$DOWNLOADS_DIR/old/$subdir"
+        [[ -d "$dir_path" ]] || continue
+        
+        for item in "$dir_path"/*; do
+            [[ -e "$item" ]] || continue
+            
+            local age
+            age=$(get_age_days "$item") || continue
+            
+            if [[ $age -ge $AGE_ANCIENT ]]; then
+                # 2+ months -> ancient/ (same category)
+                move_item "$item" "$DOWNLOADS_DIR/ancient/$subdir"
+            fi
+        done
+    done
+}
+
+# Update last run timestamp
+update_last_run() {
+    date +%s > "$LAST_RUN_FILE"
+    log "Updated last run timestamp"
+}
+
+# Check if cleanup should run (based on time since last run)
+should_run() {
+    # Always run if no state file exists
+    if [[ ! -f "$LAST_RUN_FILE" ]]; then
+        return 0
+    fi
+    
+    local last_run
+    last_run=$(cat "$LAST_RUN_FILE" 2>/dev/null) || return 0
+    local now
+    now=$(date +%s)
+    local elapsed=$(( now - last_run ))
+    local threshold=$(( 24 * 60 * 60 ))  # 24 hours in seconds
+    
+    if [[ $elapsed -ge $threshold ]]; then
+        return 0
+    else
+        log "Skipping: last run was $(( elapsed / 3600 )) hours ago"
+        return 1
+    fi
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Main
+#──────────────────────────────────────────────────────────────────────────────
+
+main() {
+    # Parse arguments
+    local force=0
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -f|--force)
+                force=1
+                shift
+                ;;
+            -v|--verbose)
+                export VERBOSE=1
+                shift
+                ;;
+            -h|--help)
+                echo "Usage: system-downloads-cleanup [-f|--force] [-v|--verbose]"
+                echo ""
+                echo "Organize Downloads folder by file age:"
+                echo "  - Root: files < 24 hours old"
+                echo "  - new/: files 1-7 days old"
+                echo "  - old/: files 7-60 days old (sorted by type)"
+                echo "  - ancient/: files 60+ days old (sorted by type)"
+                echo ""
+                echo "Options:"
+                echo "  -f, --force    Run even if last run was < 24 hours ago"
+                echo "  -v, --verbose  Print actions to stdout"
+                echo "  -h, --help     Show this help message"
+                exit 0
+                ;;
+            *)
+                echo "Unknown option: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Check if we should run
+    if [[ $force -eq 0 ]] && ! should_run; then
+        exit 0
+    fi
+    
+    # Verify downloads directory exists
+    if [[ ! -d "$DOWNLOADS_DIR" ]]; then
+        log "Downloads directory does not exist: $DOWNLOADS_DIR"
+        exit 0
+    fi
+    
+    log "Starting downloads cleanup..."
+    
+    setup_directories
+    process_root_items
+    process_new_items
+    process_old_items
+    update_last_run
+    
+    log "Downloads cleanup complete"
+}
+
+main "$@"

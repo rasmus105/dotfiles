@@ -83,7 +83,6 @@ jq
 man-db
 man-pages
 aerc
-protonmail-bridge
 
 # ============================================================
 # FILE MANAGEMENT
