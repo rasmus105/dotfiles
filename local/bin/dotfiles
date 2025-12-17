@@ -211,15 +211,15 @@ update_git() {
 }
 
 full_update() {
-    echo "Starting full system update..."
-    echo
-
-    # Check for multiple running instances using a more precise match
-    local running_count
-    running_count=$(pgrep -f "dotfiles[[:space:]]update\$" 2>/dev/null | wc -l || echo "0")
-    if [[ "$running_count" -gt 1 ]]; then
+    # Acquire lock (non-blocking)
+    local lock_file="/tmp/dotfiles-update.lock"
+    exec 9>"$lock_file"
+    if ! flock -n 9; then
         die "Update is already running"
     fi
+
+    echo "Starting full system update..."
+    echo
 
     # Cache sudo credentials
     if ! sudo -v; then
