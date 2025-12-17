@@ -242,6 +242,7 @@ apply_theme_configs() {
     apply_zathura_theme
     apply_gnome_theme
     apply_browser_theme
+    apply_vscode_theme
 }
 
 apply_nvim_theme() {
@@ -306,6 +307,49 @@ apply_browser_theme() {
     if command -v helium-browser &>/dev/null && pgrep -x helium-browser >/dev/null 2>&1; then
         # Run in subshell to suppress any crash reports
         (helium-browser --no-startup-window --refresh-platform-policy >/dev/null 2>&1 &) 2>/dev/null || true
+    fi
+}
+
+apply_vscode_theme() {
+    # Note: We cannot use `jq` to update settings.json because it's JSONC (allows comments)
+    local vscode_theme="$CURRENT_THEME_DIR/vscode.json"
+    local settings_path="$HOME/.config/Code/User/settings.json"
+
+    if ! command -v code &>/dev/null; then
+        return 0
+    fi
+
+    if [[ -f "$vscode_theme" ]]; then
+        local theme_name extension
+        theme_name=$(jq -r '.name' "$vscode_theme")
+        extension=$(jq -r '.extension' "$vscode_theme")
+
+        # Install VS Code theme extension if needed
+        if [[ -n "$extension" ]] && ! code --list-extensions | grep -Fxq "$extension"; then
+            q code --install-extension "$extension"
+        fi
+
+        # Create config file if there isn't already one
+        mkdir -p "$(dirname "$settings_path")"
+        if [[ ! -f "$settings_path" ]]; then
+            printf '{\n}\n' >"$settings_path"
+        fi
+
+        # Create a `workbench.colorTheme` entry in settings if missing
+        if ! grep -q '"workbench.colorTheme"' "$settings_path"; then
+            # Insert `"workbench.colorTheme": "",` immediately after the first `{`
+            sed -i --follow-symlinks -E '0,/\{/{s/\{/{ "workbench.colorTheme": "",/}' "$settings_path"
+        fi
+
+        # Update theme
+        sed -i --follow-symlinks -E \
+            "s/(\"workbench.colorTheme\"[[:space:]]*:[[:space:]]*\")[^\"]*(\")/\1$theme_name\2/" \
+            "$settings_path"
+    else
+        # Remove theme from settings.json when the theme doesn't have VS Code support
+        if [[ -f "$settings_path" ]]; then
+            sed -i --follow-symlinks -E 's/"workbench\.colorTheme"[[:space:]]*:[^,}]*,?//' "$settings_path"
+        fi
     fi
 }
 
