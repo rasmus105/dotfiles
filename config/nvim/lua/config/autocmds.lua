@@ -5,6 +5,16 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     end,
 })
 
+-- Ensure cursorline stays off (workaround for vscode-diff.nvim leak)
+vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
+    callback = function()
+        -- Skip diff windows (let vscode-diff manage those)
+        if not vim.wo.diff then
+            vim.wo.cursorline = false
+        end
+    end,
+})
+
 -- Auto create dir when saving a file
 vim.api.nvim_create_autocmd('BufWritePre', {
     callback = function(event)
