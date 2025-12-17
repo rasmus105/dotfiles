@@ -634,10 +634,10 @@ toggle_nightlight() {
 
     if [[ "$CURRENT_TEMP" == "$ON_TEMP" ]]; then
         hyprctl --quiet hyprsunset temperature $OFF_TEMP
-        notify-send " Daylight screen temperature"
+        echo " Daylight screen temperature"
     else
         hyprctl -q hyprsunset temperature $ON_TEMP
-        notify-send " Nightlight screen temperature"
+        echo " Nightlight screen temperature"
     fi
 }
 

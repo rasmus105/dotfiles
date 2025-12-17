@@ -25,17 +25,17 @@ actions = { "set-brightness" = "bash ~/.config/elephant/menus/brightness.sh" }
 [[entries]]
 text = "System Refresh"
 icon = ""
-actions = { "system-refresh" = "systemd-run --user --setenv=PATH='$PATH' bash -lc ~/.local/bin/system-refresh" }
+actions = { "system-refresh" = "systemd-run --user --setenv=PATH='$PATH' bash -lc \"~/.local/bin/system-refresh && notify-send 'System Refreshed!'\"" }
 
 [[entries]]
 text = "Install Package"
 icon = "󰣇"
-actions = { "install-package" = "ghostty --class=TUI.float -e ~/.local/bin/package-install" }
+actions = { "install-package" = "ghostty --class=TUI.float -e ~/.local/bin/dotfiles install-package" }
 
 [[entries]]
 text = "Remove Package"
 icon = "󰭌"
-actions = { "remove-package" = "ghostty --class=TUI.float -e ~/.local/bin/package-remove" }
+actions = { "remove-package" = "ghostty --class=TUI.float -e ~/.local/bin/dotfiles remove-package" }
 
 [[entries]]
 text = "Update System"
@@ -45,4 +45,4 @@ actions = { "update-system" = "ghostty --class=TUI.float -e ~/.local/bin/system-
 [[entries]]
 text = "Toggle Nightlight"
 icon = ""
-actions = { "toggle-nightlight" = "bash ~/.local/bin/system-toggle-nightlight" }
+actions = { "toggle-nightlight" = "bash ~/.local/bin/run-notify system-theme nightlight" }
