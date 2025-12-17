@@ -8,17 +8,19 @@ set -euo pipefail
 
 # Setup paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOTFILES_DIR="$(dirname "$SCRIPT_DIR")"
 
-# Source dependencies
-source "${DOTFILES_DIR}/local/lib/shell/ui.sh"
-source "${DOTFILES_DIR}/local/lib/shell/common.sh" 2>/dev/null || true
+# Source dependencies (relative to script location for stow compatibility)
+source "${SCRIPT_DIR}/../lib/shell/ui.sh"
+source "${SCRIPT_DIR}/../lib/shell/common.sh" 2>/dev/null || true
+
+# Derive DOTFILES_DIR from script location
+DOTFILES_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Configuration
-PACKAGES_FILE="${SCRIPT_DIR}/packages.txt"
+PACKAGES_FILE="${DOTFILES_DIR}/packages.txt"
 DEFAULT_THEME="gruvbox"
 NON_INTERACTIVE=0
-SYSTEM_SETUP="${DOTFILES_DIR}/local/bin/system-setup"
+SYSTEM_SETUP="${SCRIPT_DIR}/system-setup"
 
 #──────────────────────────────────────────────────────────────────────────────
 # Argument Parsing
@@ -172,7 +174,7 @@ main() {
 
 print_help() {
     cat <<EOF
-Usage: run_setup.sh [OPTIONS]
+Usage: run-setup [OPTIONS]
 
 Orchestrates the complete dotfiles installation and setup process.
 

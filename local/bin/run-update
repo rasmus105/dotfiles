@@ -205,7 +205,7 @@ main() {
 
 print_help() {
     cat <<EOF
-Usage: run_update [OPTIONS]
+Usage: run-update [OPTIONS]
 
 Orchestrates system updates with a TUI interface.
 
