@@ -7,14 +7,34 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/shell/common.sh" 2>/dev/null || q() { "$@" >/dev/null 2>&1; }
+source "${SCRIPT_DIR}/../lib/shell/completions.sh" 2>/dev/null || true
 
 THEME_DIR="$HOME/.config/theme"
+
+#──────────────────────────────────────────────────────────────────────────────
+# Command Definitions (for completions and help)
+#──────────────────────────────────────────────────────────────────────────────
+
+declare -gA COMMANDS=(
+    [all]="Refresh everything (apps + reload configs) [default]"
+    [apps]="Restart system applications"
+    [theme]="Reload applications to pick up theme/config changes"
+    [app]="Restart specific application with optional arguments"
+    [help]="Show this help"
+)
 
 #──────────────────────────────────────────────────────────────────────────────
 # Functions
 #──────────────────────────────────────────────────────────────────────────────
 
 main() {
+    # Handle completions first
+    if handle_completions "$@"; then
+        exit 0
+    fi
+    # If --completions was specified but failed, exit with error
+    [[ "${1:-}" == "--completions" ]] && exit 1
+
     parse_args "$@"
 }
 
@@ -187,12 +207,16 @@ print_help() {
 Usage: system-refresh [command] [arguments]
 
 Commands:
-  all                Refresh everything (apps + reload configs) [default]
-  apps               Restart system applications
-  theme              Reload applications to pick up theme/config changes
-  app NAME [ARGS]    Restart specific application with optional arguments
-                     Options: --only-if-running (only restart if already running)
-  help               Show this help
+EOF
+    # Generate commands from COMMANDS array
+    for cmd in "${!COMMANDS[@]}"; do
+        printf "  %-18s %s\n" "$cmd" "${COMMANDS[$cmd]}"
+    done | sort
+
+    cat <<EOF
+
+Options for 'app' command:
+  --only-if-running  Only restart if already running
 
 Examples:
   system-refresh                              # Refresh everything

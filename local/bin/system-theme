@@ -7,6 +7,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/shell/common.sh" 2>/dev/null || q() { "$@" >/dev/null 2>&1; }
+source "${SCRIPT_DIR}/../lib/shell/completions.sh" 2>/dev/null || true
 
 THEMES_DIR="$HOME/.config/themes"
 CURRENT_THEME_DIR="$HOME/.config/theme"
@@ -15,7 +16,60 @@ HYPR_BACKGROUND="$HOME/.config/hypr/background.jpg"
 THEME_GENERATOR="${SCRIPT_DIR}/theme-generator"
 
 #──────────────────────────────────────────────────────────────────────────────
-# Functions
+# Command Definitions (single source of truth for help + completions)
+#──────────────────────────────────────────────────────────────────────────────
+
+declare -gA COMMANDS=(
+    [set]="Set theme (generates configs if theme.toml exists)"
+    [get]="Print current theme name"
+    [list]="List available themes"
+    [generate]="Regenerate configs from theme.toml"
+    [preview]="Generate preview.png screenshot"
+    [background]="Manage background images"
+    [bg]="Manage background images (alias)"
+    [font]="Manage fonts"
+    [nightlight]="Toggle nightlight mode"
+    [help]="Show this help"
+)
+
+declare -gA SUBCOMMANDS_background=(
+    [shuffle]="Set random background from current theme"
+    [next]="Set next background in sequence"
+    [set]="Set specific background image"
+    [get]="Print current background path"
+    [help]="Show this help"
+)
+
+declare -gA SUBCOMMANDS_font=(
+    [set]="Set font (applies to all applications)"
+    [get]="Print current font name"
+    [list]="List available monospace fonts"
+    [help]="Show this help"
+)
+
+# Argument completions - maps command path to completion spec
+# Format: "type:value" where type is 'files', 'function', or 'values'
+declare -gA COMPLETIONS=(
+    [set]="function:_complete_themes"
+    [generate]="function:_complete_themes"
+    [preview]="function:_complete_themes"
+    [background_set]="files:*.{png,jpg,jpeg,webp,gif}"
+    [font_set]="function:_complete_fonts"
+)
+
+# Completion helper functions (called via _complete_<name>)
+_complete_themes() {
+    for theme_dir in "$THEMES_DIR"/*/; do
+        [[ -d "$theme_dir" ]] && basename "$theme_dir"
+    done
+}
+
+_complete_fonts() {
+    fc-list :spacing=100 -f "%{family[0]}\n" 2>/dev/null | grep -v -i -E 'emoji|signwriting' | sort -u
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Main & Argument Parsing
 #──────────────────────────────────────────────────────────────────────────────
 
 main() {
@@ -23,6 +77,21 @@ main() {
 }
 
 parse_args() {
+    # Handle completions request
+    if [[ "${1:-}" == "--completions" ]]; then
+        handle_completions "$@" && exit 0 || exit 1
+    fi
+
+    # Handle completion helper calls
+    if [[ "${1:-}" == "_complete_themes" ]]; then
+        _complete_themes
+        exit 0
+    fi
+    if [[ "${1:-}" == "_complete_fonts" ]]; then
+        _complete_fonts
+        exit 0
+    fi
+
     [[ $# -gt 0 ]] || {
         print_help
         exit 0
@@ -700,20 +769,15 @@ get_background() {
 #──────────────────────────────────────────────────────────────────────────────
 
 print_help() {
-    cat <<EOF
-Usage: system-theme <command> [arguments]
-
-Commands:
-  set THEME          Set theme to THEME (generates configs if theme.toml exists)
-  get                Print current theme name
-  list               List available themes
-  generate [THEME]   Regenerate configs from theme.toml (current theme if not specified)
-  preview [THEME]    Generate preview.png screenshot (current theme if not specified)
-  background, bg     Manage background images (see 'system-theme background help')
-  font               Manage fonts (see 'system-theme font help')
-  nightlight         Toggle nightlight mode (changes screen temperature)
-  help               Show this help
-
+    echo "Usage: system-theme <command> [arguments]"
+    echo
+    echo "Commands:"
+    # Print in desired order, excluding alias
+    for cmd in set get list generate preview background font nightlight help; do
+        printf "  %-18s %s\n" "$cmd" "${COMMANDS[$cmd]}"
+    done
+    echo
+    cat <<'EOF'
 Theme Format:
   Themes can be defined in two ways:
   1. New style: Single theme.toml file that generates all configs
@@ -731,16 +795,14 @@ EOF
 }
 
 print_background_help() {
-    cat <<EOF
-Usage: system-theme background <action> [arguments]
-
-Actions:
-  shuffle            Set random background from current theme
-  next               Set next background in sequence
-  set PATH           Set specific background image
-  get                Print current background path
-  help               Show this help
-
+    echo "Usage: system-theme background <action> [arguments]"
+    echo
+    echo "Actions:"
+    for cmd in shuffle next set get help; do
+        printf "  %-18s %s\n" "$cmd" "${SUBCOMMANDS_background[$cmd]}"
+    done
+    echo
+    cat <<'EOF'
 Examples:
   system-theme background shuffle
   system-theme background next
@@ -750,15 +812,14 @@ EOF
 }
 
 print_font_help() {
-    cat <<EOF
-Usage: system-theme font <action> [arguments]
-
-Actions:
-  set NAME           Set font to NAME (applies to all applications)
-  get                Print current font name
-  list               List available monospace fonts
-  help               Show this help
-
+    echo "Usage: system-theme font <action> [arguments]"
+    echo
+    echo "Actions:"
+    for cmd in set get list help; do
+        printf "  %-18s %s\n" "$cmd" "${SUBCOMMANDS_font[$cmd]}"
+    done
+    echo
+    cat <<'EOF'
 Examples:
   system-theme font set "JetBrains Mono"
   system-theme font get
