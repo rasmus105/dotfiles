@@ -28,6 +28,7 @@ source "${SCRIPT_DIR}/../lib/shell/completions.sh" 2>/dev/null || true
 declare -gA COMMANDS=(
     [update]="Full system update (dotfiles + packages + flatpak)"
     [update-git]="Update dotfiles from git and run stow (no package update)"
+    [update-git-stash]="Same as update-git but stash/pop changes automatically"
     [install-package]="Install packages with fzf selection"
     [remove-package]="Remove packages with fzf selection"
     [help]="Show this help"
@@ -101,7 +102,7 @@ parse_args() {
 
     # Commands that take no arguments
     case "$action" in
-    update | update-git | install-package | remove-package | --help | -h | help)
+    update | update-git | update-git-stash | install-package | remove-package | --help | -h | help)
         if [[ $# -gt 0 ]]; then
             die "$action takes no arguments"
         fi
@@ -111,6 +112,7 @@ parse_args() {
     case "$action" in
     update) full_update ;;
     update-git) update_git ;;
+    update-git-stash) update_git_with_stash ;;
     install-package) install_package ;;
     remove-package) remove_package ;;
     --help | -h | help) print_help ;;
@@ -142,7 +144,8 @@ update_git() {
     # Fetch updates
     echo "Fetching updates..."
     if ! q git fetch origin; then
-        die "Failed to fetch from remote"
+        echo "Error: Failed to fetch from remote" >&2
+        return 1
     fi
 
     # Check for updates
@@ -170,7 +173,8 @@ update_git() {
         echo "Pulling $commits_behind commit(s)..."
 
         if ! q git pull origin "$current_branch"; then
-            die "Failed to pull updates"
+            echo "Error: Failed to pull updates" >&2
+            return 1
         fi
 
         echo "Successfully pulled updates"
@@ -208,6 +212,53 @@ update_git() {
         echo "Resolve manually with: git pull --rebase or git merge" >&2
         return 1
     fi
+}
+
+# Update dotfiles with automatic stash/pop
+# Exit codes:
+#   0 = success (including successful stash pop)
+#   1 = general failure (fetch failed, diverged, etc.)
+#   2 = pull succeeded but stash pop failed (conflicts)
+update_git_with_stash() {
+    cd "$DOTFILES_DIR"
+
+    # Check if there are changes to stash (tracked files only)
+    if git diff --quiet 2>/dev/null && git diff --cached --quiet 2>/dev/null; then
+        echo "No changes to stash, running normal update..."
+        update_git
+        return $?
+    fi
+
+    # Stash changes (including untracked files)
+    echo "Stashing local changes..."
+    local stash_msg="dotfiles auto-stash: $(date '+%Y-%m-%d %H:%M:%S')"
+    if ! git stash push -u -m "$stash_msg"; then
+        echo "Error: Failed to stash changes" >&2
+        return 1
+    fi
+
+    # Run normal update (capture result, don't exit on failure)
+    local update_result=0
+    update_git || update_result=$?
+
+    # Pop stash (whether update succeeded or failed)
+    if ! git stash pop; then
+        if [[ $update_result -eq 0 ]]; then
+            # Update succeeded but pop failed - this is the conflict case
+            echo "Warning: Stash pop failed (likely conflicts)" >&2
+            echo "Your changes are saved in git stash" >&2
+            echo "Run 'git stash show' to see stashed changes" >&2
+            echo "Run 'git stash pop' to restore them manually" >&2
+            return 2
+        else
+            # Update failed and pop failed
+            echo "Warning: Could not restore stashed changes" >&2
+            echo "Your changes are saved in git stash" >&2
+            return 1
+        fi
+    fi
+
+    return $update_result
 }
 
 full_update() {
@@ -452,7 +503,7 @@ print_help() {
     echo
     echo "Commands:"
     # Generate commands list from COMMANDS array
-    for cmd in update update-git install-package remove-package help; do
+    for cmd in update update-git update-git-stash install-package remove-package help; do
         printf "  %-18s %s\n" "$cmd" "${COMMANDS[$cmd]}"
     done
     echo

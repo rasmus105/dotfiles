@@ -1,0 +1,239 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+#──────────────────────────────────────────────────────────────────────────────
+# Dotfiles Update Orchestration Layer
+# TUI-based system update with interactive prompts
+#──────────────────────────────────────────────────────────────────────────────
+
+# Setup paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source dependencies
+source "${SCRIPT_DIR}/../lib/shell/ui.sh"
+source "${SCRIPT_DIR}/../lib/shell/common.sh" 2>/dev/null || true
+
+# Configuration
+NON_INTERACTIVE=0
+DOTFILES_CMD="${SCRIPT_DIR}/dotfiles"
+
+# Source dotfiles environment for DOTFILES_DIR
+if [[ -f "$HOME/.dotfiles_env" ]]; then
+    source "$HOME/.dotfiles_env"
+elif [[ -n "${DOTFILES_DIR:-}" ]]; then
+    : # DOTFILES_DIR already set in environment
+else
+    # Fallback: derive from script location
+    DOTFILES_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+fi
+
+#──────────────────────────────────────────────────────────────────────────────
+# Argument Parsing
+#──────────────────────────────────────────────────────────────────────────────
+
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        --non-interactive)
+            NON_INTERACTIVE=1
+            shift
+            ;;
+        --help | -h)
+            print_help
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown option: $1" >&2
+            print_help
+            exit 1
+            ;;
+        esac
+    done
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Helper Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+# Wrapper for error handling based on mode
+run_step() {
+    if [[ $NON_INTERACTIVE -eq 1 ]]; then
+        ui_run_or_abort "$@"
+    else
+        ui_run_or_prompt "$@"
+    fi
+}
+
+# Check if git has uncommitted changes to tracked files
+has_uncommitted_changes() {
+    cd "$DOTFILES_DIR"
+    ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null
+}
+
+# Custom handler for update-git step with stash support
+run_update_git_step() {
+    local desc="Updating dotfiles from git"
+
+    if ui_run "$desc" "$DOTFILES_CMD" update-git; then
+        return 0
+    fi
+
+    local exit_code=$?
+
+    # In non-interactive mode, just abort
+    if [[ $NON_INTERACTIVE -eq 1 ]]; then
+        ui_cleanup
+        echo ""
+        echo "ERROR: Command failed with exit code $exit_code"
+        tail -n 10 /tmp/dotfiles-output.log 2>/dev/null | sed 's/^/  /' || true
+        exit $exit_code
+    fi
+
+    # Check if failure was due to uncommitted changes
+    if has_uncommitted_changes; then
+        # Show 4-option prompt
+        local choice
+        choice=$(ui_prompt_select "Uncommitted changes detected. What would you like to do?" \
+            "Stash and retry" \
+            "Retry" \
+            "Continue anyway" \
+            "Abort")
+
+        case "$choice" in
+        "Stash and retry")
+            # Use the stash variant
+            if ui_run "Updating dotfiles (with stash)" "$DOTFILES_CMD" update-git-stash; then
+                return 0
+            fi
+            local stash_exit=$?
+
+            if [[ $stash_exit -eq 2 ]]; then
+                # Stash pop failed (conflicts)
+                ui_prompt_confirm "Stash pop failed (conflicts). Your changes are in git stash. Continue anyway?" && return 0
+                ui_cleanup
+                exit 1
+            else
+                # General failure - recurse to show prompt again
+                run_update_git_step
+                return $?
+            fi
+            ;;
+        "Retry")
+            run_update_git_step
+            return $?
+            ;;
+        "Continue anyway")
+            return 0
+            ;;
+        *)
+            ui_cleanup
+            exit 1
+            ;;
+        esac
+    else
+        # Not uncommitted changes - use standard 3-option prompt
+        local choice
+        choice=$(ui_prompt_select "What would you like to do?" \
+            "Retry" \
+            "Continue anyway" \
+            "Abort")
+
+        case "$choice" in
+        "Retry")
+            run_update_git_step
+            return $?
+            ;;
+        "Continue anyway")
+            return 0
+            ;;
+        *)
+            ui_cleanup
+            exit 1
+            ;;
+        esac
+    fi
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Main Update Flow
+#──────────────────────────────────────────────────────────────────────────────
+
+main() {
+    parse_args "$@"
+
+    # Cache sudo credentials before starting UI
+    if ! sudo -v; then
+        echo "Error: Failed to obtain sudo credentials" >&2
+        return 1
+    fi
+
+    # Keep sudo alive in background
+    while sleep 100; do sudo -v; done &
+    local sudo_pid=$!
+    trap "kill $sudo_pid 2>/dev/null || true" EXIT
+
+    # Initialize UI with 3 steps (git, system packages, flatpak)
+    # In non-interactive mode, skip the "Done!" wait screen
+    local wait_for_keypress=1
+    if [[ $NON_INTERACTIVE -eq 1 ]]; then
+        wait_for_keypress=0
+    fi
+    ui_init 3 "basic" "$wait_for_keypress"
+
+    # Step 1: Update dotfiles from git (custom handler for stash support)
+    run_update_git_step
+
+    # Step 2: Update system packages
+    run_step "Updating system packages" \
+        bash -c 'command -v paru &>/dev/null && paru -Syu --noconfirm || sudo pacman -Syu --noconfirm'
+
+    # Step 3: Update Flatpak packages
+    if command -v flatpak &>/dev/null; then
+        run_step "Updating Flatpak packages" \
+            flatpak update -y
+    else
+        ui_run "Flatpak not installed (skipping)" true
+    fi
+
+    # Cleanup UI and show summary
+    ui_cleanup
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Help
+#──────────────────────────────────────────────────────────────────────────────
+
+print_help() {
+    cat <<EOF
+Usage: run_update [OPTIONS]
+
+Orchestrates system updates with a TUI interface.
+
+Options:
+  --non-interactive    Run in non-interactive mode (abort on errors, skip prompts)
+  --help, -h           Show this help message
+
+Update Steps:
+  1. Update dotfiles from git (pull + stow)
+     - If uncommitted changes detected, offers to stash them
+  2. Update system packages (pacman/paru)
+  3. Update Flatpak packages (if installed)
+
+Behavior by Mode:
+  Interactive (default):
+    - Failed steps prompt: retry/skip/abort
+    - Uncommitted changes prompt: stash and retry/retry/skip/abort
+    - Shows "Done!" screen, wait for keypress
+
+  Non-interactive (--non-interactive):
+    - Failed steps abort immediately
+    - Exits immediately after completion
+
+EOF
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Entry Point
+#──────────────────────────────────────────────────────────────────────────────
+
+main "$@"
