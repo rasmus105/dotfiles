@@ -24,7 +24,7 @@ opt.autoindent = true  -- Copy indent from current line
 
 -- Visual settings
 opt.termguicolors = true  -- Enable 24-bit colors
-opt.signcolumn = 'no'     -- Always show sign column
+opt.signcolumn = 'auto'   -- Always show sign column
 opt.showmatch = true      -- Highlight matching brackets
 opt.matchtime = 2         -- How long to show matching bracket
 opt.cmdheight = 1         -- Command line height

@@ -3,6 +3,7 @@ vim.pack.add({
 	{ src = "https://github.com/nvim-lua/plenary.nvim" },
 	{ src = "https://github.com/MunifTanjim/nui.nvim" },
 	{ src = "https://github.com/esmuellert/vscode-diff.nvim", version = "next" },
+	{ src = "https://github.com/lewis6991/gitsigns.nvim" },
 
 	-- File
 	{ src = "https://github.com/ThePrimeagen/harpoon", version = "harpoon2" },
