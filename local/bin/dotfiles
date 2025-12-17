@@ -5,13 +5,80 @@ set -euo pipefail
 # Setup
 #──────────────────────────────────────────────────────────────────────────────
 
+# Source dotfiles environment for DOTFILES_DIR
+if [[ -f "$HOME/.dotfiles_env" ]]; then
+    source "$HOME/.dotfiles_env"
+elif [[ -n "${DOTFILES_DIR:-}" ]]; then
+    : # DOTFILES_DIR already set in environment
+else
+    # Fallback: derive from script location
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    DOTFILES_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+fi
+
+# Source common utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/shell/common.sh" 2>/dev/null || q() { "$@" >/dev/null 2>&1; }
-
-DOTFILES_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+source "${SCRIPT_DIR}/../lib/shell/completions.sh" 2>/dev/null || true
 
 #──────────────────────────────────────────────────────────────────────────────
-# Functions
+# Command Definitions (single source of truth for help + completions)
+#──────────────────────────────────────────────────────────────────────────────
+
+declare -gA COMMANDS=(
+    [update]="Full system update (dotfiles + packages + flatpak)"
+    [update-git]="Update dotfiles from git and run stow (no package update)"
+    [install-package]="Install packages with fzf selection"
+    [remove-package]="Remove packages with fzf selection"
+    [help]="Show this help"
+)
+
+# Track background processes for cleanup
+SUDO_PID=""
+
+#──────────────────────────────────────────────────────────────────────────────
+# Utility Functions
+#──────────────────────────────────────────────────────────────────────────────
+
+cleanup() {
+    if [[ -n "$SUDO_PID" ]] && kill -0 "$SUDO_PID" 2>/dev/null; then
+        kill "$SUDO_PID" 2>/dev/null || true
+    fi
+}
+
+die() {
+    echo "Error: $1" >&2
+    exit 1
+}
+
+warn() {
+    echo "Warning: $1" >&2
+}
+
+# Common fzf arguments for package selection
+get_fzf_args() {
+    local color="$1"
+    local header="$2"
+    local preview_cmd="$3"
+
+    echo "--multi"
+    echo "--ansi"
+    echo "--preview"
+    echo "$preview_cmd"
+    echo "--preview-label=Space/Tab: select, Enter: confirm, Ctrl-p: toggle preview"
+    echo "--preview-label-pos=bottom"
+    echo "--preview-window=right:60%:wrap"
+    echo "--bind=ctrl-p:toggle-preview"
+    echo "--bind=ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up"
+    echo "--bind=ctrl-f:half-page-down,ctrl-b:half-page-up"
+    echo "--bind=space:toggle"
+    echo "--bind=ctrl-space:toggle"
+    echo "--color=pointer:$color,marker:$color"
+    echo "--header=$header"
+}
+
+#──────────────────────────────────────────────────────────────────────────────
+# Main & Argument Parsing
 #──────────────────────────────────────────────────────────────────────────────
 
 main() {
@@ -19,50 +86,35 @@ main() {
 }
 
 parse_args() {
-    [[ $# -gt 0 ]] || {
+    # Handle completions request
+    if [[ "${1:-}" == "--completions" ]]; then
+        handle_completions "$@"
+        exit 0
+    fi
+
+    if [[ $# -eq 0 ]]; then
         print_help
         exit 0
-    }
+    fi
 
     local action="$1"
     shift
 
+    # Commands that take no arguments
     case "$action" in
-    update)
-        [[ $# -eq 0 ]] || {
-            echo "Error: update takes no arguments" >&2
-            exit 1
-        }
-        full_update
+    update | update-git | install-package | remove-package | --help | -h | help)
+        if [[ $# -gt 0 ]]; then
+            die "$action takes no arguments"
+        fi
         ;;
-    update-git)
-        [[ $# -eq 0 ]] || {
-            echo "Error: update-git takes no arguments" >&2
-            exit 1
-        }
-        update_git
-        ;;
-    install-package)
-        [[ $# -eq 0 ]] || {
-            echo "Error: install-package takes no arguments" >&2
-            exit 1
-        }
-        install_package
-        ;;
-    remove-package)
-        [[ $# -eq 0 ]] || {
-            echo "Error: remove-package takes no arguments" >&2
-            exit 1
-        }
-        remove_package
-        ;;
-    --help | -h | help)
-        [[ $# -eq 0 ]] || {
-            echo "Error: help takes no arguments" >&2
-            exit 1
-        }
-        print_help
-        ;;
+    esac
+
+    case "$action" in
+    update) full_update ;;
+    update-git) update_git ;;
+    install-package) install_package ;;
+    remove-package) remove_package ;;
+    --help | -h | help) print_help ;;
     *)
         echo "Error: Unknown action: $action" >&2
         print_help
@@ -91,14 +143,13 @@ update_git() {
     # Fetch updates
     echo "Fetching updates..."
     if ! q git fetch origin; then
-        echo "Error: Failed to fetch from remote" >&2
-        return 1
+        die "Failed to fetch from remote"
     fi
 
     # Check for updates
     local current_branch
     current_branch=$(git rev-parse --abbrev-ref HEAD)
-    
+
     local upstream="origin/$current_branch"
     if ! git rev-parse "$upstream" &>/dev/null; then
         echo "No upstream branch found for '$current_branch'"
@@ -119,12 +170,8 @@ update_git() {
         commits_behind=$(git rev-list --count "$local_commit..$remote_commit")
         echo "Pulling $commits_behind commit(s)..."
 
-        local old_commit
-        old_commit=$(git rev-parse HEAD)
-
         if ! q git pull origin "$current_branch"; then
-            echo "Error: Failed to pull updates" >&2
-            return 1
+            die "Failed to pull updates"
         fi
 
         echo "Successfully pulled updates"
@@ -140,14 +187,14 @@ update_git() {
         if [[ -f "$DOTFILES_DIR/install/pre-install.sh" ]]; then
             echo "Running pre-install migrations..."
             if ! bash "$DOTFILES_DIR/install/pre-install.sh"; then
-                echo "Warning: pre-install script failed" >&2
+                warn "pre-install script failed"
             fi
         fi
 
         # Refresh system
         if command -v system-refresh &>/dev/null; then
             echo "Refreshing system..."
-            q system-refresh || echo "Warning: system-refresh failed" >&2
+            q system-refresh || warn "system-refresh failed"
         fi
 
         echo "Dotfiles updated successfully"
@@ -168,42 +215,40 @@ full_update() {
     echo "Starting full system update..."
     echo
 
-    # Check for multiple running instances
-    if [[ $(pgrep -fc "dotfiles update") -gt 1 ]]; then
-        echo "Error: Update is already running" >&2
-        return 1
+    # Check for multiple running instances using a more precise match
+    local running_count
+    running_count=$(pgrep -f "dotfiles[[:space:]]update\$" 2>/dev/null | wc -l || echo "0")
+    if [[ "$running_count" -gt 1 ]]; then
+        die "Update is already running"
     fi
 
     # Cache sudo credentials
     if ! sudo -v; then
-        echo "Error: Failed to obtain sudo credentials" >&2
-        return 1
+        die "Failed to obtain sudo credentials"
     fi
 
     # Keep sudo alive in background
     while sleep 100; do sudo -v; done &
-    local sudo_pid=$!
-    trap "kill $sudo_pid 2>/dev/null || true" EXIT
+    SUDO_PID=$!
+    trap cleanup EXIT INT TERM
 
     # Update dotfiles
     echo "==> Updating dotfiles..."
-    update_git || echo "Warning: Dotfiles update had issues" >&2
+    update_git || warn "Dotfiles update had issues"
     echo
 
     # Update system packages
     echo "==> Updating system packages..."
     if command -v paru &>/dev/null; then
-        q paru -Syu --noconfirm || {
-            echo "Error: System update failed" >&2
-            kill $sudo_pid 2>/dev/null || true
-            return 1
-        }
+        if ! q paru -Syu --noconfirm; then
+            cleanup
+            die "System update failed"
+        fi
     else
-        q sudo pacman -Syu --noconfirm || {
-            echo "Error: System update failed" >&2
-            kill $sudo_pid 2>/dev/null || true
-            return 1
-        }
+        if ! q sudo pacman -Syu --noconfirm; then
+            cleanup
+            die "System update failed"
+        fi
     fi
     echo "System packages updated"
     echo
@@ -211,7 +256,7 @@ full_update() {
     # Update flatpak
     if command -v flatpak &>/dev/null; then
         echo "==> Updating Flatpak packages..."
-        q flatpak update -y || echo "Warning: Flatpak update had issues" >&2
+        q flatpak update -y || warn "Flatpak update had issues"
         echo
     fi
 
@@ -245,9 +290,8 @@ full_update() {
         echo
     fi
 
-    # Clean up sudo background process
-    kill $sudo_pid 2>/dev/null || true
-    trap - EXIT
+    cleanup
+    trap - EXIT INT TERM
 
     echo "System update completed successfully"
 }
@@ -257,18 +301,18 @@ stow_dotfiles() {
 
     # Stow config, home, and local directories
     q stow --restow -t "$HOME/.config" config || {
-        echo "Error: Failed to stow config directory" >&2
+        warn "Failed to stow config directory"
         return 1
     }
-    
+
     q stow --restow -t "$HOME" home || {
-        echo "Error: Failed to stow home directory" >&2
+        warn "Failed to stow home directory"
         return 1
     }
 
     q mkdir -p "$HOME/.local/share/applications/icons"
     q stow --restow -t "$HOME/.local" local || {
-        echo "Error: Failed to stow local directory" >&2
+        warn "Failed to stow local directory"
         return 1
     }
 
@@ -284,10 +328,10 @@ update_system_configs() {
     # Copy system configs with rsync
     if sudo -n true 2>/dev/null; then
         q sudo rsync -av "$DOTFILES_DIR/system/" / || {
-            echo "Warning: Failed to update system configs" >&2
+            warn "Failed to update system configs"
         }
     else
-        echo "Warning: Cannot update system configs without sudo" >&2
+        warn "Cannot update system configs without sudo"
     fi
 }
 
@@ -307,31 +351,15 @@ format_packages() {
 }
 
 install_package() {
-    # Check for required tools
     if ! command -v fzf &>/dev/null; then
-        echo "Error: fzf is not installed" >&2
-        return 1
+        die "fzf is not installed"
     fi
 
-    local fzf_args=(
-        --multi
-        --ansi
-        --preview 'paru -Si {2}'
-        --preview-label='Space/Tab: select, Enter: confirm, Ctrl-p: toggle preview'
-        --preview-label-pos='bottom'
-        --preview-window 'right:60%:wrap'
-        --bind 'ctrl-p:toggle-preview'
-        --bind 'ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up'
-        --bind 'ctrl-f:half-page-down,ctrl-b:half-page-up'
-        --bind 'space:toggle'
-        --bind 'ctrl-space:toggle'
-        --color 'pointer:green,marker:green'
-        --header='Select packages to install'
-    )
-
     # Select packages with FZF
-    local selected
-    selected=$(pacman -Sl | format_packages | fzf "${fzf_args[@]}" | awk '{print $2}')
+    local selected fzf_args
+    mapfile -t fzf_args < <(get_fzf_args "green" "Select packages to install" "paru -Si {2}")
+
+    selected=$(pacman -Sl | format_packages | fzf "${fzf_args[@]}" | awk '{print $2}') || true
 
     if [[ -z "$selected" ]]; then
         echo "No packages selected"
@@ -356,52 +384,32 @@ install_package() {
         return 0
     fi
 
-    # Install packages
-    local pkg_list
-    pkg_list=$(echo "$selected" | tr '\n' ' ')
-    
+    # Convert to array for proper quoting
+    local -a pkg_array
+    mapfile -t pkg_array <<<"$selected"
+
     echo "Installing packages..."
     if command -v paru &>/dev/null; then
-        paru -S --noconfirm $pkg_list
+        paru -S --noconfirm "${pkg_array[@]}"
     else
-        sudo pacman -S --noconfirm $pkg_list
+        sudo pacman -S --noconfirm "${pkg_array[@]}"
     fi
 
-    if [[ $? -eq 0 ]]; then
-        echo "Updating file database..."
-        q sudo updatedb || true
-        echo "Packages installed successfully"
-    else
-        echo "Error: Package installation failed" >&2
-        return 1
-    fi
+    echo "Updating file database..."
+    q sudo updatedb || true
+    echo "Packages installed successfully"
 }
 
 remove_package() {
-    # Check for required tools
     if ! command -v fzf &>/dev/null; then
-        echo "Error: fzf is not installed" >&2
-        return 1
+        die "fzf is not installed"
     fi
 
-    local fzf_args=(
-        --multi
-        --preview 'paru -Qi {1}'
-        --preview-label='Space/Tab: select, Enter: confirm, Ctrl-p: toggle preview'
-        --preview-label-pos='bottom'
-        --preview-window 'right:60%:wrap'
-        --bind 'ctrl-p:toggle-preview'
-        --bind 'ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up'
-        --bind 'ctrl-f:half-page-down,ctrl-b:half-page-up'
-        --bind 'space:toggle'
-        --bind 'ctrl-space:toggle'
-        --color 'pointer:red,marker:red'
-        --header='Select packages to remove'
-    )
-
     # Select packages with FZF
-    local selected
-    selected=$(paru -Qqe | fzf "${fzf_args[@]}")
+    local selected fzf_args
+    mapfile -t fzf_args < <(get_fzf_args "red" "Select packages to remove" "paru -Qi {1}")
+
+    selected=$(paru -Qqe | fzf "${fzf_args[@]}") || true
 
     if [[ -z "$selected" ]]; then
         echo "No packages selected"
@@ -414,7 +422,7 @@ remove_package() {
     echo
     echo "Removing $pkg_count package(s):"
     echo "$selected" | while read -r pkg; do
-        echo "  ✗ $pkg"
+        echo "  - $pkg"
     done
     echo
 
@@ -426,19 +434,14 @@ remove_package() {
         return 0
     fi
 
-    # Remove packages
-    local pkg_list
-    pkg_list=$(echo "$selected" | tr '\n' ' ')
-    
-    echo "Removing packages..."
-    sudo pacman -Rns --noconfirm $pkg_list
+    # Convert to array for proper quoting
+    local -a pkg_array
+    mapfile -t pkg_array <<<"$selected"
 
-    if [[ $? -eq 0 ]]; then
-        echo "Packages removed successfully"
-    else
-        echo "Error: Package removal failed" >&2
-        return 1
-    fi
+    echo "Removing packages..."
+    sudo pacman -Rns --noconfirm "${pkg_array[@]}"
+
+    echo "Packages removed successfully"
 }
 
 #──────────────────────────────────────────────────────────────────────────────
@@ -446,34 +449,20 @@ remove_package() {
 #──────────────────────────────────────────────────────────────────────────────
 
 print_help() {
-    cat <<EOF
-Usage: dotfiles <command>
-
-Commands:
-  update             Full system update (dotfiles + packages + flatpak)
-  update-git         Update dotfiles from git and run stow (no package update)
-  install-package    Install packages with fzf selection
-  remove-package     Remove packages with fzf selection
-  help               Show this help
-
+    echo "Usage: dotfiles <command>"
+    echo
+    echo "Commands:"
+    # Generate commands list from COMMANDS array
+    for cmd in update update-git install-package remove-package help; do
+        printf "  %-18s %s\n" "$cmd" "${COMMANDS[$cmd]}"
+    done
+    echo
+    cat <<'EOF'
 Examples:
   dotfiles update              # Update everything
   dotfiles update-git          # Just update dotfiles
   dotfiles install-package     # Interactive package installation
   dotfiles remove-package      # Interactive package removal
-
-Description:
-  update         - Updates dotfiles from git, system packages (pacman/AUR),
-                   flatpak packages, checks for orphans and kernel updates
-  
-  update-git     - Only updates dotfiles from git repository and runs stow
-                   to update symlinks. Does not update system packages.
-  
-  install-package - Interactive package installer using fzf for selection
-                    with preview of package information
-  
-  remove-package  - Interactive package remover using fzf for selection
-                    with preview of package information
 EOF
 }
 
