@@ -6,7 +6,6 @@ mode = "dark"
 
 [apps]
 neovim = "bamboo"
-ghostty = "Bamboo"
 vscode_name = "Ocean Green: Dark"
 vscode_extension = "jovejonovski.ocean-green"
 icons = "Yaru-sage"

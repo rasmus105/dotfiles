@@ -212,10 +212,9 @@ set_theme() {
         return 1
     }
 
-    # Check if this is a new-style theme with theme.toml
+    # Check if this is a new style theme with theme.toml
     if [[ -f "$theme_toml" ]]; then
-        echo "Generating theme configs from theme.toml..."
-        if ! "$THEME_GENERATOR" generate "$theme_toml" "$theme_dir"; then
+        if ! "$THEME_GENERATOR" generate "$theme_toml" "$theme_dir" >/dev/null; then
             echo "Error: Theme generation failed" >&2
             return 1
         fi
@@ -228,7 +227,9 @@ set_theme() {
     apply_theme_configs
 
     # Refresh applications to reload configurations
-    if command -v system-refresh &>/dev/null; then
+    if [[ -x "${SCRIPT_DIR}/system-refresh" ]]; then
+        "${SCRIPT_DIR}/system-refresh" theme
+    elif command -v system-refresh &>/dev/null; then
         system-refresh theme
     else
         echo "Warning: system-refresh not found, theme applied but apps not refreshed" >&2
@@ -514,7 +515,10 @@ set_font() {
     fi
 
     # Refresh applications if system-refresh is available
-    if command -v system-refresh &>/dev/null; then
+    if [[ -x "${SCRIPT_DIR}/system-refresh" ]]; then
+        q "${SCRIPT_DIR}/system-refresh" apps || true
+        q "${SCRIPT_DIR}/system-refresh" theme || true
+    elif command -v system-refresh &>/dev/null; then
         q system-refresh apps || true
         q system-refresh theme || true
     fi

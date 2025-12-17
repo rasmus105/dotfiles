@@ -5,8 +5,8 @@ name = "ristretto"
 mode = "dark"
 
 [apps]
-neovim = "ristretto"
-ghostty = "Ristretto"
+neovim = "monokai-pro-ristretto"
+ghostty = "Monokai Pro Ristretto"
 vscode_name = "Ristretto"
 vscode_extension = "foxundermoon.ristretto"
 icons = "Yaru-brown"

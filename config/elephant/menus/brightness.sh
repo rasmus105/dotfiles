@@ -76,4 +76,4 @@ fi
 BUS_NUMBER=$(echo "$MONITOR_INFO" | grep "^BUS:$DRM_CONNECTOR:" | cut -d: -f3)
 
 # Set brightness using ddcutil
-ddcutil --bus="$BUS_NUMBER" setvcp 10 "$BRIGHTNESS"
+run-notify ddcutil --bus="$BUS_NUMBER" setvcp 10 "$BRIGHTNESS"

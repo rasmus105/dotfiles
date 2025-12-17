@@ -59,7 +59,7 @@ function GetEntries()
                 Text = display_name,
                 Value = theme,
                 Actions = {
-                    activate = "~/.local/bin/system-theme set " .. theme,
+                    activate = "~/.local/bin/run-notify system-theme set " .. theme,
                 },
             }
 
