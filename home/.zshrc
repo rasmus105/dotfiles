@@ -94,6 +94,10 @@ PROMPT='%F{blue}%~ %(?.%F{green}✓.%F{red}✗ %?)%f %F{green}(${vcs_info_msg_0_
 # Completion System (compinit)
 # ===============================
 zstyle :compinstall filename '/home/rasmus105/.zshrc'
+
+# Add custom completions directory to fpath (before compinit)
+fpath=(~/.local/share/zsh/site-functions $fpath)
+
 autoload -Uz compinit
 compinit
 

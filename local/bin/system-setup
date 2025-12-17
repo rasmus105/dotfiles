@@ -14,8 +14,64 @@ VERBOSE="${VERBOSE:-0}"
 
 # Source common utilities (defines q() function that respects VERBOSE)
 source "${DOTFILES_DIR}/local/lib/shell/common.sh" # 2>/dev/null || q() { "$@"; }
+source "${DOTFILES_DIR}/local/lib/shell/completions.sh" 2>/dev/null || true
 
 VERSION_FILE="${DOTFILES_DIR}/.version"
+
+#──────────────────────────────────────────────────────────────────────────────
+# Command Definitions (for completions and help)
+#──────────────────────────────────────────────────────────────────────────────
+
+declare -gA COMMANDS=(
+    [deps]="Dependency management (gum, paru, packages)"
+    [deploy]="Deploy configuration files (stow + system)"
+    [shell]="Set default shell (zsh, bash, fish)"
+    [configure]="Configure applications and services"
+    [version]="Version tracking and migrations"
+    [all]="Run complete setup (all steps in order)"
+    [help]="Show this help"
+)
+
+declare -gA SUBCOMMANDS_deps=(
+    [gum]="Install gum (TUI toolkit)"
+    [paru]="Install paru (AUR helper)"
+    [packages - file]="Install packages from file"
+    [packages - list]="Install packages from argument list"
+    [all]="Install gum, paru, and packages from default file"
+    [help]="Show deps help"
+)
+
+declare -gA SUBCOMMANDS_deploy=(
+    [home]="Stow dotfiles to \$HOME"
+    [system]="Copy system configs to / (requires sudo)"
+    [all]="Deploy both home and system configs"
+    [help]="Show deploy help"
+)
+
+declare -gA SUBCOMMANDS_shell=(
+    [zsh]="Set zsh as default shell and install antidote"
+    [bash]="Set bash as default shell"
+    [fish]="Set fish as default shell"
+    [help]="Show shell help"
+)
+
+declare -gA SUBCOMMANDS_configure=(
+    [env]="Export DOTFILES_DIR to shell environment"
+    [mimetypes]="Configure default applications for file types"
+    [systemd]="Enable systemd user services"
+    [chromium]="Setup Chromium policies directory"
+    [theme]="Set default theme"
+    [completions]="Generate shell completions for all scripts"
+    [all]="Run all configuration steps"
+    [help]="Show configure help"
+)
+
+declare -gA SUBCOMMANDS_version=(
+    [write]="Write current git commit to .version file"
+    [get]="Display current version from .version file"
+    [pre - install]="Run pre-install migration scripts"
+    [help]="Show version help"
+)
 
 #──────────────────────────────────────────────────────────────────────────────
 # Configuration Options (can be set by caller)
@@ -32,6 +88,13 @@ DEFAULT_THEME="${DEFAULT_THEME:-gruvbox}"
 #──────────────────────────────────────────────────────────────────────────────
 
 main() {
+    # Handle completions first
+    if handle_completions "$@"; then
+        exit 0
+    fi
+    # If --completions was specified but failed, exit with error
+    [[ "${1:-}" == "--completions" ]] && exit 1
+
     parse_args "$@"
 }
 
@@ -280,6 +343,13 @@ parse_configure_args() {
         local theme_name="${1:-$DEFAULT_THEME}"
         setup_default_theme "$theme_name"
         ;;
+    completions)
+        [[ $# -eq 0 ]] || {
+            echo "Error: completions takes no arguments" >&2
+            exit 1
+        }
+        setup_completions
+        ;;
     all)
         [[ $# -eq 0 ]] || {
             echo "Error: all takes no arguments" >&2
@@ -290,6 +360,7 @@ parse_configure_args() {
         setup_systemd_services
         setup_chromium_policies
         setup_default_theme "$DEFAULT_THEME"
+        setup_completions
         ;;
     --help | -h | help)
         [[ $# -eq 0 ]] || {
@@ -459,17 +530,18 @@ install_packages() {
     local -a failed_packages=()
 
     for package in "${packages[@]}"; do
+        # Check if already installed (this is A LOT faster than -Si or -Sg, so
+        # important to do first)
+        if paru -Q "$package" &>/dev/null; then
+            skipped=$((skipped + 1))
+            continue
+        fi
+
         # Check if package exists in repos
         if ! paru -Si "$package" &>/dev/null && ! paru -Sg "$package" &>/dev/null; then
             echo "Package not found: $package"
             failed=$((failed + 1))
             failed_packages+=("$package")
-            continue
-        fi
-
-        # Check if already installed
-        if paru -Q "$package" &>/dev/null; then
-            skipped=$((skipped + 1))
             continue
         fi
 
@@ -875,6 +947,24 @@ setup_default_theme() {
     echo "Default theme set to $theme_name"
 }
 
+setup_completions() {
+    echo "Generating shell completions..."
+
+    if ! declare -F generate_all_completions &>/dev/null; then
+        echo "Error: completions.sh library not loaded" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    fi
+
+    generate_all_completions || {
+        echo "Error: Failed to generate completions" >&2
+        [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
+        return 1
+    }
+
+    echo "Shell completions generated successfully"
+}
+
 #──────────────────────────────────────────────────────────────────────────────
 # Version Functions
 #──────────────────────────────────────────────────────────────────────────────
@@ -968,13 +1058,12 @@ print_help() {
 Usage: system-setup <command> [arguments]
 
 Commands:
-  deps                 Dependency management (gum, paru, packages)
-  deploy               Deploy configuration files (stow + system)
-  shell                Set default shell (zsh, bash, fish)
-  configure            Configure applications and services
-  version              Version tracking and migrations
-  all                  Run complete setup (all steps in order)
-  help                 Show this help
+EOF
+    for cmd in "${!COMMANDS[@]}"; do
+        printf "  %-18s %s\n" "$cmd" "${COMMANDS[$cmd]}"
+    done | sort
+
+    cat <<EOF
 
 For command-specific help, use: system-setup <command> help
 
@@ -999,12 +1088,12 @@ print_deps_help() {
 Usage: system-setup deps <action> [arguments]
 
 Actions:
-  gum                  Install gum (TUI toolkit)
-  paru                 Install paru (AUR helper)
-  packages-file FILE   Install packages from file
-  packages-list PKG..  Install packages from argument list
-  all                  Install gum, paru, and packages from default file
-  help                 Show this help
+EOF
+    for cmd in "${!SUBCOMMANDS_deps[@]}"; do
+        printf "  %-18s %s\n" "$cmd" "${SUBCOMMANDS_deps[$cmd]}"
+    done | sort
+
+    cat <<EOF
 
 Examples:
   system-setup deps gum
@@ -1020,10 +1109,12 @@ print_deploy_help() {
 Usage: system-setup deploy <action>
 
 Actions:
-  home                 Stow dotfiles to \$HOME (config, home, local dirs)
-  system               Copy system configs to / (requires sudo)
-  all                  Deploy both home and system configs
-  help                 Show this help
+EOF
+    for cmd in "${!SUBCOMMANDS_deploy[@]}"; do
+        printf "  %-18s %s\n" "$cmd" "${SUBCOMMANDS_deploy[$cmd]}"
+    done | sort
+
+    cat <<EOF
 
 Examples:
   system-setup deploy home
@@ -1037,10 +1128,12 @@ print_shell_help() {
 Usage: system-setup shell <shell>
 
 Shells:
-  zsh                  Set zsh as default shell and install antidote
-  bash                 Set bash as default shell
-  fish                 Set fish as default shell
-  help                 Show this help
+EOF
+    for cmd in "${!SUBCOMMANDS_shell[@]}"; do
+        printf "  %-18s %s\n" "$cmd" "${SUBCOMMANDS_shell[$cmd]}"
+    done | sort
+
+    cat <<EOF
 
 Examples:
   system-setup shell zsh
@@ -1054,18 +1147,18 @@ print_configure_help() {
 Usage: system-setup configure <action> [arguments]
 
 Actions:
-  env                  Export DOTFILES_DIR to shell environment
-  mimetypes            Configure default applications for file types
-  systemd              Enable systemd user services
-  chromium             Setup Chromium policies directory
-  theme [NAME]         Set default theme (default: gruvbox)
-  all                  Run all configuration steps
-  help                 Show this help
+EOF
+    for cmd in "${!SUBCOMMANDS_configure[@]}"; do
+        printf "  %-18s %s\n" "$cmd" "${SUBCOMMANDS_configure[$cmd]}"
+    done | sort
+
+    cat <<EOF
 
 Examples:
   system-setup configure env
   system-setup configure mimetypes
   system-setup configure theme rose-pine
+  system-setup configure completions
   system-setup configure all
 EOF
 }
@@ -1075,10 +1168,12 @@ print_version_help() {
 Usage: system-setup version <action>
 
 Actions:
-  write                Write current git commit to .version file
-  get                  Display current version from .version file
-  pre-install          Run pre-install migration scripts (if they exist)
-  help                 Show this help
+EOF
+    for cmd in "${!SUBCOMMANDS_version[@]}"; do
+        printf "  %-18s %s\n" "$cmd" "${SUBCOMMANDS_version[$cmd]}"
+    done | sort
+
+    cat <<EOF
 
 Examples:
   system-setup version write

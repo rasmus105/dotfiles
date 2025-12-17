@@ -34,3 +34,12 @@ y() {
 # Zoxide Integration
 # ===============================
 eval "$(zoxide init bash)"
+
+# ===============================
+# Custom Completions
+# ===============================
+# Source completions from user directory
+# (bash-completion >= 2.8 auto-loads, but this ensures compatibility)
+for f in ~/.local/share/bash-completion/completions/*; do
+    [[ -f "$f" ]] && source "$f"
+done

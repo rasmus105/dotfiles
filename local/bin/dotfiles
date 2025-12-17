@@ -88,8 +88,7 @@ main() {
 parse_args() {
     # Handle completions request
     if [[ "${1:-}" == "--completions" ]]; then
-        handle_completions "$@"
-        exit 0
+        handle_completions "$@" && exit 0 || exit 1
     fi
 
     if [[ $# -eq 0 ]]; then

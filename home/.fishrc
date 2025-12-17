@@ -39,3 +39,9 @@ end
 # Zoxide Integration
 # ===============================
 zoxide init fish | source
+
+# ===============================
+# Custom Completions
+# ===============================
+# Completions are auto-loaded from ~/.config/fish/completions/
+# Run 'system-setup configure completions' to regenerate

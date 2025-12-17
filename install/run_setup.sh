@@ -92,13 +92,13 @@ main() {
 
     while sleep 100; do sudo -v; done &
 
-    # Initialize UI with 9 steps
+    # Initialize UI with 10 steps
     # In non-interactive mode, skip the "Done!" wait screen
     local wait_for_keypress=1
     if [[ $NON_INTERACTIVE -eq 1 ]]; then
         wait_for_keypress=0
     fi
-    ui_init 9 "basic" "$wait_for_keypress"
+    ui_init 10 "basic" "$wait_for_keypress"
 
     # Read packages from file
     local -a packages=()
@@ -158,6 +158,10 @@ main() {
             "$SYSTEM_SETUP" configure theme "$DEFAULT_THEME"
     fi
 
+    # Step 10: Generate shell completions
+    run_step "Generating shell completions" \
+        "$SYSTEM_SETUP" configure completions
+
     # Cleanup UI and show summary
     ui_cleanup
 }
@@ -177,7 +181,7 @@ Options:
   --theme THEME        Set default theme (default: gruvbox)
   --help, -h           Show this help message
 
-Setup Steps (9 total):
+Setup Steps (10 total):
   1. Install gum (UI toolkit)
   2. Install paru (AUR helper)
   3. Install packages from packages.txt
@@ -187,12 +191,13 @@ Setup Steps (9 total):
   7. Setup shell (zsh/bash/fish)
   8. Enable systemd services
   9. Set default theme
+  10. Generate shell completions
 
 Notes:
-  • This script is idempotent - safe to run multiple times
-  • In interactive mode, you can retry/skip/abort failed steps
-  • In non-interactive mode, any failure aborts the entire setup
-  • All output is captured and displayed in a scrolling TUI view
+  - This script is idempotent - safe to run multiple times
+  - In interactive mode, you can retry/skip/abort failed steps
+  - In non-interactive mode, any failure aborts the entire setup
+  - All output is captured and displayed in a scrolling TUI view
 
 EOF
 }
