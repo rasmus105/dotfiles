@@ -15,13 +15,14 @@ require("plugins.lualine")
 require("plugins.tabby")
 require("plugins.surround")
 require("plugins.vscode-diff")
+require("plugins.gitsigns")
 
 ---- Misc Plugins With Minimal Configuration ----
 -- icons
 require("mini.icons").setup()
 -- replacing stuff
 require("grug-far").setup()
-map("n", "<leader>g", function()
+map("n", "<leader>r", function()
     require("grug-far").open()
 end, { desc = "Search & Replace" })
 
