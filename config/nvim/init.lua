@@ -14,6 +14,7 @@ require("plugins.render-markdown")
 require("plugins.lualine")
 require("plugins.tabby")
 require("plugins.surround")
+require("plugins.vscode-diff")
 
 ---- Misc Plugins With Minimal Configuration ----
 -- icons

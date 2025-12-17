@@ -36,6 +36,10 @@
     "monokai-pro.nvim": [],
     "neovim": [],
     "nightfox.nvim": [],
+    "nui.nvim": {
+      "rev": "de74099",
+      "src": "https://github.com/MunifTanjim/nui.nvim"
+    },
     "nvim": [],
     "nvim-lspconfig": [],
     "nvim-notify": [],
@@ -52,6 +56,11 @@
     "vague.nvim": {
       "rev": "25107de",
       "src": "https://github.com/vague2k/vague.nvim"
+    },
+    "vscode-diff.nvim": {
+      "rev": "7ade581",
+      "src": "https://github.com/esmuellert/vscode-diff.nvim",
+      "version": "'next'"
     },
     "which-key.nvim": [],
     "yazi.nvim": []
