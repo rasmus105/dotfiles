@@ -6,8 +6,8 @@
 # Wraps vm.sh with a user-friendly gum-based interface.
 #
 # Usage:
-#   ./run_vm.sh              Start interactive menu
-#   ./run_vm.sh --help       Show this help message
+#   ./run-vm.sh              Start interactive menu
+#   ./run-vm.sh --help       Show this help message
 #
 
 set -euo pipefail
@@ -653,8 +653,8 @@ VM Test Environment Orchestrator
 Interactive TUI for managing the QEMU-based VM test environment.
 
 Usage:
-  ./run_vm.sh              Start interactive menu
-  ./run_vm.sh --help       Show this help message
+  ./run-vm.sh              Start interactive menu
+  ./run-vm.sh --help       Show this help message
 
 The menu provides access to:
   • Start VM (boot from disk or fresh install from ISO)

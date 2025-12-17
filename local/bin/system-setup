@@ -191,7 +191,7 @@ parse_deps_args() {
         }
         install_gum
         install_paru
-        install_packages "${DOTFILES_DIR}/install/packages.txt"
+        install_packages "${DOTFILES_DIR}/packages.txt"
         ;;
     --help | -h | help)
         [[ $# -eq 0 ]] || {
@@ -1079,7 +1079,7 @@ Environment Variables:
   DEFAULT_THEME      Theme to set if none exists (default: gruvbox)
   VERBOSE            Set to 1 to show all command output (default: 0)
 
-Note: This script is called by install/run_setup.sh for orchestrated setup
+Note: This script is called by local/bin/run-setup for orchestrated setup
 EOF
 }
 

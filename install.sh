@@ -122,7 +122,7 @@ if prompt_confirm "Proceed with setup?" "y"; then
     echo
     # Export for setup.sh to use
     export USE_DEFAULT_OPTIONS
-    bash "$DOTFILES_DIR/install/setup.sh"
+    bash "$DOTFILES_DIR/local/bin/run-setup"
 else
-    echo -e "${YELLOW}Setup skipped. Run 'bash $DOTFILES_DIR/install/setup.sh' when ready.${NC}"
+    echo -e "${YELLOW}Setup skipped. Run 'bash $DOTFILES_DIR/local/bin/run-setup' when ready.${NC}"
 fi
