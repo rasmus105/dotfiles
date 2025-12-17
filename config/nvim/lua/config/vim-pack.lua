@@ -1,6 +1,8 @@
 vim.pack.add({
 	-- General Utils
 	{ src = "https://github.com/nvim-lua/plenary.nvim" },
+	{ src = "https://github.com/MunifTanjim/nui.nvim" },
+	{ src = "https://github.com/esmuellert/vscode-diff.nvim", version = "next" },
 
 	-- File
 	{ src = "https://github.com/ThePrimeagen/harpoon", version = "harpoon2" },
