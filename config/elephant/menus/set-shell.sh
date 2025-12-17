@@ -32,5 +32,5 @@ SELECTED=$(menu "$PROMPT" "$shell_options")
 # If a shell was selected, remove prefix and run command
 if [ -n "$SELECTED" ]; then
     SELECTED_SHELL=$(echo "$SELECTED" | sed "s/^[$SELECTED_PREFIX]//")
-    ghostty --class=TUI.float -e "$HOME/.local/bin/system-set-shell" "$SELECTED_SHELL"
+    ghostty --class=TUI.float -e "$HOME/.local/bin/system-setup shell" "$SELECTED_SHELL"
 fi
