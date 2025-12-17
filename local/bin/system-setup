@@ -45,17 +45,14 @@ parse_args() {
     shift
 
     case "$action" in
-    bootstrap)
-        parse_bootstrap_args "$@"
+    deps)
+        parse_deps_args "$@"
         ;;
-    packages)
-        parse_packages_args "$@"
+    deploy)
+        parse_deploy_args "$@"
         ;;
-    stow)
-        parse_stow_args "$@"
-        ;;
-    system)
-        parse_system_args "$@"
+    shell)
+        parse_shell_args "$@"
         ;;
     configure)
         parse_configure_args "$@"
@@ -89,17 +86,16 @@ parse_args() {
 # Subcommand Parsers
 #──────────────────────────────────────────────────────────────────────────────
 
-parse_bootstrap_args() {
+parse_deps_args() {
     [[ $# -gt 0 ]] || {
-        echo "Error: bootstrap requires an action" >&2
-        print_bootstrap_help
-        exit 1
+        print_deps_help
+        exit 0
     }
 
-    local bootstrap_action="$1"
+    local deps_action="$1"
     shift
 
-    case "$bootstrap_action" in
+    case "$deps_action" in
     gum)
         [[ $# -eq 0 ]] || {
             echo "Error: gum takes no arguments" >&2
@@ -114,6 +110,17 @@ parse_bootstrap_args() {
         }
         install_paru
         ;;
+    packages-file)
+        local package_file="${1:-}"
+        if [[ -z "$package_file" ]]; then
+            echo "Error: packages-file requires a file path" >&2
+            exit 1
+        fi
+        install_packages "$package_file"
+        ;;
+    packages-list)
+        install_packages_from_list "$@"
+        ;;
     all)
         [[ $# -eq 0 ]] || {
             echo "Error: all takes no arguments" >&2
@@ -121,109 +128,53 @@ parse_bootstrap_args() {
         }
         install_gum
         install_paru
+        install_packages "${DOTFILES_DIR}/install/packages.txt"
         ;;
     --help | -h | help)
         [[ $# -eq 0 ]] || {
             echo "Error: help takes no arguments" >&2
             exit 1
         }
-        print_bootstrap_help
+        print_deps_help
         ;;
     *)
-        echo "Error: Unknown bootstrap action: $bootstrap_action" >&2
-        print_bootstrap_help
+        echo "Error: Unknown deps action: $deps_action" >&2
+        print_deps_help
         exit 1
         ;;
     esac
 }
 
-parse_packages_args() {
+parse_deploy_args() {
     [[ $# -gt 0 ]] || {
-        echo "Error: packages requires an action" >&2
-        print_packages_help
-        exit 1
+        print_deploy_help
+        exit 0
     }
 
-    local packages_action="$1"
+    local deploy_action="$1"
     shift
 
-    case "$packages_action" in
-    install)
-        local package_file="${1:-}"
-        if [[ -z "$package_file" ]]; then
-            echo "Error: install requires a package file path" >&2
-            exit 1
-        fi
-        install_packages "$package_file"
-        ;;
-    install-list)
-        # Accept packages as arguments
-        install_packages_from_list "$@"
-        ;;
-    --help | -h | help)
+    case "$deploy_action" in
+    home)
         [[ $# -eq 0 ]] || {
-            echo "Error: help takes no arguments" >&2
-            exit 1
-        }
-        print_packages_help
-        ;;
-    *)
-        echo "Error: Unknown packages action: $packages_action" >&2
-        print_packages_help
-        exit 1
-        ;;
-    esac
-}
-
-parse_stow_args() {
-    [[ $# -gt 0 ]] || {
-        echo "Error: stow requires an action" >&2
-        print_stow_help
-        exit 1
-    }
-
-    local stow_action="$1"
-    shift
-
-    case "$stow_action" in
-    dotfiles)
-        [[ $# -eq 0 ]] || {
-            echo "Error: dotfiles takes no arguments" >&2
+            echo "Error: home takes no arguments" >&2
             exit 1
         }
         stow_dotfiles
         ;;
-    --help | -h | help)
+    system)
         [[ $# -eq 0 ]] || {
-            echo "Error: help takes no arguments" >&2
+            echo "Error: system takes no arguments" >&2
             exit 1
         }
-        print_stow_help
+        copy_system_configs
         ;;
-    *)
-        echo "Error: Unknown stow action: $stow_action" >&2
-        print_stow_help
-        exit 1
-        ;;
-    esac
-}
-
-parse_system_args() {
-    [[ $# -gt 0 ]] || {
-        echo "Error: system requires an action" >&2
-        print_system_help
-        exit 1
-    }
-
-    local system_action="$1"
-    shift
-
-    case "$system_action" in
-    copy-configs)
+    all)
         [[ $# -eq 0 ]] || {
-            echo "Error: copy-configs takes no arguments" >&2
+            echo "Error: all takes no arguments" >&2
             exit 1
         }
+        stow_dotfiles
         copy_system_configs
         ;;
     --help | -h | help)
@@ -231,34 +182,26 @@ parse_system_args() {
             echo "Error: help takes no arguments" >&2
             exit 1
         }
-        print_system_help
+        print_deploy_help
         ;;
     *)
-        echo "Error: Unknown system action: $system_action" >&2
-        print_system_help
+        echo "Error: Unknown deploy action: $deploy_action" >&2
+        print_deploy_help
         exit 1
         ;;
     esac
 }
 
-parse_configure_args() {
+parse_shell_args() {
     [[ $# -gt 0 ]] || {
-        echo "Error: configure requires an action" >&2
-        print_configure_help
-        exit 1
+        print_shell_help
+        exit 0
     }
 
-    local configure_action="$1"
+    local shell_action="$1"
     shift
 
-    case "$configure_action" in
-    mimetypes)
-        [[ $# -eq 0 ]] || {
-            echo "Error: mimetypes takes no arguments" >&2
-            exit 1
-        }
-        configure_mimetypes
-        ;;
+    case "$shell_action" in
     zsh)
         [[ $# -eq 0 ]] || {
             echo "Error: zsh takes no arguments" >&2
@@ -280,6 +223,45 @@ parse_configure_args() {
         }
         setup_fish
         ;;
+    --help | -h | help)
+        [[ $# -eq 0 ]] || {
+            echo "Error: help takes no arguments" >&2
+            exit 1
+        }
+        print_shell_help
+        ;;
+    *)
+        echo "Error: Unknown shell: $shell_action" >&2
+        print_shell_help
+        exit 1
+        ;;
+    esac
+}
+
+parse_configure_args() {
+    [[ $# -gt 0 ]] || {
+        print_configure_help
+        exit 0
+    }
+
+    local configure_action="$1"
+    shift
+
+    case "$configure_action" in
+    env)
+        [[ $# -eq 0 ]] || {
+            echo "Error: env takes no arguments" >&2
+            exit 1
+        }
+        setup_dotfiles_env
+        ;;
+    mimetypes)
+        [[ $# -eq 0 ]] || {
+            echo "Error: mimetypes takes no arguments" >&2
+            exit 1
+        }
+        configure_mimetypes
+        ;;
     systemd)
         [[ $# -eq 0 ]] || {
             echo "Error: systemd takes no arguments" >&2
@@ -298,13 +280,6 @@ parse_configure_args() {
         local theme_name="${1:-$DEFAULT_THEME}"
         setup_default_theme "$theme_name"
         ;;
-    env)
-        [[ $# -eq 0 ]] || {
-            echo "Error: env takes no arguments" >&2
-            exit 1
-        }
-        setup_dotfiles_env
-        ;;
     all)
         [[ $# -eq 0 ]] || {
             echo "Error: all takes no arguments" >&2
@@ -312,7 +287,6 @@ parse_configure_args() {
         }
         setup_dotfiles_env
         configure_mimetypes
-        setup_zsh
         setup_systemd_services
         setup_chromium_policies
         setup_default_theme "$DEFAULT_THEME"
@@ -334,9 +308,8 @@ parse_configure_args() {
 
 parse_version_args() {
     [[ $# -gt 0 ]] || {
-        echo "Error: version requires an action" >&2
         print_version_help
-        exit 1
+        exit 0
     }
 
     local version_action="$1"
@@ -380,7 +353,7 @@ parse_version_args() {
 }
 
 #──────────────────────────────────────────────────────────────────────────────
-# Bootstrap Functions
+# Dependency Functions
 #──────────────────────────────────────────────────────────────────────────────
 
 install_gum() {
@@ -594,7 +567,7 @@ install_packages_from_list() {
 }
 
 #──────────────────────────────────────────────────────────────────────────────
-# Stow Functions
+# Deploy Functions
 #──────────────────────────────────────────────────────────────────────────────
 
 stow_dotfiles() {
@@ -636,10 +609,6 @@ stow_dotfiles() {
 
     echo "Dotfiles stowed successfully"
 }
-
-#──────────────────────────────────────────────────────────────────────────────
-# System Functions
-#──────────────────────────────────────────────────────────────────────────────
 
 copy_system_configs() {
     if [[ ! -d "$DOTFILES_DIR/system" ]]; then
@@ -732,6 +701,10 @@ configure_mimetypes() {
 
     echo "MIME types configured"
 }
+
+#──────────────────────────────────────────────────────────────────────────────
+# Shell Functions
+#──────────────────────────────────────────────────────────────────────────────
 
 setup_zsh() {
     local ZSH_PATH="/usr/bin/zsh"
@@ -960,17 +933,13 @@ run_all_setup() {
     # Check for pre-install migrations first
     run_pre_install_migrations || return 1
 
-    # Bootstrap
+    # Dependencies (gum, paru, packages)
     install_gum || return 1
     install_paru || return 1
+    install_packages "${DOTFILES_DIR}/install/packages.txt" || return 1
 
-    # Install packages
-    install_packages "$PACKAGES_FILE" || return 1
-
-    # Stow dotfiles
+    # Deploy configs
     stow_dotfiles || return 1
-
-    # Copy system configs
     copy_system_configs || return 1
 
     # Configure everything
@@ -996,22 +965,22 @@ print_help() {
 Usage: system-setup <command> [arguments]
 
 Commands:
-  bootstrap          Bootstrap essentials (gum, paru)
-  packages           Package management operations
-  stow               Stow dotfiles to home directory
-  system             System-level configuration
-  configure          Configure applications and services
-  version            Version tracking and migrations
-  all                Run complete setup (all steps in order)
-  help               Show this help
+  deps                 Dependency management (gum, paru, packages)
+  deploy               Deploy configuration files (stow + system)
+  shell                Set default shell (zsh, bash, fish)
+  configure            Configure applications and services
+  version              Version tracking and migrations
+  all                  Run complete setup (all steps in order)
+  help                 Show this help
 
 For command-specific help, use: system-setup <command> help
 
 Examples:
-  system-setup bootstrap all
-  system-setup packages install-list firefox neovim
-  system-setup stow dotfiles
-  system-setup configure zsh
+  system-setup deps all
+  system-setup deps packages-list firefox neovim
+  system-setup deploy all
+  system-setup shell zsh
+  system-setup configure mimetypes
 
 Environment Variables:
   ABORT_ON_ERROR     Set to 1 to stop on first error (default: 0)
@@ -1022,61 +991,58 @@ Note: This script is called by install/run_setup.sh for orchestrated setup
 EOF
 }
 
-print_bootstrap_help() {
+print_deps_help() {
     cat <<EOF
-Usage: setup_new.sh bootstrap <action>
+Usage: system-setup deps <action> [arguments]
 
 Actions:
-  gum                Install gum (TUI toolkit)
-  paru               Install paru (AUR helper)
-  all                Install both gum and paru
-  help               Show this help
+  gum                  Install gum (TUI toolkit)
+  paru                 Install paru (AUR helper)
+  packages-file FILE   Install packages from file
+  packages-list PKG..  Install packages from argument list
+  all                  Install gum, paru, and packages from default file
+  help                 Show this help
 
 Examples:
-  setup_new.sh bootstrap gum
-  setup_new.sh bootstrap paru
-  setup_new.sh bootstrap all
+  system-setup deps gum
+  system-setup deps paru
+  system-setup deps packages-file /path/to/packages.txt
+  system-setup deps packages-list firefox neovim git
+  system-setup deps all
 EOF
 }
 
-print_packages_help() {
+print_deploy_help() {
     cat <<EOF
-Usage: system-setup packages <action> [arguments]
+Usage: system-setup deploy <action>
 
 Actions:
-  install FILE       Install packages from file
-  install-list PKG.. Install packages from argument list
-  help               Show this help
+  home                 Stow dotfiles to \$HOME (config, home, local dirs)
+  system               Copy system configs to / (requires sudo)
+  all                  Deploy both home and system configs
+  help                 Show this help
 
 Examples:
-  system-setup packages install /path/to/packages.txt
-  system-setup packages install-list firefox neovim git
+  system-setup deploy home
+  system-setup deploy system
+  system-setup deploy all
 EOF
 }
 
-print_stow_help() {
+print_shell_help() {
     cat <<EOF
-Usage: setup_new.sh stow <action>
+Usage: system-setup shell <shell>
 
-Actions:
-  dotfiles           Stow config, home, and local directories
-  help               Show this help
+Shells:
+  zsh                  Set zsh as default shell and install antidote
+  bash                 Set bash as default shell
+  fish                 Set fish as default shell
+  help                 Show this help
 
 Examples:
-  setup_new.sh stow dotfiles
-EOF
-}
-
-print_system_help() {
-    cat <<EOF
-Usage: setup_new.sh system <action>
-
-Actions:
-  copy-configs       Copy system configs to / (requires sudo)
-  help               Show this help
-
-Examples:
-  setup_new.sh system copy-configs
+  system-setup shell zsh
+  system-setup shell bash
+  system-setup shell fish
 EOF
 }
 
@@ -1085,21 +1051,17 @@ print_configure_help() {
 Usage: system-setup configure <action> [arguments]
 
 Actions:
-  env                Export DOTFILES_DIR to shell environment
-  mimetypes          Configure default applications for file types
-  zsh                Set zsh as default shell and install antidote
-  bash               Set bash as default shell
-  fish               Set fish as default shell
-  systemd            Enable systemd user services
-  chromium           Setup Chromium policies directory
-  theme [NAME]       Set default theme (default: gruvbox)
-  all                Run all configuration steps
-  help               Show this help
+  env                  Export DOTFILES_DIR to shell environment
+  mimetypes            Configure default applications for file types
+  systemd              Enable systemd user services
+  chromium             Setup Chromium policies directory
+  theme [NAME]         Set default theme (default: gruvbox)
+  all                  Run all configuration steps
+  help                 Show this help
 
 Examples:
+  system-setup configure env
   system-setup configure mimetypes
-  system-setup configure zsh
-  system-setup configure bash
   system-setup configure theme rose-pine
   system-setup configure all
 EOF
@@ -1107,18 +1069,18 @@ EOF
 
 print_version_help() {
     cat <<EOF
-Usage: setup_new.sh version <action>
+Usage: system-setup version <action>
 
 Actions:
-  write              Write current git commit to .version file
-  get                Display current version from .version file
-  pre-install        Run pre-install migration scripts (if they exist)
-  help               Show this help
+  write                Write current git commit to .version file
+  get                  Display current version from .version file
+  pre-install          Run pre-install migration scripts (if they exist)
+  help                 Show this help
 
 Examples:
-  setup_new.sh version write
-  setup_new.sh version get
-  setup_new.sh version pre-install
+  system-setup version write
+  system-setup version get
+  system-setup version pre-install
 EOF
 }
 
