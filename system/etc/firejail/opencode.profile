@@ -13,6 +13,7 @@ nosound
 notv
 novideo
 seccomp
+nodbus
 noroot
 private-tmp
 private-dev
@@ -58,19 +59,18 @@ whitelist ~/.m2
 
 # General development
 whitelist ~/.local/bin
+whitelist ~/.platformio
+
+# Additional package managers
+whitelist ~/.local/share/pnpm
+whitelist ~/.yarn
+whitelist ~/.cache/go-build
 
 # Neovim
 whitelist ~/.config/nvim
-read-write ~/.local/share/nvim
 whitelist ~/.local/share/nvim
-
-read-write ~/.local/state/nvim
 whitelist ~/.local/state/nvim
-
-read-write ~/.cache/nvim
 whitelist ~/.cache/nvim
-
-read-write /usr/share/nvim/
 whitelist /usr/share/nvim/
 
 
