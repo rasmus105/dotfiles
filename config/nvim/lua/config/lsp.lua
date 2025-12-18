@@ -1,7 +1,19 @@
 local map = vim.keymap.set
 
 require("nvim-treesitter.configs").setup({
-    ensure_installed = { "bash", "c", "zig", "rust", "lua", "javascript", "typst", "gitignore", "make" },
+    ensure_installed = {
+        "bash",
+        "c",
+        "zig",
+        "rust",
+        "lua",
+        "javascript",
+        "typst",
+        "gitignore",
+        "make",
+        "editorconfig",
+        "confini",
+    },
     sync_install = false,
     auto_install = true,
     ignore_install = {},
@@ -29,22 +41,22 @@ require("mason-lspconfig").setup({
 })
 require("mason-tool-installer").setup({
     ensure_installed = {
-        "rust_analyzer",        -- Rust language server
-        "clangd",               -- C/C++ language server
-        "lua_ls",               -- Lua language server
-        "ts_ls",                -- Typescript language server
-        "pyright",              -- Python language server
-        "zls",                  -- Zig language server
-        "tinymist",             -- Typst language server
-        "marksman",             -- Markdown language server
+        "rust_analyzer",  -- Rust language server
+        "clangd",         -- C/C++ language server
+        "lua_ls",         -- Lua language server
+        "ts_ls",          -- Typescript language server
+        "pyright",        -- Python language server
+        "zls",            -- Zig language server
+        "tinymist",       -- Typst language server
+        "marksman",       -- Markdown language server
         "bash-language-server", -- Bash language server
 
-        "rustfmt",              -- Rust formatter
-        "clang-format",         -- C/C++ formatter
-        "stylua",               -- Lua formatter
-        "black",                -- Python formatter
-        "shellcheck",           -- Shell linter
-        "shfmt",                -- Shell formatter
+        "rustfmt",        -- Rust formatter
+        "clang-format",   -- C/C++ formatter
+        "stylua",         -- Lua formatter
+        "black",          -- Python formatter
+        "shellcheck",     -- Shell linter
+        "shfmt",          -- Shell formatter
     },
 })
 
