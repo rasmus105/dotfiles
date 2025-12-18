@@ -38,7 +38,7 @@
         "interval": 1800,
         "signal": 1,
         "hide-empty-text": true,
-        "on-click": "ghostty --class=TUI.float -e ~/.local/bin/system-perform-update"
+        "on-click": "ghostty --class=TUI.float -e ~/.local/bin/run-update"
     },
     // Wlogout
     "custom/wlogout": {

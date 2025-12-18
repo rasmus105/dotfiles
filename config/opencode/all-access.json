@@ -7,6 +7,8 @@
     "permission": {
         "bash": "allow",
         "edit": "allow",
-        "webfetch": "allow"
+        "webfetch": "allow",
+        "doom_loop": "allow",
+        "external_directory": "allow"
     }
 }
