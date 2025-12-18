@@ -23,6 +23,7 @@ whitelist ~/.opencode
 whitelist ~/.local/share/opencode
 whitelist ~/.config/opencode
 whitelist ~/.cache/opencode
+whitelist ~/.local/state/opencode
 
 # Git (SSH-based)
 whitelist ~/.gitconfig
