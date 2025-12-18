@@ -81,7 +81,8 @@ wget
 jq
 man-db
 man-pages
-aerc
+npm
+gnome-keyring
 
 # ============================================================
 # FILE MANAGEMENT

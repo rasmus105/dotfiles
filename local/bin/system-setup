@@ -883,18 +883,65 @@ setup_fish() {
 setup_systemd_services() {
     echo "Setting up systemd services..."
 
-    # Reload systemd user daemon to pick up new unit files
+    # Reload systemd daemons to pick up new unit files
+    q systemctl daemon-reload
     q systemctl --user daemon-reload
 
-    # Enable downloads cleanup timer if it exists
-    if systemctl --user list-unit-files downloads-cleanup.timer &>/dev/null; then
-        q systemctl --user enable --now downloads-cleanup.timer || {
-            echo "Warning: Failed to enable downloads-cleanup.timer" >&2
+    # Helper function to enable a service if not already enabled
+    # Usage: enable_service [--user] [--now] <unit> [disable_unit]
+    enable_service() {
+        local user_flag="" now_flag="" sudo_cmd="sudo"
+        while [[ "$1" == --* ]]; do
+            case "$1" in
+                --user) user_flag="--user"; sudo_cmd=""; shift ;;
+                --now) now_flag="--now"; shift ;;
+            esac
+        done
+
+        local unit="$1"
+        local disable_unit="${2:-}"
+
+        # Check if unit exists
+        if ! systemctl $user_flag list-unit-files "$unit" &>/dev/null; then
+            echo "$unit not found, skipping"
+            return 0
+        fi
+
+        # Check if already enabled
+        if systemctl $user_flag is-enabled "$unit" &>/dev/null; then
+            echo "$unit already enabled"
+            return 0
+        fi
+
+        # Enable the unit
+        echo "Enabling $unit..."
+        q $sudo_cmd systemctl $user_flag enable $now_flag "$unit" || {
+            echo "Warning: Failed to enable $unit" >&2
+            return 1
         }
-        echo "downloads-cleanup.timer enabled"
-    else
-        echo "downloads-cleanup.timer not found, skipping"
-    fi
+
+        # Disable conflicting unit if specified
+        if [[ -n "$disable_unit" ]]; then
+            q $sudo_cmd systemctl $user_flag disable "$disable_unit" 2>/dev/null || true
+        fi
+    }
+
+    #───────────────────────────────────────────────────────────────────────────
+    # System services
+    #───────────────────────────────────────────────────────────────────────────
+
+    enable_service --now ly@tty2.service getty@tty2.service
+    enable_service --now bluetooth.service
+    enable_service --now NetworkManager.service
+
+    #───────────────────────────────────────────────────────────────────────────
+    # User services
+    #───────────────────────────────────────────────────────────────────────────
+
+    enable_service --user --now pipewire.socket
+    enable_service --user --now pipewire-pulse.socket
+    enable_service --user --now wireplumber.service
+    enable_service --user --now downloads-cleanup.timer
 
     echo "Systemd services configured"
 }

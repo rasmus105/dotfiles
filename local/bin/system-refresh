@@ -111,6 +111,7 @@ refresh_apps() {
     restart_app elephant || true
     restart_app walker --gapplication-service || true
     restart_app mako || true
+    # restart_app kanshi || true
 
     echo "Apps refreshed"
 }
