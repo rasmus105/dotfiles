@@ -2,6 +2,8 @@
 
 # OpenCode firejail wrapper
 # Runs opencode in a sandboxed environment with proper config access
+#
+# Very important to NOT use private /dev, as that will screw up the input of neovim inside of opencode.
 
 local cwd="${1:-$PWD}"
 if [ -d "$cwd" ]; then
@@ -61,7 +63,7 @@ JAIL_RW=(
 JAIL="firejail --noprofile"
 JAIL="$JAIL --caps.drop=all --nonewprivs --seccomp --noroot"
 JAIL="$JAIL --nodvd --notv --novideo --nosound --noinput"
-JAIL="$JAIL --private-tmp --private-dev"
+JAIL="$JAIL --private-tmp"
 JAIL="$JAIL --read-only=\"$HOME\""
 
 for jp in "${JAIL_RW[@]}"; do
