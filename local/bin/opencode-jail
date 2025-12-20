@@ -1,0 +1,73 @@
+#!/bin/zsh
+
+# OpenCode firejail wrapper
+# Runs opencode in a sandboxed environment with proper config access
+
+local cwd="${1:-$PWD}"
+if [ -d "$cwd" ]; then
+    cwd="$(realpath "$cwd")"
+    shift
+else
+    cwd="$PWD"
+fi
+
+# Paths that need read-write access
+JAIL_RW=(
+    "$HOME/.config/opencode"
+    "$HOME/.opencode"
+    "$HOME/.local/share/opencode"
+    "$HOME/.local/state/opencode"
+    "$HOME/.cache/opencode"
+    "$HOME/.dotfiles/config/opencode"  # symlink target for config
+    "$HOME/.gitconfig"
+    "$HOME/.ssh"
+    "$cwd"
+)
+
+# Language toolchains (add if they exist)
+[ -d "$HOME/.cargo" ] && JAIL_RW+=("$HOME/.cargo")
+[ -d "$HOME/.rustup" ] && JAIL_RW+=("$HOME/.rustup")
+[ -d "$HOME/.npm" ] && JAIL_RW+=("$HOME/.npm")
+[ -d "$HOME/.local/share/npm" ] && JAIL_RW+=("$HOME/.local/share/npm")
+[ -d "$HOME/.bun" ] && JAIL_RW+=("$HOME/.bun")
+[ -d "$HOME/.deno" ] && JAIL_RW+=("$HOME/.deno")
+[ -d "$HOME/go" ] && JAIL_RW+=("$HOME/go")
+[ -d "$HOME/.go" ] && JAIL_RW+=("$HOME/.go")
+[ -d "$HOME/.cache/go-build" ] && JAIL_RW+=("$HOME/.cache/go-build")
+[ -d "$HOME/.pyenv" ] && JAIL_RW+=("$HOME/.pyenv")
+[ -d "$HOME/.local/share/virtualenvs" ] && JAIL_RW+=("$HOME/.local/share/virtualenvs")
+[ -d "$HOME/.conda" ] && JAIL_RW+=("$HOME/.conda")
+[ -d "$HOME/.local/pipx" ] && JAIL_RW+=("$HOME/.local/pipx")
+[ -d "$HOME/.cache/pip" ] && JAIL_RW+=("$HOME/.cache/pip")
+[ -d "$HOME/.java" ] && JAIL_RW+=("$HOME/.java")
+[ -d "$HOME/.gradle" ] && JAIL_RW+=("$HOME/.gradle")
+[ -d "$HOME/.m2" ] && JAIL_RW+=("$HOME/.m2")
+[ -d "$HOME/.local/bin" ] && JAIL_RW+=("$HOME/.local/bin")
+[ -d "$HOME/.platformio" ] && JAIL_RW+=("$HOME/.platformio")
+[ -d "$HOME/.pnpm" ] && JAIL_RW+=("$HOME/.pnpm")
+[ -d "$HOME/.local/share/pnpm" ] && JAIL_RW+=("$HOME/.local/share/pnpm")
+[ -d "$HOME/.yarn" ] && JAIL_RW+=("$HOME/.yarn")
+
+# Neovim (for editor integration)
+[ -d "$HOME/.config/nvim" ] && JAIL_RW+=("$HOME/.config/nvim")
+[ -d "$HOME/.local/share/nvim" ] && JAIL_RW+=("$HOME/.local/share/nvim")
+[ -d "$HOME/.local/state/nvim" ] && JAIL_RW+=("$HOME/.local/state/nvim")
+[ -d "$HOME/.cache/nvim" ] && JAIL_RW+=("$HOME/.cache/nvim")
+
+# Lazygit
+[ -d "$HOME/.config/lazygit" ] && JAIL_RW+=("$HOME/.config/lazygit")
+
+# Build the firejail command
+JAIL="firejail --noprofile"
+JAIL="$JAIL --caps.drop=all --nonewprivs --seccomp --noroot"
+JAIL="$JAIL --nodvd --notv --novideo --nosound --noinput"
+JAIL="$JAIL --private-tmp --private-dev"
+JAIL="$JAIL --read-only=\"$HOME\""
+
+for jp in "${JAIL_RW[@]}"; do
+    [ -e "$jp" ] && JAIL="$JAIL --read-write=\"$jp\""
+done
+
+pushd -q "$cwd"
+eval $JAIL --env=OPENCODE_CONFIG="$HOME/.config/opencode/all-access.json" opencode "$@"
+popd -q

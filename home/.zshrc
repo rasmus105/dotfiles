@@ -36,15 +36,9 @@ alias cd='z'  # Use zoxide for quick directory navigation
 alias cat='bat' # better 'cat'.
 alias g='lazygit'
 alias n='nvim'
-# alias opencode-jail='OPENCODE_CONFIG=~/.config/opencode/all-access.json firejail --profile=opencode --whitelist=$(pwd) opencode'
 
 ls() { # better ls command
     command eza "$@" 
-}
-
-opencode-jail() {
-    local -r workdir="$(pwd)"
-    OPENCODE_CONFIG=~/.config/opencode/all-access.json firejail --profile=opencode --whitelist="$workdir" --read-write="$workdir" opencode "$@"
 }
 
 # Specific
