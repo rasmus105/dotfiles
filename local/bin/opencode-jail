@@ -55,6 +55,7 @@ JAIL_RW=(
 [ -d "$HOME/.local/share/nvim" ] && JAIL_RW+=("$HOME/.local/share/nvim")
 [ -d "$HOME/.local/state/nvim" ] && JAIL_RW+=("$HOME/.local/state/nvim")
 [ -d "$HOME/.cache/nvim" ] && JAIL_RW+=("$HOME/.cache/nvim")
+[ -d "$HOME/.vim" ] && JAIL_RW+=("$HOME/.vim")
 
 # Lazygit
 [ -d "$HOME/.config/lazygit" ] && JAIL_RW+=("$HOME/.config/lazygit")
