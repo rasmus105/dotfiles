@@ -12,11 +12,11 @@ require("gitsigns").setup({
 
     preview_config = {
         -- Options passed to nvim_open_win
-        border = 'none',
-        style = 'minimal',
-        relative = 'cursor',
+        border = "none",
+        style = "minimal",
+        relative = "cursor",
         row = 0,
-        col = 1
+        col = 1,
     },
 
     on_attach = function(bufnr)
@@ -44,20 +44,20 @@ require("gitsigns").setup({
         end, opts("Previous hunk"))
 
         -- Stage/unstage hunks
-        map("n", "<leader>gs", gitsigns.stage_hunk, opts("Stage hunk"))
-        map("n", "<leader>gr", gitsigns.reset_hunk, opts("Reset hunk"))
+        map("n", "<leader>c", gitsigns.stage_hunk, opts("Stage hunk"))
+        map("n", "<leader>r", gitsigns.reset_hunk, opts("Reset hunk"))
 
         -- Stage/reset in visual mode (partial hunk)
-        map("v", "<leader>gs", function()
+        map("v", "<leader>c", function()
             gitsigns.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
         end, opts("Stage selected lines"))
-        map("v", "<leader>gr", function()
+        map("v", "<leader>r", function()
             gitsigns.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
         end, opts("Reset selected lines"))
 
         -- Stage/reset entire buffer
-        map("n", "<leader>gS", gitsigns.stage_buffer, opts("Stage buffer"))
-        map("n", "<leader>gR", gitsigns.reset_buffer, opts("Reset buffer"))
+        map("n", "<leader>S", gitsigns.stage_buffer, opts("Stage buffer"))
+        map("n", "<leader>R", gitsigns.reset_buffer, opts("Reset buffer"))
 
         -- Undo stage
         map("n", "<leader>gu", gitsigns.undo_stage_hunk, opts("Undo stage hunk"))
