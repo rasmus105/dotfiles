@@ -17,13 +17,23 @@ require("gruvbox").setup({
     invert_signs = false,
     invert_tabline = false,
     invert_intend_guides = false,
-    inverse = true, -- invert background for search, diffs, statuslines and errors
-    contrast = "",  -- can be 'hard', 'soft' or empty string
+    inverse = false, -- invert background for search, diffs, statuslines and errors
+    contrast = "", -- can be 'hard', 'soft' or empty string
     palette_overrides = {},
     dim_inactive = false,
     transparent_mode = false,
     overrides = {
         Normal = { bg = "#292522" },
+        -- Diff highlights adjusted for warmer background
+        DiffAdd = { bg = "#3d4220" },
+        DiffDelete = { bg = "#4a2828" },
+        DiffChange = { bg = "#3a3520" },
+        DiffText = { bg = "#5c5020", fg = "#ebdbb2" },
+        -- vscode-diff.nvim highlight groups
+        CodeDiffLineInsert = { bg = "#2a3525" },
+        CodeDiffLineDelete = { bg = "#3a2525" },
+        CodeDiffCharInsert = { bg = "#3d4a2a" },
+        CodeDiffCharDelete = { bg = "#4a3030" },
     },
 })
 
@@ -79,13 +89,17 @@ apply_theme()
 -- Using 1000 ms interval - very low overhead
 local last_target = vim.fn.resolve(theme_file)
 local timer = uv.new_timer()
-timer:start(1000, 1000, vim.schedule_wrap(function()
-    local current_target = vim.fn.resolve(theme_file)
-    if current_target ~= last_target then
-        last_target = current_target
-        apply_theme()
-    end
-end))
+timer:start(
+    1000,
+    1000,
+    vim.schedule_wrap(function()
+        local current_target = vim.fn.resolve(theme_file)
+        if current_target ~= last_target then
+            last_target = current_target
+            apply_theme()
+        end
+    end)
+)
 
 -- Optional manual command if you ever want to trigger it yourself
 vim.api.nvim_create_user_command("ThemeReload", apply_theme, {})
