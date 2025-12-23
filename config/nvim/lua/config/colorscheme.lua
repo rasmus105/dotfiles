@@ -34,6 +34,10 @@ require("gruvbox").setup({
         CodeDiffLineDelete = { bg = "#3a2525" },
         CodeDiffCharInsert = { bg = "#3d4a2a" },
         CodeDiffCharDelete = { bg = "#4a3030" },
+        -- Invert search highlights for better visibility
+        Search = { reverse = true },
+        IncSearch = { reverse = true },
+        CurSearch = { reverse = true },
     },
 })
 
