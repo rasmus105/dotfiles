@@ -2,7 +2,7 @@ local map = vim.keymap.set
 
 -- Command shortcuts
 map({ "n", "v", "x" }, "<leader>n", ":norm ", { desc = "enter norm command" })
-map({ "n", "v", "x" }, "<leader>s", ":update<CR>", { desc = "update" })
+map({ "n", "v", "x" }, "<leader>u", ":update<CR>", { desc = "update" })
 map({ "n", "v", "x" }, "<leader>o", ":update<CR>:source %<CR>", { desc = "write and source current file" })
 map({ "n", "v", "x" }, "<leader>q", ":q<CR>", { desc = "quit" })
 map({ "n", "v", "x" }, "<leader>Q", ":wqa<CR>", { desc = "quit all" })
@@ -58,7 +58,7 @@ map("n", "<leader><tab>l", ":tabnext<CR>")
 map("n", "<leader><tab>h", ":tabprevious<CR>")
 map("n", "<leader><tab>m", "<C-w>T")
 for i = 1, 9 do
-    map("n", "<leader><tab>" .. i, ":tabn " .. i .. "<CR>")
+	map("n", "<leader><tab>" .. i, ":tabn " .. i .. "<CR>")
 end
 
 -- Better up/down (wrapped lines will count as multiple)
