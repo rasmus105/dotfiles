@@ -1,5 +1,5 @@
 -- Highlight on yank (neet visual feedback when yanking)
-vim.api.nvim_create_autocmd('TextYankPost', {
+vim.api.nvim_create_autocmd("TextYankPost", {
     callback = function()
         (vim.hl or vim.highlight).on_yank()
     end,
@@ -16,15 +16,15 @@ vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter" }, {
 })
 
 -- Auto create dir when saving a file
-vim.api.nvim_create_autocmd('BufWritePre', {
+vim.api.nvim_create_autocmd("BufWritePre", {
     callback = function(event)
         local file = vim.uv.fs_realpath(event.match) or event.match
-        vim.fn.mkdir(vim.fn.fnamemodify(file, ':p:h'), 'p')
+        vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
     end,
 })
 
 -- go to last loc when opening a buffer
-vim.api.nvim_create_autocmd('BufReadPost', {
+vim.api.nvim_create_autocmd("BufReadPost", {
     callback = function(event)
         -- local exclude = { 'gitcommit' } -- don't remember position in commit messages
         local mark = vim.api.nvim_buf_get_mark(event.buf, "'")
@@ -36,8 +36,8 @@ vim.api.nvim_create_autocmd('BufReadPost', {
 })
 
 -- wrap and check for spell in text filetypes
-vim.api.nvim_create_autocmd('FileType', {
-    pattern = { 'text', 'markdown', 'gitcommit' },
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = { "text", "markdown", "gitcommit" },
     callback = function()
         vim.opt_local.wrap = true
         vim.opt_local.spell = true
@@ -45,13 +45,17 @@ vim.api.nvim_create_autocmd('FileType', {
 })
 
 -- close some filetypes with <q>
-vim.api.nvim_create_autocmd('FileType', {
+vim.api.nvim_create_autocmd("FileType", {
     pattern = {
-        'help', 'lspinfo', 'checkhealth', 'qf', 'grug-far'
+        "help",
+        "lspinfo",
+        "checkhealth",
+        "qf",
+        "grug-far",
     },
     callback = function(event)
-        vim.keymap.set('n', 'q', function()
-            vim.cmd('close')
+        vim.keymap.set("n", "q", function()
+            vim.cmd("close")
         end, { buffer = event.buf, silent = true, nowait = true })
     end,
 })
@@ -72,7 +76,7 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
         local filename = vim.fn.shellescape(vim.api.nvim_buf_get_name(0))
         vim.cmd("silent !zathura " .. filename .. " &")
         vim.cmd("let tobedeleted = bufnr('%') | b# | exe \"bd! \" . tobedeleted")
-    end
+    end,
 })
 
 -- Images → imv
@@ -136,11 +140,10 @@ vim.api.nvim_create_autocmd("FileType", {
             local info = vim.fn.getqflist({ size = 1, items = 1, title = 1 })
             local size = info.size or 0
 
+            pcall(vim.cmd, "silent! cclose") -- close the quickfix window
             if size > 0 then
                 pcall(vim.cmd, "silent! cfirst") -- jump to the first entry
             end
-
-            pcall(vim.cmd, "silent! cclose") -- close the quickfix window
 
             -- Build a helpful notification
             local title = info.title or "Quickfix"
@@ -162,8 +165,11 @@ vim.api.nvim_create_autocmd("FileType", {
                     { title = "Quickfix" }
                 )
             else
-                vim.notify(string.format("%s is empty. Closed the list.", title), vim.log.levels.INFO,
-                    { title = "Quickfix" })
+                vim.notify(
+                    string.format("%s is empty. Closed the list.", title),
+                    vim.log.levels.INFO,
+                    { title = "Quickfix" }
+                )
             end
         end)
     end,
