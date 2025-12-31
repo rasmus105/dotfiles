@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Ensure ~/.local/bin is in PATH for dotfiles scripts
+export PATH="$HOME/.local/bin:$PATH"
+
 #──────────────────────────────────────────────────────────────────────────────
 # run-notify - Orchestrator for running scripts with notifications
 #
