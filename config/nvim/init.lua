@@ -22,7 +22,7 @@ require("plugins.gitsigns")
 require("mini.icons").setup()
 -- replacing stuff
 require("grug-far").setup()
-map("n", "<leader>r", function()
+map("n", "<leader>z", function()
     require("grug-far").open()
 end, { desc = "Search & Replace" })
 
