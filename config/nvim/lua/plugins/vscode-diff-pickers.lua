@@ -15,8 +15,10 @@ local function extract_hash(line)
     if not line then
         return nil
     end
-    -- Try to match a hex commit hash at start of line
-    local hash = line:match("^(%x+)") or line:match("^(%S+)")
+    -- Strip ANSI escape sequences (fzf-lua may include colors) and trim whitespace
+    local s = line:gsub("\27%[[0-9;]*m", ""):gsub("^%s+", ""):gsub("%s+$", "")
+    -- Try to match a hex commit hash at start of the sanitized line
+    local hash = s:match("^(%x+)") or s:match("^(%S+)")
     return hash
 end
 
@@ -29,7 +31,7 @@ local function pick_repo_commit()
                     if #selected > 0 then
                         local hash = extract_hash(selected[1])
                         if hash then
-                            vim.cmd("CodeDiff " .. hash)
+                            vim.cmd("CodeDiff " .. hash .. "^ " .. hash)
                         else
                             vim.notify("Could not parse commit hash", vim.log.levels.ERROR)
                         end
@@ -49,7 +51,7 @@ local function pick_file_commit()
                     if #selected > 0 then
                         local hash = extract_hash(selected[1])
                         if hash then
-                            vim.cmd("CodeDiff file " .. hash)
+                            vim.cmd("CodeDiff file " .. hash .. "^ " .. hash)
                         else
                             vim.notify("Could not parse commit hash", vim.log.levels.ERROR)
                         end
