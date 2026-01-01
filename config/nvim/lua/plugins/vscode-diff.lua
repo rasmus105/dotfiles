@@ -18,6 +18,11 @@ require("vscode-diff").setup({
         max_computation_time_ms = 5000, -- Maximum time for diff computation (VSCode default)
     },
 
+    -- File explorer
+    explorer = {
+        view_mode = "tree",
+    },
+
     -- Keymaps in diff view
     keymaps = {
         view = {
