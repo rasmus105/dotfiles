@@ -4,7 +4,7 @@ require("vscode-diff").setup({
     -- Highlight configuration (using Gruvbox-friendly colors for better readability)
     highlights = {
         -- Line-level: accepts highlight group names or hex colors (e.g., "#2ea043")
-        line_insert = "DiffAdd", -- Line-level insertions
+        line_insert = "DiffAdd",    -- Line-level insertions
         line_delete = "DiffDelete", -- Line-level deletions
 
         -- Character-level: explicit colors for better contrast with Gruvbox
@@ -14,7 +14,7 @@ require("vscode-diff").setup({
 
     -- Diff view behavior
     diff = {
-        disable_inlay_hints = true, -- Disable inlay hints in diff windows for cleaner view
+        disable_inlay_hints = true,     -- Disable inlay hints in diff windows for cleaner view
         max_computation_time_ms = 5000, -- Maximum time for diff computation (VSCode default)
     },
 
@@ -26,17 +26,17 @@ require("vscode-diff").setup({
     -- Keymaps in diff view
     keymaps = {
         view = {
-            quit = "q",           -- Close diff tab
+            quit = "q",                    -- Close diff tab
             toggle_explorer = "<leader>e", -- Toggle explorer visibility (explorer mode only)
-            next_hunk = "]h",     -- Jump to next change
-            prev_hunk = "[h",     -- Jump to previous change
-            next_file = "]f",     -- Next file in explorer mode
-            prev_file = "[f",     -- Previous file in explorer mode
+            next_hunk = "]h",              -- Jump to next change
+            prev_hunk = "[h",              -- Jump to previous change
+            next_file = "]f",              -- Next file in explorer mode
+            prev_file = "[f",              -- Previous file in explorer mode
         },
         explorer = {
             select = "<CR>", -- Open diff for selected file
-            hover = "K", -- Show file diff preview
-            refresh = "R", -- Refresh git status
+            hover = "K",     -- Show file diff preview
+            refresh = "R",   -- Refresh git status
         },
     },
 })
