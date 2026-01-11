@@ -14,8 +14,8 @@ require("plugins.render-markdown")
 require("plugins.lualine")
 require("plugins.tabby")
 require("plugins.surround")
-require("plugins.vscode-diff")
-require("plugins.vscode-diff-pickers")
+require("plugins.codediff")
+require("plugins.codediff-pickers")
 require("plugins.gitsigns")
 
 ---- Misc Plugins With Minimal Configuration ----
