@@ -41,22 +41,22 @@ require("mason-lspconfig").setup({
 })
 require("mason-tool-installer").setup({
     ensure_installed = {
-        "rust_analyzer",        -- Rust language server
-        "clangd",               -- C/C++ language server
-        "lua_ls",               -- Lua language server
-        "ts_ls",                -- Typescript language server
-        "pyright",              -- Python language server
-        "zls",                  -- Zig language server
-        "tinymist",             -- Typst language server
-        "marksman",             -- Markdown language server
+        "rust_analyzer",  -- Rust language server
+        "clangd",         -- C/C++ language server
+        "lua_ls",         -- Lua language server
+        "ts_ls",          -- Typescript language server
+        "pyright",        -- Python language server
+        "zls",            -- Zig language server
+        "tinymist",       -- Typst language server
+        "marksman",       -- Markdown language server
         "bash-language-server", -- Bash language server
 
-        "rustfmt",              -- Rust formatter
-        "clang-format",         -- C/C++ formatter
-        "stylua",               -- Lua formatter
-        "black",                -- Python formatter
-        "shellcheck",           -- Shell linter
-        "shfmt",                -- Shell formatter
+        "rustfmt",        -- Rust formatter
+        "clang-format",   -- C/C++ formatter
+        "stylua",         -- Lua formatter
+        "black",          -- Python formatter
+        "shellcheck",     -- Shell linter
+        "shfmt",          -- Shell formatter
     },
 })
 
@@ -97,7 +97,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
         -- Code actions
         map("n", "<leader>ca", vim.lsp.buf.code_action, opts)
-        map("n", "<leader>rn", vim.lsp.buf.rename, opts)
+        map("n", "<leader>cr", vim.lsp.buf.rename, opts)
         map("n", "<leader>f", function()
             vim.lsp.buf.format({ async = true })
         end, opts)
