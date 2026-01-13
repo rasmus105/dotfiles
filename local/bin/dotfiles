@@ -407,9 +407,9 @@ install_package() {
 
     # Select packages with FZF
     local selected fzf_args
-    mapfile -t fzf_args < <(get_fzf_args "green" "Select packages to install" "paru -Si {2}")
+    mapfile -t fzf_args < <(get_fzf_args "green" "Select packages to install" "paru -Si {2} 2>/dev/null || paru -Sia {2}")
 
-    selected=$(pacman -Sl | format_packages | fzf "${fzf_args[@]}" | awk '{print $2}') || true
+    selected=$(paru -Sl | format_packages | fzf "${fzf_args[@]}" | awk '{print $2}') || true
 
     if [[ -z "$selected" ]]; then
         echo "No packages selected"
