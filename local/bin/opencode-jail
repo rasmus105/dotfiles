@@ -49,6 +49,11 @@ JAIL_RW=(
 [ -d "$HOME/.pnpm" ] && JAIL_RW+=("$HOME/.pnpm")
 [ -d "$HOME/.local/share/pnpm" ] && JAIL_RW+=("$HOME/.local/share/pnpm")
 [ -d "$HOME/.yarn" ] && JAIL_RW+=("$HOME/.yarn")
+[ -d "$HOME/.cache/zig" ] && JAIL_RW+=("$HOME/.cache/zig")
+
+# Paths that need read-only access (system libraries, etc.)
+JAIL_RO=()
+[ -d "/usr/lib/zig" ] && JAIL_RO+=("/usr/lib/zig")
 
 # Neovim (for editor integration)
 [ -d "$HOME/.config/nvim" ] && JAIL_RW+=("$HOME/.config/nvim")
@@ -69,6 +74,10 @@ JAIL="$JAIL --read-only=\"$HOME\""
 
 for jp in "${JAIL_RW[@]}"; do
     [ -e "$jp" ] && JAIL="$JAIL --read-write=\"$jp\""
+done
+
+for jp in "${JAIL_RO[@]}"; do
+    [ -e "$jp" ] && JAIL="$JAIL --read-only=\"$jp\""
 done
 
 pushd -q "$cwd"
