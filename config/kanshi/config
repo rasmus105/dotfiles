@@ -13,6 +13,6 @@ profile big-tv {
 }
 
 profile pandrup-office {
-  output "Dell Inc. DELL P3425WE G37LY54" mode 3440x1440@59.97300Hz position 0,0 scale 1.0
+  output "Dell Inc. DELL P3425WE G37LY54" mode 3440x1440@59.97300Hz position 0,0 scale 1.6
   output "eDP-1" disable
 }
