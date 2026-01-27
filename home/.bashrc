@@ -16,6 +16,7 @@ alias cd='z'
 alias cat='bat'
 alias g='lazygit'
 alias n='nvim'
+alias open='setsid xdg-open'
 
 ls() {
     command eza "$@"
@@ -25,7 +26,7 @@ ls() {
 y() {
     local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
     yazi "$@" --cwd-file="$tmp"
-    IFS= read -r -d '' cwd < "$tmp"
+    IFS= read -r -d '' cwd <"$tmp"
     [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
     rm -f -- "$tmp"
 }

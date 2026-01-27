@@ -16,6 +16,7 @@ alias cd='z'
 alias cat='bat'
 alias g='lazygit'
 alias n='nvim'
+alias open='setsid xdg-open'
 
 # Better ls command
 function ls
