@@ -27,3 +27,6 @@ config/themes/*/light.mode
 
 config/hypr/background.jpg
 config/hypr/background.png
+
+# local changes
+*.local
