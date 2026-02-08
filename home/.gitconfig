@@ -5,15 +5,14 @@
 
 [diff]
     external = difft
+    tool = codediff
 
-; [merge]
-;     conflictstyle = vimdiff
+[difftool "codediff"]
+    cmd = nvim -c "CodeDiff"
 
-; [mergetool]
-;   prompt = false
-;   keepBackup = false
+[difftool]
+    prompt = false
 
-; [mergetool "vimdiff"]
-;   layout = "LOCAL,BASE,REMOTE / MERGED"
 [alias]
 	change-commits = "!f() { VAR=$1; OLD=$2; NEW=$3; shift 3; git filter-branch --env-filter \"if [[ \\\"$`echo $VAR`\\\" = '$OLD' ]]; then export $VAR='$NEW'; fi\" $@; }; f"
+    d = "difftool --dir-diff"
