@@ -1,9 +1,7 @@
 #!/bin/zsh
 
-# OpenCode firejail wrapper
-# Runs opencode in a sandboxed environment with proper config access
-#
-# Very important to NOT use private /dev, as that will screw up the input of neovim inside of opencode.
+# Claude Code firejail wrapper
+# Runs claude in a sandboxed environment with proper config access
 
 local cwd="${1:-$PWD}"
 if [[ $# -ge 1 ]] && [ -d "$1" ]; then
@@ -15,12 +13,9 @@ fi
 
 # Paths that need read-write access
 JAIL_RW=(
-    "$HOME/.config/opencode"
-    "$HOME/.opencode"
-    "$HOME/.local/share/opencode"
-    "$HOME/.local/state/opencode"
-    "$HOME/.cache/opencode"
-    "$HOME/.dotfiles/config/opencode"  # symlink target for config
+    "$HOME/.claude"
+    "$HOME/.claude.json"
+    "$HOME/.config/Claude"
     "$HOME/.gitconfig"
     "$HOME/.ssh"
     "$cwd"
@@ -81,5 +76,5 @@ for jp in "${JAIL_RO[@]}"; do
 done
 
 pushd -q "$cwd"
-eval $JAIL --env=OPENCODE_CONFIG="$HOME/.config/opencode/all-access.json" opencode "$@"
+eval $JAIL claude --dangerously-skip-permissions "$@"
 popd -q
