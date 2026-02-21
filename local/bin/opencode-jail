@@ -68,6 +68,12 @@ JAIL_RO=()
 # Build the firejail command
 JAIL="firejail --noprofile"
 JAIL="$JAIL --caps.drop=all --nonewprivs --seccomp --noroot"
+
+# kcov uses ptrace/process_vm_readv; Firejail seccomp blocks these unless allowed.
+if command -v kcov >/dev/null 2>&1; then
+    JAIL="$JAIL --allow-debuggers"
+fi
+
 JAIL="$JAIL --nodvd --notv --novideo --nosound --noinput"
 JAIL="$JAIL --private-tmp"
 JAIL="$JAIL --read-only=\"$HOME\""
