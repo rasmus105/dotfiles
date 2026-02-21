@@ -36,7 +36,7 @@ alias cd='z'  # Use zoxide for quick directory navigation
 alias cat='bat' # better 'cat'.
 alias g='lazygit'
 alias n='nvim'
-alias open='setsid xdg-open'
+alias open='setsid xdg-open &>/dev/null'
 
 ls() { # better ls command
     command eza "$@" 
