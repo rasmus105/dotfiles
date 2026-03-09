@@ -10,7 +10,6 @@ require("config.autocmds") -- Useful autocommands
 ---- Plugin ----
 require("plugins.harpoon")
 require("plugins.fzf-lua")
-require("plugins.render-markdown")
 require("plugins.lualine")
 require("plugins.tabby")
 require("plugins.surround")

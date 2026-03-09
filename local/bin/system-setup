@@ -471,7 +471,7 @@ install_paru() {
     local paru_dir="/tmp/paru-$$"
     q rm -rf "$paru_dir"
 
-    q git clone --depth=1 https://aur.archlinux.org/paru-bin.git "$paru_dir" || {
+    q git clone --depth=1 https://aur.archlinux.org/paru.git "$paru_dir" || {
         echo "Error: Failed to clone paru repository" >&2
         [[ "$ABORT_ON_ERROR" == "1" ]] && exit 1
         return 1
