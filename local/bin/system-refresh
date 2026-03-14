@@ -112,6 +112,7 @@ refresh_apps() {
     restart_app walker --gapplication-service || true
     restart_app mako || true
     restart_app kanshi || true
+    restart_app awww-daemon
 
     echo "Apps refreshed"
 }
