@@ -41,6 +41,25 @@ require("codediff").setup({
 	},
 })
 
+vim.api.nvim_create_user_command("CodeDiffStandalone", function()
+	local group = vim.api.nvim_create_augroup("CodeDiffStandalone", { clear = true })
+	vim.g.codediff_standalone = true
+
+	vim.api.nvim_create_autocmd("TabClosed", {
+		group = group,
+		callback = function()
+			vim.schedule(function()
+				if vim.g.codediff_standalone and vim.fn.tabpagenr("$") == 1 then
+					vim.g.codediff_standalone = false
+					vim.cmd("qa")
+				end
+			end)
+		end,
+	})
+
+	vim.cmd("CodeDiff")
+end, { desc = "Open CodeDiff as a standalone session" })
+
 -- Open diff explorer (git status)
 map("n", "<leader>cd", ":CodeDiff<CR>", { desc = "Open diff explorer" })
 
