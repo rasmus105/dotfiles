@@ -1,0 +1,5 @@
+[target.aarch64-apple-darwin]
+rustflags = [
+    "-L", "/opt/homebrew/lib",
+    "-C", "link-arg=-Wl,-rpath,/opt/homebrew/lib"
+]

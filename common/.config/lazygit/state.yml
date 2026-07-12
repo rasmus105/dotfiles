@@ -1,0 +1,117 @@
+lastupdatecheck: 0
+recentrepos:
+    - /Users/kargo/dev/personal/dotfiles
+    - /Users/kargo/dotfiles
+    - /Users/kargo/dev/personal/docker-wrapper
+    - /Users/kargo/dev/personal/smolvm-wrapper
+    - /Users/kargo/dev/traffitech/gt115
+    - /Users/kargo/dev/personal/gitui
+    - /Users/kargo/dev/personal/microfmt
+    - /Users/kargo/dev/public/microzig
+    - /Users/kargo/dev/traffitech/gt115-dev
+    - /Users/kargo/dev/traffitech/gt115-v2.6.4
+    - /Users/kargo/dev/traffitech/gt115-v2.8.7
+    - /Users/kargo/dev/traffitech/imu-calibration
+    - /Users/kargo/dev/personal/dotfiles-ubuntu
+    - /Users/kargo/dev/public/smolvm
+    - /Users/kargo/dev/traffitech/traffilog-gosun-adapter
+    - /Users/kargo/dev/personal/docker-sandbox
+    - /Users/kargo/dev/traffitech/tt-firmware-presentation
+    - /Users/kargo/dev/traffitech/tt301-algorithms
+    - /Users/kargo/dev/traffitech/support-slop-site
+    - /Users/kargo/dev/personal/assembly-analyze
+    - /Users/kargo/dev/personal/serial-monitor
+    - /Users/kargo/dev/personal/proton-cli-scripts
+    - /opt/homebrew
+startuppopupversion: 5
+didshowhunkstaginghint: true
+lastversion: 0.63.0
+customcommandshistory: []
+hidecommandlog: false
+githubPullRequests:
+    /Users/kargo/dev/personal/docker-sandbox: []
+    /Users/kargo/dev/personal/dotfiles: []
+    /Users/kargo/dev/personal/dotfiles-ubuntu: []
+    /Users/kargo/dev/personal/gitui: []
+    /Users/kargo/dev/personal/microfmt: []
+    /Users/kargo/dev/personal/serial-monitor: []
+    /Users/kargo/dev/personal/smolvm-wrapper: []
+    /Users/kargo/dev/public/microzig:
+        - headRefName: main
+          number: 939
+          title: Implement pins_v2.zig for stm32f429 and extend support for stm32l479
+          state: OPEN
+          url: https://github.com/ZigEmbeddedGroup/microzig/pull/939
+          headRepositoryOwner: JAicewizard
+        - headRefName: main
+          number: 845
+          title: 'feat: add nxp mcxn947 port (and minor fix to derive)'
+          state: MERGED
+          url: https://github.com/ZigEmbeddedGroup/microzig/pull/845
+          headRepositoryOwner: samy-00007
+        - headRefName: main
+          number: 793
+          title: fix M7 CFSR and add FPU fault bits to CFSR
+          state: MERGED
+          url: https://github.com/ZigEmbeddedGroup/microzig/pull/793
+          headRepositoryOwner: RecursiveError
+        - headRefName: main
+          number: 722
+          title: Add Support for Multiple CDC Drivers
+          state: MERGED
+          url: https://github.com/ZigEmbeddedGroup/microzig/pull/722
+          headRepositoryOwner: eugenepentland
+        - headRefName: main
+          number: 678
+          title: Fix incorrect calculation for get_readable_len in CircularBuffer
+          state: MERGED
+          url: https://github.com/ZigEmbeddedGroup/microzig/pull/678
+          headRepositoryOwner: luke-thom
+    /Users/kargo/dev/public/smolvm: []
+    /Users/kargo/dev/traffitech/tt-firmware-presentation: []
+    /Users/kargo/dev/work/can-stack: []
+    /Users/kargo/dotfiles: []
+    /Users/kargo/git/personal/arduino-gsm-sim900: []
+    /Users/kargo/git/personal/docker-sandbox: []
+    /Users/kargo/git/personal/dotfiles: []
+    /Users/kargo/git/personal/dotfiles-ubuntu: []
+    /Users/kargo/git/personal/gitui: []
+    /Users/kargo/git/personal/iced-plotter: []
+    /Users/kargo/git/personal/kanban: []
+    /Users/kargo/git/personal/serial-monitor: []
+    /Users/kargo/git/personal/test-runner.nvim: []
+    /Users/kargo/git/personal/zig-static-alloc: []
+    /Users/kargo/git/traffitech/gt115/vendors/can-stack: []
+    /Users/kargo/git/work/can-data-extractor: []
+    /Users/kargo/git/work/can-stack: []
+    /opt/homebrew:
+        - headRefName: main
+          number: 22593
+          title: awesome-brew
+          state: CLOSED
+          url: https://github.com/Homebrew/brew/pull/22593
+          headRepositoryOwner: SardorchikDev
+        - headRefName: main
+          number: 22591
+          title: sure
+          state: CLOSED
+          url: https://github.com/Homebrew/brew/pull/22591
+          headRepositoryOwner: SardorchikDev
+        - headRefName: main
+          number: 22521
+          title: prefer pnpm over npm in npm extension
+          state: OPEN
+          url: https://github.com/Homebrew/brew/pull/22521
+          headRepositoryOwner: cavanaug
+        - headRefName: main
+          number: 22419
+          title: 'mcp: fix required placement, add lgtm tool, nil safety, isError reporting'
+          state: CLOSED
+          url: https://github.com/Homebrew/brew/pull/22419
+          headRepositoryOwner: vbplyr
+        - headRefName: main
+          number: 22340
+          title: Remove obsolete --skip-update from command-not-found handlers
+          state: MERGED
+          url: https://github.com/Homebrew/brew/pull/22340
+          headRepositoryOwner: rexmhall09

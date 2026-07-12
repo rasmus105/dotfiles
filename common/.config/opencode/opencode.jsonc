@@ -1,0 +1,44 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "mlx-gemma4": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "MLX Gemma 4 26B MTP",
+
+      "options": {
+        "baseURL": "http://127.0.0.1:8080/v1",
+        "apiKey": "not-needed"
+      },
+
+      "models": {
+        "mlx-community/gemma-4-26B-A4B-it-qat-4bit": {
+          "name": "Gemma 4 26B-A4B QAT 4-bit + MTP",
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
+        }
+      }
+    },
+
+    "mlx-diffusiongemma": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "MLX DiffusionGemma 26B",
+
+      "options": {
+        "baseURL": "http://127.0.0.1:8081/v1",
+        "apiKey": "not-needed"
+      },
+
+      "models": {
+        "mlx-community/diffusiongemma-26B-A4B-it-4bit": {
+          "name": "DiffusionGemma 26B-A4B 4-bit",
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          }
+        }
+      }
+    }
+  }
+}

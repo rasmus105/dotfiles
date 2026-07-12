@@ -1,0 +1,53 @@
+[user]
+    name = Rasmus Kargo
+    email = rasmus105@protonmail.com
+
+[alias]
+    difft = -c diff.external='difft --color=always --background=dark' -c core.pager='less -R' diff
+	whoami = !git config --global user.name && git config --global user.email
+    l = log --graph --pretty=format:'%C(yellow)%h%C(auto)%d%Creset %s %C(white)- %an, %ar%Creset'
+    c = "!f() { git clone --recursive \"$@\"; }; f"
+    s = "status -s"
+    count = rev-list --count --all
+
+[init]
+    defaultBranch = main
+
+[pull]
+    rebase = false
+
+[color]
+	branch = auto
+	diff = auto
+	interactive = auto
+	pager = true
+	status = auto
+	ui = true
+
+[core]
+    editor = nvim
+    ; pager = delta
+    ignoreCase = false
+
+; [interactive]
+;     diffFilter = delta --color-only
+;
+; [delta]
+;     side-by-side = true
+;     syntax-theme = gruvbox-dark
+
+[includeIf "gitdir:~/git/work/"]
+    path = ~/.gitconfig-personal # (my company)
+    path = ~/.gitconfig-nversion
+
+[includeIf "gitdir:~/git/personal/"]
+    path = ~/.gitconfig-personal
+
+[includeIf "gitdir:~/git/traffitech/"]
+    path = ~/.gitconfig-traffitech
+
+[filter "lfs"]
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
