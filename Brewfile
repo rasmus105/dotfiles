@@ -1,3 +1,5 @@
+tap "jstkdng/programs", trusted: true
+
 brew "antidote"
 brew "ast-grep"
 brew "bat"
