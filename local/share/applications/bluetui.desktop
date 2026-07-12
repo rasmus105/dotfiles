@@ -1,8 +1,0 @@
-[Desktop Entry]
-Version=1.0
-Name=BlueTUI
-Comment=BlueTUI (bluetooth TUI)
-Exec=alacritty --class=TUI.float -e bluetui
-Type=Application
-Icon=/home/rasmus105/.local/share/applications/icons/bluetooth.png
-StartupNotify=true

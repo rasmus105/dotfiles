@@ -1,2 +1,0 @@
-- [ ] Finish and test initial version of VM helper scripts and TUI
-- [ ] Test `install.sh`
