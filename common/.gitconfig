@@ -36,14 +36,14 @@
 ;     side-by-side = true
 ;     syntax-theme = gruvbox-dark
 
-[includeIf "gitdir:~/git/work/"]
+[includeIf "gitdir:~/dev/work/"]
     path = ~/.gitconfig-personal # (my company)
     path = ~/.gitconfig-nversion
 
-[includeIf "gitdir:~/git/personal/"]
+[includeIf "gitdir:~/dev/personal/"]
     path = ~/.gitconfig-personal
 
-[includeIf "gitdir:~/git/traffitech/"]
+[includeIf "gitdir:~/dev/traffitech/"]
     path = ~/.gitconfig-traffitech
 
 [filter "lfs"]
