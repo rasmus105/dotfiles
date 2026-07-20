@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 image="dotfiles-test:ubuntu"
+platform="linux/amd64"
 
-docker build --tag "$image" "$repo_dir"
-docker run --rm "$image"
+docker build --platform "$platform" --tag "$image" "$repo_dir"
+docker run --platform "$platform" --rm "$image"
