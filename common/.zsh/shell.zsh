@@ -66,6 +66,7 @@ zstyle ':fzf-tab:*' fzf-bindings 'ctrl-g:accept'
 
 KEYTIMEOUT=1
 bindkey -e
+bindkey '^U' backward-kill-line
 
 # ==============================================================================
 # Prompt
