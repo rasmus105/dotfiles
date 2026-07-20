@@ -4,6 +4,14 @@ local lazy = require("config.lazy")
 -- Global auto-format toggle
 vim.g.autoformat = true
 
+local format_group = vim.api.nvim_create_augroup("UserLspFormat", { clear = true })
+
+local function format_filter(bufnr)
+    return function(client)
+        return vim.bo[bufnr].filetype ~= "python" or client.name == "ruff"
+    end
+end
+
 local function toggle_autoformat()
     vim.g.autoformat = not vim.g.autoformat
     local status = vim.g.autoformat and "enabled" or "disabled"
@@ -55,7 +63,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
             end, { buffer = ev.buf, desc = "ZLS fix all" })
         end
         map("n", "<leader>f", function()
-            vim.lsp.buf.format({ async = true })
+            vim.lsp.buf.format({
+                async = true,
+                filter = format_filter(ev.buf),
+            })
         end, opts)
 
         -- Diagnostics
@@ -63,9 +74,15 @@ vim.api.nvim_create_autocmd("LspAttach", {
         map("n", "gl", vim.diagnostic.open_float, { buffer = ev.buf, desc = "Show diagnostic as float" })
 
         -- Format on save
+        vim.api.nvim_clear_autocmds({ group = format_group, buffer = ev.buf })
         vim.api.nvim_create_autocmd("BufWritePre", {
+            group = format_group,
             buffer = ev.buf,
             callback = function(args)
+                if not vim.g.autoformat then
+                    return
+                end
+
                 local clients = vim.lsp.get_clients({
                     bufnr = args.buf,
                     method = "textDocument/formatting",
@@ -78,6 +95,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
                 vim.lsp.buf.format({
                     bufnr = args.buf,
                     timeout_ms = 1000,
+                    filter = format_filter(args.buf),
                 })
             end,
         })
@@ -117,8 +135,18 @@ local setup_lsp = lazy.once("lsp", function()
             "stylua", -- Lua formatter
             "shellcheck", -- Shell linter
             "shfmt", -- Shell formatter
+            "ty", -- Python type checker and language server
+            "ruff", -- Python linter and formatter
+            "debugpy", -- Python debug adapter
         },
     })
+
+    vim.lsp.config("ty", {
+        cmd = { "ty", "server" },
+        filetypes = { "python" },
+        root_markers = { "pyproject.toml", "ty.toml", ".git" },
+    })
+    vim.lsp.enable({ "ty", "ruff" })
 
     require("plugins.luasnip").setup()
     lazy.packadd("blink.cmp")
