@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+input="${1:?usage: $0 <file.xlsx>}"
+output="${input%.xlsx}.csv"
+
+xlsx2csv "$input" > "$output"

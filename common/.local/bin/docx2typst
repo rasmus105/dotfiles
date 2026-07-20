@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+input="${1:?usage: $0 <file.docx>}"
+output="${input%.docx}.typ"
+
+pandoc "$input" \
+  --to=typst \
+  --output="$output"
