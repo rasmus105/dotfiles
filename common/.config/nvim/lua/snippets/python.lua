@@ -3,7 +3,7 @@
 local banner = "# -----------------------------------------------------------------------------"
 
 return {
-	s({ trig = "#=", wordTrig = false, name = "comment section" }, {
+	s({ trig = "#-", wordTrig = false, name = "comment section" }, {
 		t(banner),
 		t({ "", "# " }),
 		i(1),
