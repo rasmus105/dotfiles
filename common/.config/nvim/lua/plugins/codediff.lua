@@ -39,6 +39,23 @@ end)
 
 lazy.on_cmd("CodeDiff", load_codediff)
 
+vim.api.nvim_create_autocmd("User", {
+	pattern = "CodeDiffOpen",
+	callback = function(event)
+		local tabpage = event.data and event.data.tabpage or vim.api.nvim_get_current_tabpage()
+
+		for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tabpage)) do
+			local bufnr = vim.api.nvim_win_get_buf(win)
+
+			if vim.bo[bufnr].filetype == "codediff-explorer" then
+				vim.wo[win].statuscolumn = ""
+			end
+		end
+
+		vim.cmd("redraw")
+	end,
+})
+
 -- When codediff is opened in a standalone session, quit neovim after closing the diff.
 vim.api.nvim_create_user_command("CodeDiffStandalone", function(opts)
 	local group = vim.api.nvim_create_augroup("CodeDiffStandalone", { clear = true })

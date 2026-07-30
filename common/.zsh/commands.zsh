@@ -52,6 +52,10 @@ gd() {
   local -a args
   local arg
 
+  if (( $# == 1 )); then
+    set -- "$1^" "$1"
+  fi
+
   for arg in "$@"; do
     arg=${arg//\\/\\\\}
     arg=${arg// /\\ }
