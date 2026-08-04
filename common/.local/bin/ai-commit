@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+fail() {
+    printf 'ai-commit: %s\n' "$*" >&2
+    exit 1
+}
+
+backend="${AI_COMMIT_BACKEND:-opencode}"
+model="${AI_COMMIT_MODEL:-deepseek/deepseek-v4-flash}"
+
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
+    fail "not inside a Git working tree"
+
+if [[ -z "$(git status --porcelain --untracked-files=normal)" && "$#" -eq 0 ]]; then
+    fail "no changes to commit"
+fi
+
+guidance="${*:-No additional guidance.}"
+opencode_config=$(printf '%s' \
+    '{"permission":{' \
+    '"*":"deny",' \
+    '"read":"allow",' \
+    '"glob":"allow",' \
+    '"grep":"allow",' \
+    '"list":"allow",' \
+    '"bash":{' \
+    '"*":"deny",' \
+    '"git status*":"allow",' \
+    '"git diff*":"allow",' \
+    '"git log*":"allow",' \
+    '"git add *":"allow",' \
+    '"git commit -m *":"allow",' \
+    '"git commit --amend -m *":"allow",' \
+    '"git add *--force*":"deny",' \
+    '"git add -f*":"deny",' \
+    '"git add * -f*":"deny",' \
+    '"git commit *--no-verify*":"deny",' \
+    '"git commit -n*":"deny",' \
+    '"git commit * -n*":"deny"' \
+    '}}}')
+prompt=$(printf '%s\n' \
+    "Create or amend one Git commit as requested." \
+    "" \
+    "Requirements:" \
+    "- Inspect the status, diff, and recent Git history." \
+    "- Match the repository's commit message convention." \
+    "- Prefer a single-line subject with no body unless repository convention or guidance calls for one." \
+    "- Amend only when explicitly requested. Otherwise create exactly one new commit." \
+    "- Run normal Git hooks." \
+    "- Stop and warn instead of committing suspected credentials, secrets, or sensitive data." \
+    "- If a safe commit cannot be made, stop and explain why." \
+    "" \
+    "Additional guidance: $guidance")
+
+case "$backend" in
+    opencode)
+        opencode_bin="${AI_COMMIT_OPENCODE_BIN:-opencode}"
+        command -v "$opencode_bin" >/dev/null 2>&1 ||
+            fail "OpenCode is not installed or not on PATH"
+        OPENCODE_CONFIG_CONTENT="$opencode_config" \
+            command "$opencode_bin" run --model "$model" "$prompt"
+        ;;
+    *)
+        fail "unsupported backend: $backend"
+        ;;
+esac
