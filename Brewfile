@@ -1,4 +1,5 @@
 tap "jstkdng/programs", trusted: true
+tap "anomalyco/tap"
 
 brew "antidote"
 brew "ast-grep"
@@ -13,6 +14,7 @@ brew "hyperfine"
 brew "jstkdng/programs/ueberzugpp"
 brew "lazygit"
 brew "neovim", args: ["HEAD"]
+brew "anomalyco/tap/opencode"
 brew "resvg"
 brew "ripgrep"
 brew "rustup"
@@ -24,7 +26,6 @@ brew "tree-sitter"
 brew "pandoc"
 brew "typst"
 brew "uv"
-brew "xlsx2csv"
 brew "yazi"
 brew "zig"
 brew "zoxide"
