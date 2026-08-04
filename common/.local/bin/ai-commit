@@ -17,41 +17,47 @@ if [[ -z "$(git status --porcelain --untracked-files=normal)" && "$#" -eq 0 ]]; 
 fi
 
 guidance="${*:-No additional guidance.}"
-opencode_config=$(printf '%s' \
-    '{"permission":{' \
-    '"*":"deny",' \
-    '"read":"allow",' \
-    '"glob":"allow",' \
-    '"grep":"allow",' \
-    '"list":"allow",' \
-    '"bash":{' \
-    '"*":"deny",' \
-    '"git status*":"allow",' \
-    '"git diff*":"allow",' \
-    '"git log*":"allow",' \
-    '"git add *":"allow",' \
-    '"git commit -m *":"allow",' \
-    '"git commit --amend -m *":"allow",' \
-    '"git add *--force*":"deny",' \
-    '"git add -f*":"deny",' \
-    '"git add * -f*":"deny",' \
-    '"git commit *--no-verify*":"deny",' \
-    '"git commit -n*":"deny",' \
-    '"git commit * -n*":"deny"' \
-    '}}}')
-prompt=$(printf '%s\n' \
-    "Create or amend one Git commit as requested." \
-    "" \
-    "Requirements:" \
-    "- Inspect the status, diff, and recent Git history." \
-    "- Match the repository's commit message convention." \
-    "- Prefer a single-line subject with no body unless repository convention or guidance calls for one." \
-    "- Amend only when explicitly requested. Otherwise create exactly one new commit." \
-    "- Run normal Git hooks." \
-    "- Stop and warn instead of committing suspected credentials, secrets, or sensitive data." \
-    "- If a safe commit cannot be made, stop and explain why." \
-    "" \
-    "Additional guidance: $guidance")
+IFS= read -r -d '' opencode_config <<'JSON' || true
+{
+  "permission": {
+    "*": "deny",
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "bash": {
+      "*": "deny",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git add *": "allow",
+      "git commit -m *": "allow",
+      "git commit --amend -m *": "allow",
+      "git add *--force*": "deny",
+      "git add -f*": "deny",
+      "git add * -f*": "deny",
+      "git commit *--no-verify*": "deny",
+      "git commit -n*": "deny",
+      "git commit * -n*": "deny"
+    }
+  }
+}
+JSON
+
+IFS= read -r -d '' prompt <<PROMPT || true
+Create or amend one Git commit as requested.
+
+Requirements:
+- Inspect the status, diff, and recent Git history.
+- Match the repository's commit message convention.
+- Prefer a single-line subject with no body unless repository convention or guidance calls for one.
+- Amend only when explicitly requested. Otherwise create exactly one new commit.
+- Run normal Git hooks.
+- Stop and warn instead of committing suspected credentials, secrets, or sensitive data.
+- If a safe commit cannot be made, stop and explain why.
+
+Additional guidance: $guidance
+PROMPT
 
 case "$backend" in
     opencode)
