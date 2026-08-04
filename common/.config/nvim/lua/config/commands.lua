@@ -1,11 +1,31 @@
 vim.api.nvim_create_user_command("T", function(opts)
     vim.cmd("tabnew")
+    local terminal_buf = vim.api.nvim_get_current_buf()
+
+    vim.api.nvim_create_autocmd("TermClose", {
+        buffer = terminal_buf,
+        once = true,
+        callback = function(args)
+            if vim.api.nvim_buf_is_valid(args.buf) then
+                vim.bo[args.buf].modified = false
+            end
+        end,
+    })
+
     vim.cmd("terminal " .. opts.args)
 
     vim.bo.bufhidden = "wipe"
     vim.bo.buflisted = false
 
-    vim.keymap.set("n", "q", "<cmd>tabclose<CR>", {
+    vim.keymap.set("n", "q", function()
+        if #vim.api.nvim_list_tabpages() > 1 then
+            vim.cmd("tabclose!")
+            return
+        end
+
+        vim.api.nvim_buf_delete(terminal_buf, { force = true })
+        vim.cmd("quit")
+    end, {
         buffer = true,
         silent = true,
         nowait = true,
