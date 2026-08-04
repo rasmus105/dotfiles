@@ -1,5 +1,8 @@
 local lazy = require("config.lazy")
 
+local explorer_min_width = 20
+local explorer_max_width = 40
+
 local codediff_config = {
 	highlights = {
 		line_insert = "DiffAdd", -- Line-level insertions
@@ -8,6 +11,7 @@ local codediff_config = {
 	-- File explorer
 	explorer = {
 		view_mode = "tree",
+		width = explorer_max_width,
 	},
 	-- Keymaps in diff view
 	keymaps = {
@@ -39,7 +43,43 @@ end)
 
 lazy.on_cmd("CodeDiff", load_codediff)
 
+local function fit_explorer(tabpage)
+	local explorer = require("codediff.ui.lifecycle").get_explorer(tabpage)
+	if not explorer or not explorer.winid or not vim.api.nvim_win_is_valid(explorer.winid) then
+		return
+	end
+
+	local max_line_width = 0
+	local status_margin = codediff_config.explorer.status_right_margin or 1
+	local lines = vim.api.nvim_buf_get_lines(explorer.bufnr, 0, -1, false)
+
+	for line_number, line in ipairs(lines) do
+		local rendered = line:gsub("%s+$", "")
+		local node = explorer.tree:get_node(line_number)
+		local status = node and node.data and node.data.status_symbol
+
+		if status and status ~= "" then
+			local content = rendered:match("^(.-)%s+" .. vim.pesc(status) .. "$")
+			if content then
+				rendered = content .. "  " .. status .. string.rep(" ", status_margin)
+			end
+		end
+
+		max_line_width = math.max(max_line_width, vim.fn.strdisplaywidth(rendered))
+	end
+
+	local width = math.max(explorer_min_width, math.min(explorer_max_width, max_line_width + 1))
+	local config = require("codediff.config")
+	config.options.explorer.width = width
+	explorer.split._size = width
+	vim.api.nvim_win_set_width(explorer.winid, width)
+	explorer.tree:render()
+end
+
+local codediff_ui_group = vim.api.nvim_create_augroup("CodeDiffUi", { clear = true })
+
 vim.api.nvim_create_autocmd("User", {
+	group = codediff_ui_group,
 	pattern = "CodeDiffOpen",
 	callback = function(event)
 		local tabpage = event.data and event.data.tabpage or vim.api.nvim_get_current_tabpage()
@@ -52,7 +92,16 @@ vim.api.nvim_create_autocmd("User", {
 			end
 		end
 
+		fit_explorer(tabpage)
 		vim.cmd("redraw")
+	end,
+})
+
+vim.api.nvim_create_autocmd("User", {
+	group = codediff_ui_group,
+	pattern = "CodeDiffClose",
+	callback = function()
+		require("codediff.config").options.explorer.width = explorer_max_width
 	end,
 })
 
