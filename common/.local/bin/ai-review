@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+fail() {
+    printf 'ai-review: %s\n' "$*" >&2
+    exit 1
+}
+
+resolve_script_dir() {
+    local source_path="${BASH_SOURCE[0]}"
+    local source_dir
+    local target
+
+    while [[ -L "$source_path" ]]; do
+        source_dir="$(cd -P -- "$(dirname -- "$source_path")" && pwd)"
+        target="$(readlink "$source_path")"
+        if [[ "$target" = /* ]]; then
+            source_path="$target"
+        else
+            source_path="$source_dir/$target"
+        fi
+    done
+
+    cd -P -- "$(dirname -- "$source_path")" && pwd
+}
+
+colorize() {
+    local output="$1"
+
+    if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+        output="${output//CRITICAL/$'\033[1;31mCRITICAL\033[0m'}"
+        output="${output//HIGH/$'\033[31mHIGH\033[0m'}"
+        output="${output//MEDIUM/$'\033[33mMEDIUM\033[0m'}"
+        output="${output//LOW/$'\033[36mLOW\033[0m'}"
+        output="${output//No issues found./$'\033[32mNo issues found.\033[0m'}"
+    fi
+
+    printf '%s\n' "$output"
+}
+
+backend="${AI_REVIEW_BACKEND:-pi}"
+model="${AI_REVIEW_MODEL:-}"
+
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
+    fail "not inside a Git working tree"
+
+[[ -n "$(git status --porcelain --untracked-files=normal)" ]] ||
+    fail "no changes to review"
+
+guidance="${*:-No additional guidance.}"
+IFS= read -r -d '' opencode_config <<'JSON' || true
+{
+  "permission": {
+    "*": "deny",
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "bash": {
+      "*": "deny",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow"
+    }
+  }
+}
+JSON
+
+IFS= read -r -d '' prompt <<PROMPT || true
+Review the current staged, unstaged, and untracked changes for defects.
+
+Rules:
+- Report only concrete, high-confidence problems introduced by these changes.
+- Focus on correctness, security, data loss, and user-visible regressions.
+- Ignore style, preferences, speculative edge cases, and pre-existing problems.
+- Do not praise, summarize, suggest optional improvements, or describe your process.
+- Return at most 10 findings, ordered by severity.
+- Keep every finding to one concise line.
+
+Use exactly this format:
+- SEVERITY path/to/file:line - Problem and concrete consequence.
+
+SEVERITY must be CRITICAL, HIGH, MEDIUM, or LOW.
+If there are no findings, output exactly: No issues found.
+
+Additional guidance: $guidance
+PROMPT
+
+case "$backend" in
+    pi)
+        pi_bin="${AI_REVIEW_PI_BIN:-pi}"
+        command -v "$pi_bin" >/dev/null 2>&1 ||
+            fail "Pi is not installed or not on PATH"
+        script_dir="$(resolve_script_dir)"
+        pi_extension="${AI_REVIEW_PI_EXTENSION:-$script_dir/../lib/ai-git/pi-git-tools.js}"
+        [[ -r "$pi_extension" ]] ||
+            fail "Pi Git tools extension not found: $pi_extension"
+        output=$(AI_GIT_PI_MODE=review command "$pi_bin" \
+            --print \
+            --no-session \
+            --no-extensions \
+            --no-skills \
+            --no-prompt-templates \
+            --no-context-files \
+            --no-approve \
+            --tools read,grep,find,ls,git_status,git_diff,git_log \
+            --extension "$pi_extension" \
+            --model "${model:-openai-codex/gpt-5.6-luna}" \
+            "$prompt")
+        colorize "$output"
+        ;;
+    opencode)
+        opencode_bin="${AI_REVIEW_OPENCODE_BIN:-opencode}"
+        command -v "$opencode_bin" >/dev/null 2>&1 ||
+            fail "OpenCode is not installed or not on PATH"
+        output=$(OPENCODE_CONFIG_CONTENT="$opencode_config" \
+            command "$opencode_bin" run --model "${model:-deepseek/deepseek-v4-flash}" "$prompt")
+        colorize "$output"
+        ;;
+    *)
+        fail "unsupported backend: $backend"
+        ;;
+esac
