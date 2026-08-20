@@ -43,6 +43,33 @@ map("n", "<C-b>", "<C-b>zz")
 map("n", "<C-o>", "<C-o>zz")
 map("n", "<C-i>", "<C-i>zz")
 
+for _, key in ipairs({
+	"zF",
+	"zd",
+	"zD",
+	"zE",
+	"zo",
+	"zO",
+	"zc",
+	"zC",
+	"za",
+	"zA",
+	"zv",
+	"zx",
+	"zX",
+	"zm",
+	"zM",
+	"zr",
+	"zR",
+	"zn",
+	"zN",
+	"zi",
+	"zj",
+	"zk",
+}) do
+	map("n", key, key .. "zz")
+end
+
 -- Copying
 map({ "n", "v" }, "<leader>y", '"+y')
 map("n", "<leader>Y", '"+Y')
@@ -97,7 +124,12 @@ map("v", "J", ":m '>+1<CR>gv=gv")
 map("v", "K", ":m '>-2<CR>gv=gv")
 
 -- Change all strings matching this string
-map("n", "<leader>w", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
+map("n", "<leader>w", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], {
+	desc = "Replace word in buffer",
+})
+map("x", "<leader>w", [[:s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], {
+	desc = "Replace word in selected lines",
+})
 
 -- Tip: Use ]q/[q for moving in quickfix list.
 -- useful in combination with Fzf-lua:
