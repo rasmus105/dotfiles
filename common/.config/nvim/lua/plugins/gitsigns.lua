@@ -19,6 +19,10 @@ local setup = lazy.once("gitsigns", function()
 			col = 1,
 		},
 		on_attach = function(bufnr)
+			if vim.bo[bufnr].filetype == "bigfile" then
+				return false
+			end
+
 			local gitsigns = require("gitsigns")
 
 			local function opts(desc)

@@ -92,8 +92,9 @@ opt.wildignore:append({ "*.o", "*.obj", "*.pyc", "*.class", "*.jar" })
 opt.diffopt:append("linematch:60")
 
 -- Performance improvements
-opt.redrawtime = 10000
-opt.maxmempattern = 20000
+-- Bound regex-heavy highlighting so pathological lines cannot block redraws for long.
+opt.redrawtime = 2000
+opt.maxmempattern = 1000
 
 -- Create undo directory if it doesn't exist
 local undodir = vim.fn.expand("~/.vim/undodir")
