@@ -81,6 +81,13 @@ gwt() {
   fi
 }
 
+gex() {
+  local exclude_file
+
+  exclude_file="$(git rev-parse --path-format=absolute --git-path info/exclude)" || return
+  "${EDITOR:-vi}" "$exclude_file"
+}
+
 # [g]it[p]ush[a]ll
 gpa() {
   emulate -L zsh
