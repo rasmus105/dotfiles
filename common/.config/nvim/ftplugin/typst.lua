@@ -1,9 +1,5 @@
 local map = vim.keymap.set
 
-local function pdf_for(file)
-    return vim.fn.fnamemodify(file, ":r") .. ".pdf"
-end
-
 local function compile_current_file()
     local file = vim.api.nvim_buf_get_name(0)
     if file == "" then
@@ -28,16 +24,15 @@ local function watch_current_file()
 
     vim.cmd.update()
 
-    local pdf = pdf_for(file)
-    local result = vim.system({ "typst", "compile", file }):wait()
-    if result.code ~= 0 then
-        vim.notify("Typst compile failed:\n" .. result.stderr, vim.log.levels.ERROR)
-        return
-    end
-
-    vim.ui.open(pdf)
-    local script = vim.fn.shellescape('typst watch "$1"; exec bash')
-    vim.cmd("T bash -c " .. script .. " _ " .. vim.fn.shellescape(file))
+    require("config.typst-watch").watch()
 end
 
-map({ "n", "v", "x" }, "<leader>m", watch_current_file, { buffer = true, desc = "typst watch" })
+vim.api.nvim_buf_create_user_command(0, "TypstWatchLog", function()
+    require("config.typst-watch").show_log()
+end, { desc = "Show Typst watcher output" })
+
+vim.api.nvim_buf_create_user_command(0, "TypstWatchStop", function()
+    require("config.typst-watch").stop()
+end, { desc = "Stop watching the current Typst document" })
+
+map({ "n", "v", "x" }, "<leader>m", watch_current_file, { buffer = true, desc = "typst PDF watch" })
