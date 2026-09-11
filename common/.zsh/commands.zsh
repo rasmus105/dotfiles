@@ -65,6 +65,72 @@ gd() {
   nvim -c "CodeDiffStandalone ${(j: :)args}"
 }
 
+gstats() (
+  emulate -L zsh
+  setopt pipefail
+  local root file tracked color=0
+
+  root="$(git rev-parse --show-toplevel)" || return
+  builtin cd -- "$root" || return
+  tracked="$(git diff --no-color --raw --numstat HEAD)" || return
+  [[ -t 1 && -z "${NO_COLOR:-}" && "$TERM" != dumb ]] && color=1
+
+  {
+    [[ -z "$tracked" ]] || print -r -- "$tracked"
+    print -r -- '?'
+    git ls-files --others --exclude-standard -z |
+      while IFS= read -r -d '' file; do
+        # A no-index diff exits with 1 when it finds changes.
+        git diff --no-color --no-index --numstat -- /dev/null "$file" || (( $? == 1 )) || return
+      done
+  } | awk -F '\t' -v color="$color" '
+    BEGIN {
+      if (color) {
+        reset = "\033[0m"; bold = "\033[1m"; dim = "\033[2m"
+        green = "\033[32m"; red = "\033[31m"
+        mark["M"] = mark["T"] = mark["?"] = "\033[33m"
+        mark["A"] = green; mark["D"] = red
+        mark["R"] = mark["C"] = "\033[36m"; mark["U"] = "\033[35m"
+      }
+      add_width = 5; del_width = 7
+    }
+    # Git emits raw statuses before numstat rows, in matching order.
+    /^:/ {
+      split($1, metadata, " ")
+      kind[++tracked_count] = substr(metadata[5], 1, 1)
+      next
+    }
+    $0 == "?" { untracked = 1; next }
+    NF >= 3 {
+      row++
+      if (untracked) kind[row] = "?"
+      path[row] = $0
+      sub(/^[^\t]*\t[^\t]*\t/, "", path[row])
+      if (untracked) sub(/^\/dev\/null => /, "", path[row])
+      binary[row] = ($1 == "-")
+      if (!binary[row]) {
+        additions[row] = "+" $1; deletions[row] = "-" $2
+        added += $1; deleted += $2
+        if (length(additions[row]) > add_width) add_width = length(additions[row])
+        if (length(deletions[row]) > del_width) del_width = length(deletions[row])
+      }
+    }
+    END {
+      if (row) printf "%s    %*s  %*s  File%s\n", dim, add_width, "Added", del_width, "Deleted", reset
+      for (i = 1; i <= row; i++) {
+        printf " %s%s%s  ", mark[kind[i]], kind[i], reset
+        if (binary[i]) {
+          printf "%s%*s%s", dim, add_width + del_width + 2, "binary", reset
+        } else {
+          printf "%s%*s%s  %s%*s%s", green, add_width, additions[i], reset, red, del_width, deletions[i], reset
+        }
+        printf "  %s\n", path[i]
+      }
+      printf "\n%sTotal:%s %s+%d%s %s-%d%s lines (%d %s)\n", bold, reset, green, added, reset, red, deleted, reset, row, (row == 1 ? "file" : "files")
+    }
+  '
+)
+
 gwt() {
   if [[ -z "$1" ]]; then
     print -u2 "Usage: gwt <branch-name>"
