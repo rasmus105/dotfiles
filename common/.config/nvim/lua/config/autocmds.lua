@@ -62,40 +62,74 @@ vim.api.nvim_create_autocmd("FileType", {
 	end,
 })
 
--- Pdfs, images, videos
+local external_files = require("config.external-files")
+
 vim.api.nvim_create_autocmd("BufReadCmd", {
-	pattern = {
-		-- images
-		"*.png",
-		"*.jpg",
-		"*.jpeg",
-		"*.gif",
-		"*.webp",
-		"*.bmp",
-		"*.tif",
-		"*.tiff",
-		-- videos
-		"*.mp4",
-		"*.avi", -- video/x-msvideo
-		"*.mkv", -- video/x-matroska
-		"*.flv", -- video/x-flv
-		"*.wmv", -- video/x-ms-wmv
-		"*.mpeg", -- video/mpeg
-		"*.mpg", -- often video/mpeg
-		"*.ogv", -- video/ogg
-		"*.webm", -- video/webm
-		"*.mov", -- video/quicktime
-		"*.3gp", -- video/3gpp
-		"*.3g2", -- video/3gpp2
-		"*.asf", -- video/x-ms-asf
-		"*.ogm", -- video/x-ogm+ogg
-		-- pdfs
-		"*.pdf",
-	},
-	callback = function()
-		local filename = vim.fn.shellescape(vim.api.nvim_buf_get_name(0))
-		vim.cmd("silent !open " .. filename .. " &")
-		vim.cmd([[let tobedeleted = bufnr('%') | b# | exe "bd! " . tobedeleted]])
+	pattern = external_files.patterns,
+	callback = function(event)
+		local filename = vim.api.nvim_buf_get_name(event.buf)
+		-- Virtual revisions belong to their plugin's BufReadCmd handler.
+		if filename:match("^%a[%w+.-]*://") then
+			return
+		end
+
+		-- Background loads need a buffer, but must not read binary data or open a viewer.
+		vim.b[event.buf].external_file = true
+		vim.bo[event.buf].buftype = "nofile"
+		vim.bo[event.buf].swapfile = false
+		vim.bo[event.buf].modifiable = true
+		vim.api.nvim_buf_set_lines(event.buf, 0, -1, false, { "Binary file: " .. filename })
+		vim.bo[event.buf].modified = false
+		vim.bo[event.buf].modifiable = false
+	end,
+})
+
+vim.api.nvim_create_autocmd("BufEnter", {
+	pattern = external_files.patterns,
+	callback = function(event)
+		if not vim.b[event.buf].external_file or vim.fn.win_gettype() ~= "" or vim.wo.diff then
+			return
+		end
+
+		local win = vim.api.nvim_get_current_win()
+		local previous = vim.fn.bufnr("#")
+		-- Let the caller finish setting up its windows before opening or replacing anything.
+		vim.schedule(function()
+			if
+				not vim.api.nvim_win_is_valid(win)
+				or vim.api.nvim_get_current_win() ~= win
+				or vim.api.nvim_win_get_buf(win) ~= event.buf
+				or vim.fn.win_gettype(win) ~= ""
+				or vim.wo[win].diff
+			then
+				return
+			end
+
+			-- CodeDiff's single-file panes do not set the native 'diff' option.
+			local lifecycle = package.loaded["codediff.ui.lifecycle"]
+			if lifecycle and lifecycle.get_session(vim.api.nvim_win_get_tabpage(win)) then
+				return
+			end
+
+			local _, err = vim.ui.open(vim.api.nvim_buf_get_name(event.buf))
+			if err then
+				vim.notify(err, vim.log.levels.ERROR)
+				return
+			end
+
+			if
+				previous == event.buf
+				or not vim.api.nvim_buf_is_valid(previous)
+				or not vim.bo[previous].buflisted
+				or vim.bo[previous].buftype ~= ""
+			then
+				previous = vim.api.nvim_create_buf(true, false)
+			end
+			vim.api.nvim_win_set_buf(win, previous)
+			if #vim.fn.win_findbuf(event.buf) == 0 then
+				vim.api.nvim_buf_delete(event.buf, { force = true })
+			end
+		end)
 	end,
 })
 

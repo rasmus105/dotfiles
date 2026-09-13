@@ -7,7 +7,34 @@ M.setup = lazy.once("fzf-lua", function()
 	lazy.packadd("fzf-lua")
 
 	local fzf = require("fzf-lua")
+	local external_files = require("config.external-files")
+	local path = require("fzf-lua.path")
+	local actions = require("fzf-lua.actions")
+	local file_actions = { true }
+	for key, action in pairs({
+		["enter"] = actions.file_edit_or_qf,
+		["ctrl-s"] = actions.file_split,
+		["ctrl-v"] = actions.file_vsplit,
+		["ctrl-t"] = actions.file_tabedit,
+	}) do
+		file_actions[key] = function(selected, opts)
+			local editable = {}
+			for _, selection in ipairs(selected) do
+				local entry = path.entry_to_file(selection, opts)
+				if not external_files.open(entry.bufname or entry.path or entry.uri) then
+					editable[#editable + 1] = selection
+				end
+			end
+			if #editable > 0 then
+				return action(editable, opts)
+			end
+		end
+	end
+
 	fzf.setup({
+		actions = {
+			files = file_actions,
+		},
 		previewers = {
 			builtin = {
 				extensions = {
