@@ -44,7 +44,12 @@ end)
 lazy.on_cmd("CodeDiff", load_codediff)
 
 local function fit_explorer(tabpage)
-	local explorer = require("codediff.ui.lifecycle").get_explorer(tabpage)
+	local lifecycle = require("codediff.ui.lifecycle")
+	if lifecycle.get_panel_name(tabpage) ~= "explorer" then
+		return
+	end
+
+	local explorer = lifecycle.get_panel_view(tabpage)
 	if not explorer or not explorer.winid or not vim.api.nvim_win_is_valid(explorer.winid) then
 		return
 	end
@@ -105,19 +110,49 @@ vim.api.nvim_create_autocmd("User", {
 	end,
 })
 
--- When codediff is opened in a standalone session, quit neovim after closing the diff.
+-- Standalone diffs replace the startup tab and quit only when no other tabs remain.
 vim.api.nvim_create_user_command("CodeDiffStandalone", function(opts)
 	local group = vim.api.nvim_create_augroup("CodeDiffStandalone", { clear = true })
-	vim.g.codediff_standalone = true
+	local startup_tab = vim.api.nvim_get_current_tabpage()
 
-	vim.api.nvim_create_autocmd("TabClosed", {
+	-- CodeDiff creates its tab asynchronously, after loading the git status.
+	vim.api.nvim_create_autocmd("User", {
 		group = group,
-		callback = function()
+		pattern = "CodeDiffOpen",
+		once = true,
+		callback = function(event)
+			local diff_tab = event.data.tabpage
 			vim.schedule(function()
-				if vim.g.codediff_standalone and vim.fn.tabpagenr("$") == 1 then
-					vim.g.codediff_standalone = false
-					vim.cmd("qa")
+				if not vim.api.nvim_tabpage_is_valid(diff_tab) then
+					return
 				end
+
+				if startup_tab ~= diff_tab and vim.api.nvim_tabpage_is_valid(startup_tab) then
+					local wins = vim.api.nvim_tabpage_list_wins(startup_tab)
+					local buf = vim.api.nvim_win_get_buf(wins[1])
+					if
+						#wins == 1
+						and vim.api.nvim_buf_get_name(buf) == ""
+						and vim.bo[buf].buftype == ""
+						and not vim.bo[buf].modified
+						and vim.api.nvim_buf_line_count(buf) == 1
+						and vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1] == ""
+					then
+						vim.cmd.tabclose(vim.api.nvim_tabpage_get_number(startup_tab))
+					end
+				end
+
+				local session = require("codediff.ui.lifecycle").get_session(diff_tab)
+				session.exit_on_close = #vim.api.nvim_list_tabpages() == 1
+				vim.api.nvim_create_autocmd({ "TabEnter", "TabClosed" }, {
+					group = group,
+					callback = function()
+						if not vim.api.nvim_tabpage_is_valid(diff_tab) then
+							return true
+						end
+						session.exit_on_close = #vim.api.nvim_list_tabpages() == 1
+					end,
+				})
 			end)
 		end,
 	})
