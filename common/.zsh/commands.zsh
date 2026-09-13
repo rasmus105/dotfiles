@@ -52,6 +52,15 @@ gd() {
   local -a args
   local arg
 
+  if (( $# == 0 )); then
+    local changes
+    changes="$(git status --porcelain --untracked-files=normal)" || return
+    if [[ -z "$changes" ]]; then
+      print -r -- "No uncommitted changes."
+      return 0
+    fi
+  fi
+
   if (( $# == 1 )); then
     set -- "$1^" "$1"
   fi
@@ -176,4 +185,15 @@ gpa() {
   fi
 
   wait
+}
+
+# ==============================================================================
+# Pdf
+# ==============================================================================
+
+pdfpage() {
+  local pdf="$1" page="$2"
+  local output="/tmp/pdf-page-$page"
+  pdftoppm -f "$page" -l "$page" -png -r 180 "$pdf" "$output"
+  kitten icat "${output}-$(printf '%02d' "$page").png"
 }
