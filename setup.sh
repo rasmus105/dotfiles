@@ -43,7 +43,7 @@ stow_package() {
 
     [[ -d "$repo_dir/$package" ]] || fail "Missing Stow package: $package"
 
-    stow --restow --ignore='^\.gitkeep$' --dir "$repo_dir" --target "$HOME" "$mode"='.*' "$package"
+    stow --restow --no-folding --ignore='^\.gitkeep$' --dir "$repo_dir" --target "$HOME" "$mode"='.*' "$package"
 }
 
 case "$(uname -s)" in
@@ -70,6 +70,9 @@ platform_setup="$repo_dir/bin/${platform}-setup.sh"
 install_homebrew
 activate_homebrew
 brew bundle --file "$repo_dir/Brewfile"
+
+# Remove folded directory links from previous runs before merging packages.
+stow --delete --dir "$repo_dir" --target "$HOME" common "$platform"
 
 # Defer conflicts from the generic package so the platform package owns them.
 stow_package common --defer
