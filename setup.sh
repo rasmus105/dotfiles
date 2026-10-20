@@ -43,7 +43,9 @@ stow_package() {
 
     [[ -d "$repo_dir/$package" ]] || fail "Missing Stow package: $package"
 
-    stow --restow --no-folding --ignore='^\.gitkeep$' --dir "$repo_dir" --target "$HOME" "$mode"='.*' "$package"
+    stow --restow --no-folding --ignore='^\.gitkeep$' \
+        --ignore='(^|/)\.codex/(?!AGENTS\.md$).*' \
+        --dir "$repo_dir" --target "$HOME" "$mode"='.*' "$package"
 }
 
 case "$(uname -s)" in
