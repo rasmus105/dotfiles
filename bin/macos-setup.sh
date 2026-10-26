@@ -6,6 +6,8 @@ defaults write com.apple.dock autohide -bool true # automatically hide dock.
 defaults write com.apple.dock autohide-time-modifier -float 0.30 # increase animation speed of dock appearing
 defaults write com.apple.dock autohide-delay -float 0 # immediately show dock when moving cursor to the bottom.
 defaults write com.apple.dock show-recents -bool false # don't show recent apps in dock
+defaults write com.apple.CrashReporter DialogType -string server # suppress crash dialogs while keeping crash logs
+defaults write com.apple.dock workspaces-auto-swoosh -bool true
 
 # enable disk encryption
 if [ "$(fdesetup isactive)" = "false" ]; then
