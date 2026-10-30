@@ -22,3 +22,6 @@
 - If you detect that you are in a sandbox, you may install tools and do whatever
   is needed to complete the task. If a required network resource is blocked, ask
   the user for access and explain why it is needed.
+- Git commit messages are a single brief subject line (e.g.
+  `debug: accept '?' inside AT set arguments`). Do not add a body or
+  description.
