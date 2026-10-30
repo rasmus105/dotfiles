@@ -8,7 +8,8 @@
 
 export EDITOR="nvim"
 export MANPAGER="nvim +Man!"
-export TERM="xterm-256color"
+# Preserve the terminal's capabilities; use a fallback only when none is supplied.
+export TERM="${TERM:-xterm-256color}"
 
 # ==============================================================================
 # Tool Homes

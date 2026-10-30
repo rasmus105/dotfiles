@@ -25,6 +25,9 @@ keybind = super+ctrl+l=goto_split:right
 keybind = super+ctrl+v=new_split:right
 keybind = super+ctrl+s=new_split:down
 
+keybind = super+ctrl+u=scroll_page_fractional:-0.5
+keybind = super+ctrl+d=scroll_page_fractional:0.5
+
 # Ctrl + [ as Escape
 keybind = ctrl+[=text:\x1b
 # Ignore Ctrl modifier when pressing enter
