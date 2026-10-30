@@ -9,6 +9,7 @@
     c = "!f() { git clone --recursive \"$@\"; }; f"
     s = "status -s"
     count = rev-list --count --all
+	filelog = log --follow --stat
 
 [init]
     defaultBranch = main
@@ -51,3 +52,11 @@
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
+[merge]
+	conflictStyle = zdiff3
+[credential "https://github.com"]
+	helper =
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !/opt/homebrew/bin/gh auth git-credential
