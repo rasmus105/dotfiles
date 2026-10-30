@@ -9,4 +9,4 @@ map("n", "K", function()
 	vim.cmd.RustLsp({ "hover", "actions" })
 end, { silent = true, buffer = bufnr, desc = "Rust hover actions" })
 
-map({ "n", "v", "x" }, "<leader>m", ":T cargo build<CR>", { buffer = true, desc = "cargo build" })
+map({ "n", "x" }, "<leader>m", ":T cargo build<CR>", { buffer = true, desc = "cargo build" })
