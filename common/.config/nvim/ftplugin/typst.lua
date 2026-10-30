@@ -35,4 +35,4 @@ vim.api.nvim_buf_create_user_command(0, "TypstWatchStop", function()
     require("config.typst-watch").stop()
 end, { desc = "Stop watching the current Typst document" })
 
-map({ "n", "v", "x" }, "<leader>m", watch_current_file, { buffer = true, desc = "typst PDF watch" })
+map({ "n", "x" }, "<leader>m", watch_current_file, { buffer = true, desc = "typst PDF watch" })
