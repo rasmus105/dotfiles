@@ -10,6 +10,17 @@ defaults write com.apple.dock show-recents -bool false # don't show recent apps 
 defaults write com.apple.CrashReporter DialogType -string server # suppress crash dialogs while keeping crash logs
 defaults write com.apple.dock workspaces-auto-swoosh -bool true
 
+# Free Control+Command+D for Ghostty; use Control+Command+Shift+D for dictionary lookup.
+# Hotkey 70 takes the character "d" (100), ANSI key code (2), and Cocoa modifier mask.
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 70 \
+    '<dict>
+        <key>enabled</key><true/>
+        <key>value</key><dict>
+            <key>parameters</key><array><integer>100</integer><integer>2</integer><integer>1441792</integer></array>
+            <key>type</key><string>standard</string>
+        </dict>
+    </dict>'
+
 # Stop the app before writing its preferences so it cannot overwrite them.
 switcher_domain="com.interversehq.InstantSpaceSwitcher"
 switcher_service="gui/$(id -u)/com.dotfiles.instant-space-switcher"
@@ -32,7 +43,7 @@ done
 for action in left right lastSpace space{11..16}; do
     defaults write "$switcher_domain" "enabled.$action" -bool false
 done
-defaults write "$switcher_domain" swipeOverride -bool true
+defaults write "$switcher_domain" swipeOverride -bool false
 defaults write "$switcher_domain" gestureSpeed -float 2000
 
 # enable disk encryption
