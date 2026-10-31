@@ -10,6 +10,8 @@ rex.bind("cmd+ctrl+l", "pane.focus", { direction = "right" })
 rex.bind("cmd+ctrl+v", "pane.split", { direction = "right" })
 rex.bind("cmd+ctrl+s", "pane.split", { direction = "down" })
 
+rex.bind("cmd+ctrl+f", "pane.zoom")
+
 -- Send literal bytes, matching Ghostty even with extended key protocols enabled.
 rex.bind("ctrl+[", "com.superlogical.terminal.write", { data = "\027" })
 rex.bind("ctrl+enter", "com.superlogical.terminal.write", { data = "\r" })

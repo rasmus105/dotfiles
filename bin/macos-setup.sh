@@ -10,6 +10,12 @@ defaults write com.apple.dock show-recents -bool false # don't show recent apps 
 defaults write com.apple.CrashReporter DialogType -string server # suppress crash dialogs while keeping crash logs
 defaults write com.apple.dock workspaces-auto-swoosh -bool true
 
+# Free Control+Command+F by moving macOS full-screen shortcuts to Control+Command+Shift+F.
+defaults write -g NSUserKeyEquivalents -dict-add \
+    'Enter Full Screen' '^@$f' \
+    'Exit Full Screen' '^@$f' \
+    'Toggle Full Screen' '^@$f'
+
 # Free Control+Command+D for Ghostty; use Control+Command+Shift+D for dictionary lookup.
 # Hotkey 70 takes the character "d" (100), ANSI key code (2), and Cocoa modifier mask.
 defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 70 \
