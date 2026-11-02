@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.dotfiles.instant-space-switcher</string>
+    <key>ProgramArguments</key>
+    <!-- The app may also have its native login item enabled already. -->
+    <array>
+        <string>/bin/sh</string>
+        <string>-c</string>
+        <string>if ! /usr/bin/pgrep -x InstantSpaceSwitcher &gt;/dev/null; then exec /usr/bin/open -g -a /Applications/InstantSpaceSwitcher.app; fi</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+</dict>
+</plist>

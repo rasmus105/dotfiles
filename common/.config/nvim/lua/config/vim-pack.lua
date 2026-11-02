@@ -28,6 +28,7 @@ vim.pack.add({
     { src = "https://github.com/mfussenegger/nvim-dap" },
     { src = "https://github.com/igorlfs/nvim-dap-view",                    version = vim.version.range("1") },
     -- Visuals
+    { src = "https://github.com/nvim-mini/mini.notify" },
     { src = "https://github.com/nvim-mini/mini.icons" },
     { src = "https://github.com/folke/which-key.nvim" },
     { src = "https://github.com/nvim-lualine/lualine.nvim" },

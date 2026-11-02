@@ -15,4 +15,4 @@ vim.api.nvim_buf_create_user_command(0, "JuliaRun", run_current_file, {
 	desc = "Run current Julia file",
 })
 
-map({ "n", "v", "x" }, "<leader>m", run_current_file, { buffer = true, desc = "julia run" })
+map({ "n", "x" }, "<leader>m", run_current_file, { buffer = true, desc = "julia run" })

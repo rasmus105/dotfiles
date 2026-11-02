@@ -29,3 +29,11 @@ brew "uv"
 brew "yazi"
 brew "zig"
 brew "zoxide"
+
+if OS.mac?
+  tap "jurplel/tap"
+  cask "karabiner-elements"
+  cask "jurplel/tap/instant-space-switcher"
+  cask "ghostty@tip"
+  cask "firefox"
+end

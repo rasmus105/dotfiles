@@ -95,19 +95,27 @@ case "$backend" in
         pi_extension="${AI_REVIEW_PI_EXTENSION:-$script_dir/../lib/ai-git/pi-git-tools.js}"
         [[ -r "$pi_extension" ]] ||
             fail "Pi Git tools extension not found: $pi_extension"
-        output=$(AI_GIT_PI_MODE=review command "$pi_bin" \
-            --print \
-            --no-session \
-            --no-extensions \
-            --no-skills \
-            --no-prompt-templates \
-            --no-context-files \
-            --no-approve \
-            --tools read,grep,find,ls,git_status,git_diff,git_log \
-            --extension "$pi_extension" \
-            --model "${model:-openai-codex/gpt-5.6-luna}" \
-            "$prompt")
-        colorize "$output"
+        run_pi() {
+            local auto_exit="$1"
+            shift
+            AI_GIT_PI_MODE=review AI_GIT_PI_AUTO_EXIT="$auto_exit" command "$pi_bin" \
+                "$@" \
+                --no-session \
+                --no-extensions \
+                --no-skills \
+                --no-prompt-templates \
+                --no-context-files \
+                --no-approve \
+                --tools read,grep,find,ls,git_status,git_diff,git_log \
+                --extension "$pi_extension" \
+                --model "${model:-openai-codex/gpt-6-luna}" \
+                "$prompt"
+        }
+        if [[ ! -t 0 || ! -t 1 ]]; then
+            run_pi 0 --print
+        else
+            run_pi 1
+        fi
         ;;
     opencode)
         opencode_bin="${AI_REVIEW_OPENCODE_BIN:-opencode}"

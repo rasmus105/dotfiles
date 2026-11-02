@@ -1,15 +1,17 @@
 local map = vim.keymap.set
 local functions = require("config.keymaps.functions")
 
+-- Use "x" for Visual-only maps so typing can replace selected snippet placeholders.
+
 -- Command shortcuts
-map({ "n", "v", "x" }, "<leader>n", ":norm ", { desc = "enter norm command" })
-map({ "n", "v", "x" }, "<leader>q", ":q<CR>", { desc = "quit" })
-map({ "n", "v", "x" }, "<leader>x", ":wqa!<CR>", { desc = "force quit all" })
-map({ "n", "v", "x" }, "<leader>l", ":update<CR>:source<CR>", { desc = "Update and source lua file" })
-map({ "n", "v", "x" }, "<leader>,", ":tabnew<CR>:term<CR>i", { desc = "Open terminal" })
-map({ "n", "v", "x" }, "<leader>.", ":edit!<CR>", { desc = "Reload current file" })
-map({ "n", "v", "x" }, "<CR>", ":T ", { desc = "Execute terminal command" })
-map({ "n", "v", "x" }, "<leader>s", ":wa<CR>", { desc = "Save all files" })
+map({ "n", "x" }, "<leader>n", ":norm ", { desc = "enter norm command" })
+map({ "n", "x" }, "<leader>q", ":q<CR>", { desc = "quit" })
+map({ "n", "x" }, "<leader>x", ":wqa!<CR>", { desc = "force quit all" })
+map({ "n", "x" }, "<leader>l", ":update<CR>:source<CR>", { desc = "Update and source lua file" })
+map({ "n", "x" }, "<leader>,", ":tabnew<CR>:term<CR>i", { desc = "Open terminal" })
+map({ "n", "x" }, "<leader>.", ":edit!<CR>", { desc = "Reload current file" })
+map({ "n", "x" }, "<CR>", ":T ", { desc = "Execute terminal command" })
+map({ "n", "x" }, "<leader>s", ":wa<CR>", { desc = "Save all files" })
 
 -- Change shortcuts for switching & resizing view
 map("n", "<C-h>", "<C-w>h")
@@ -71,7 +73,7 @@ for _, key in ipairs({
 end
 
 -- Copying
-map({ "n", "v" }, "<leader>y", '"+y')
+map({ "n", "x" }, "<leader>y", '"+y')
 map("n", "<leader>Y", '"+Y')
 map("n", "<leader>p", '"+p')
 map("n", "<leader>d", '"+d')
@@ -83,11 +85,11 @@ map("n", "<leader>a", "gg<S-v>G")
 map("n", "<leader>/", ":noh<CR>")
 
 -- Remove command history list
-map({ "n", "v" }, "q:", "")
+map({ "n", "x" }, "q:", "")
 
 -- Better indenting (stay in visual mode)
-map("v", "<", "<gv")
-map("v", ">", ">gv")
+map("x", "<", "<gv")
+map("x", ">", ">gv")
 
 -- Tab
 
@@ -114,14 +116,14 @@ map("n", "n", "'Nn'[v:searchforward].'zzzv'", { expr = true, desc = "Next Search
 map("n", "N", "'nN'[v:searchforward].'zzzv'", { expr = true, desc = "Prev Search Result" })
 
 -- Better paste
-map("v", "p", '"_dP')
+map("x", "p", '"_dP')
 
 -- Fix spelling (picks first suggestion)
 map("n", "z0", "1z=", { desc = "Fix word under cursor" })
 
 -- Move lines up/down
-map("v", "J", ":m '>+1<CR>gv=gv")
-map("v", "K", ":m '>-2<CR>gv=gv")
+map("x", "J", ":m '>+1<CR>gv=gv")
+map("x", "K", ":m '>-2<CR>gv=gv")
 
 -- Change all strings matching this string
 map("n", "<leader>w", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], {
@@ -152,6 +154,16 @@ map({ "c", "i" }, "<C-b>", "<Left>")
 -- binds Ctrl + f in insert mode to go forward 1 character, providing consistency with
 -- terminal/shell experience (that is the normal behavior)
 map({ "c", "i" }, "<C-f>", "<Right>")
+
+-- Snippet placeholders use Select mode; leave it without replacing their text.
+for key, motion in pairs({
+	["<C-e>"] = "<End>",
+	["<C-a>"] = "<Home>",
+	["<C-b>"] = "<Left>",
+	["<C-f>"] = "<Right>",
+}) do
+	map("s", key, "<Esc>i" .. motion)
+end
 
 -- make ESC behave similar to regular ESC in terminals
 map("t", "<Esc>", "<C-\\><C-n>", { desc = "Exit Terminal" })

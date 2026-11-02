@@ -116,6 +116,7 @@ local setup_lsp = lazy.once("lsp", function()
                 -- using neovim plugin to extend rust LSP capabilities, and it will
                 -- handle starting rust analyzer.
                 "rust_analyzer",
+                "tsgo", -- Deprecated alias for tsc; older Mason installations may still have it.
             },
         },
     })
@@ -126,6 +127,7 @@ local setup_lsp = lazy.once("lsp", function()
             "clangd", -- C/C++ language server
             "julials", -- Julia language server
             "lua_ls", -- Lua language server
+            "tsc", -- TypeScript/JavaScript language server (TypeScript 7+)
             -- "emmylua_ls", -- Another lua language server
             "zls", -- Zig language server
             "tinymist", -- Typst language server

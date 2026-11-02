@@ -8,10 +8,12 @@
 
 export ARM_NONE_EABI_TOOLCHAIN_PATH="/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
 export CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm"
+export JAVA_HOME="/Library/Java/JavaVirtualMachines/liberica-jdk-26-full.jdk/Contents/Home"
 export PATH="$PATH:/Users/kargo/.lmstudio/bin"
 
 typeset -U path
 path=(
+  "$JAVA_HOME/bin"
   "$ARM_NONE_EABI_TOOLCHAIN_PATH/bin"
   "/Applications/SEGGER/JLink/JFlash.app/Contents/MacOS"
   $path

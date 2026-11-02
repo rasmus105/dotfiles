@@ -2,6 +2,7 @@ vim.loader.enable()
 
 ---- Configuration (import order matters) ----
 require("config.options") -- vim options (i.e. vim.opt.*)
+require("config.bigfile") -- Disable expensive features for pathological files
 require("config.keymaps") -- vim native keymaps
 require("config.vim-pack")
 require("config.colorscheme") -- colorscheme configuration and setup

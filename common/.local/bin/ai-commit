@@ -65,16 +65,28 @@ IFS= read -r -d '' opencode_config <<'JSON' || true
 JSON
 
 IFS= read -r -d '' prompt <<PROMPT || true
-Create or amend one Git commit as requested.
+Create or amend one Git commit now. This invocation authorizes the commit;
+do not ask questions or wait for confirmation.
 
 Requirements:
-- Inspect the status, diff, and recent Git history.
+- Follow explicit additional guidance about commit scope. Otherwise, if anything
+  is staged, commit exactly the current index. Leave unstaged and untracked changes
+  untouched, including unstaged edits in partially staged files.
+- If nothing is staged, stage the current changes and create one commit, limiting
+  the selected paths only when additional guidance requests it.
+- Treat the selected scope as intentional. Related unstaged code or documentation,
+  incomplete work, missing tests, and possible inconsistencies are not reasons to
+  refuse, expand the scope, or request confirmation.
+- Inspect the status, selected diff, and recent Git history to write the message.
+  This is a commit task; do not review, fix files, or run tests yourself.
 - Match the repository's commit message convention.
 - Prefer a single-line subject with no body unless repository convention or guidance calls for one.
 - Amend only when explicitly requested. Otherwise create exactly one new commit.
 - Run normal Git hooks.
-- Stop and warn instead of committing suspected credentials, secrets, or sensitive data.
-- If a safe commit cannot be made, stop and explain why.
+- Stop only for concrete blockers: suspected credentials, secrets, or sensitive
+  data in the selected changes; unresolved merge conflicts; a failing hook or Git
+  command; or nothing to commit. Explain the blocker without asking for confirmation.
+- After success, report the commit hash and subject concisely.
 
 Additional guidance: $guidance
 PROMPT
@@ -88,18 +100,27 @@ case "$backend" in
         pi_extension="${AI_COMMIT_PI_EXTENSION:-$script_dir/../lib/ai-git/pi-git-tools.js}"
         [[ -r "$pi_extension" ]] ||
             fail "Pi Git tools extension not found: $pi_extension"
-        AI_GIT_PI_MODE=commit command "$pi_bin" \
-            --print \
-            --no-session \
-            --no-extensions \
-            --no-skills \
-            --no-prompt-templates \
-            --no-context-files \
-            --no-approve \
-            --tools read,grep,find,ls,git_status,git_diff,git_log,git_add,git_commit \
-            --extension "$pi_extension" \
-            --model "${model:-openai-codex/gpt-5.6-luna}" \
-            "$prompt"
+        run_pi() {
+            local auto_exit="$1"
+            shift
+            AI_GIT_PI_MODE=commit AI_GIT_PI_AUTO_EXIT="$auto_exit" command "$pi_bin" \
+                "$@" \
+                --no-session \
+                --no-extensions \
+                --no-skills \
+                --no-prompt-templates \
+                --no-context-files \
+                --no-approve \
+                --tools read,grep,find,ls,git_status,git_diff,git_log,git_add,git_commit \
+                --extension "$pi_extension" \
+                --model "${model:-openai-codex/gpt-6-luna}" \
+                "$prompt"
+        }
+        if [[ ! -t 0 || ! -t 1 ]]; then
+            run_pi 0 --print
+        else
+            run_pi 1
+        fi
         ;;
     opencode)
         opencode_bin="${AI_COMMIT_OPENCODE_BIN:-opencode}"

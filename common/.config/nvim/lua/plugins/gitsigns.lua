@@ -19,6 +19,10 @@ local setup = lazy.once("gitsigns", function()
 			col = 1,
 		},
 		on_attach = function(bufnr)
+			if vim.bo[bufnr].filetype == "bigfile" then
+				return false
+			end
+
 			local gitsigns = require("gitsigns")
 
 			local function opts(desc)
@@ -48,10 +52,10 @@ local setup = lazy.once("gitsigns", function()
 			-- map("n", "<leader>r", gitsigns.reset_hunk, opts("Reset hunk"))
 
 			-- Stage/reset in visual mode (partial hunk)
-			map("v", "<leader>s", function()
+			map("x", "<leader>s", function()
 				gitsigns.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
 			end, opts("Stage selected lines"))
-			map("v", "<leader>r", function()
+			map("x", "<leader>r", function()
 				gitsigns.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
 			end, opts("Reset selected lines"))
 
