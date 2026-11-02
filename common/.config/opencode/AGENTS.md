@@ -54,6 +54,9 @@
 - Git commit messages are a single brief subject line (e.g.
   `debug: accept '?' inside AT set arguments`). Do not add a body or
   description.
+- On the Mac mini, use Rex host `macbook` to access the MacBook server;
+  run `rex -S macbook ...` and inspect its sessions before using a terminal.
+  If `rex` is not on PATH, use `/Applications/Rex Beta.app/Contents/Helpers/Rex Server.rex/Contents/MacOS/rex`.
 
 ## Communication
 
