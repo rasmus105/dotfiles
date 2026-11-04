@@ -125,13 +125,17 @@ local setup_lsp = lazy.once("lsp", function()
     require("mason-tool-installer").setup({
         ensure_installed = {
             "clangd", -- C/C++ language server
+            "dockerls", -- Docker language server
+            "jdtls", -- Java language server
             "julials", -- Julia language server
             "lua_ls", -- Lua language server
+            "rust_analyzer", -- Rust language server
             "tsc", -- TypeScript/JavaScript language server (TypeScript 7+)
             -- "emmylua_ls", -- Another lua language server
             "zls", -- Zig language server
             "tinymist", -- Typst language server
             "marksman", -- Markdown language server
+            "yamlls", -- YAML language server
             "codelldb", -- Debug adapter for Zig/C/C++/Rust
             "clang-format", -- C/C++ formatter
             "stylua", -- Lua formatter
@@ -142,6 +146,10 @@ local setup_lsp = lazy.once("lsp", function()
             "debugpy", -- Python debug adapter
         },
     })
+    -- Lazy loading can happen after the installer's VimEnter autocmd.
+    if vim.v.vim_did_enter == 1 then
+        require("mason-tool-installer").run_on_start()
+    end
 
     vim.lsp.config("ty", {
         cmd = { "ty", "server" },
