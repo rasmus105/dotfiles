@@ -56,6 +56,17 @@ gd() {
   local -a args
   local arg
 
+  if (( $# == 1 )) && [[ "$1" == -f ]]; then
+    local commits selected
+    commits="$(git log --color=always --date=relative --format='%H%x09%C(auto)%h %s %C(dim green)(%ar) %C(bold blue)<%an>%C(auto)%d%Creset')" || return
+    [[ -n "$commits" ]] || return 0
+    selected="$(print -r -- "$commits" | fzf --ansi --delimiter=$'\t' --with-nth=2.. \
+      --preview='git show --color=always --stat --format=fuller {1}' \
+      --preview-window='right:60%:wrap')" || return 0
+    [[ -n "$selected" ]] || return 0
+    set -- "${selected%%$'\t'*}"
+  fi
+
   if (( $# == 0 )); then
     local changes
     changes="$(git status --porcelain --untracked-files=normal)" || return
