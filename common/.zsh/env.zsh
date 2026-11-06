@@ -22,6 +22,9 @@ export BUN_INSTALL="$HOME/.bun"
 # ==============================================================================
 
 typeset -U path
+if [[ "$(uname -s)" == "Darwin" && -x /opt/homebrew/bin/brew ]]; then
+  path=(/opt/homebrew/bin /opt/homebrew/sbin $path)
+fi
 path=(
   "$HOME/.cargo/bin"
   "$HOME/.local/bin"

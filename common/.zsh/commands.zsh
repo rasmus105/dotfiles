@@ -9,6 +9,8 @@
 alias g='lazygit -ucd "$HOME/.config/lazygit"'
 alias gp='git push'
 alias n='nvim'
+alias cx='codex'
+alias cl='claude'
 alias grep='grep --color=auto'
 alias cd='z'
 alias cat='bat -p'
