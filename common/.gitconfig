@@ -42,6 +42,24 @@
     path = ~/.gitconfig-personal # (my company)
     path = ~/.gitconfig-nversion
 
+[includeIf "gitdir:~/dev/vl/"]
+    path = ~/.gitconfig-personal
+    path = ~/.gitconfig-nversion
+
+[includeIf "gitdir:~/dev/cde/"]
+    path = ~/.gitconfig-personal
+    path = ~/.gitconfig-nversion
+
+[includeIf "gitdir:~/dev/ts/"]
+    path = ~/.gitconfig-personal
+    path = ~/.gitconfig-nversion
+
+[includeIf "gitdir:~/dev/p/"]
+    path = ~/.gitconfig-personal
+
+[includeIf "gitdir:~/dev/tt/"]
+    path = ~/.gitconfig-traffitech
+
 [includeIf "gitdir:~/dev/personal/"]
     path = ~/.gitconfig-personal
 
