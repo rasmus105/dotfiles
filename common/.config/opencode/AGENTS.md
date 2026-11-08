@@ -49,6 +49,7 @@
 ## Workflow
 
 - Close temporary tabs and panes in Rex you create when finished.
+- NEVER name Rex tabs or sessions unless explicitly asked.
 - Before committing uncommitted work you did not write, review it against these
   rules as if you had written it.
 - Git commit messages are a single brief subject line (e.g.
