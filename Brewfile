@@ -1,5 +1,6 @@
 tap "jstkdng/programs", trusted: true
 tap "anomalyco/tap"
+tap "rasmus105/tap"
 
 brew "antidote"
 brew "ast-grep"
@@ -16,6 +17,7 @@ brew "lazygit"
 brew "neovim", args: ["HEAD"]
 brew "node"
 brew "anomalyco/tap/opencode"
+brew "rasmus105/tap/ptz"
 brew "resvg"
 brew "ripgrep"
 brew "rustup"
