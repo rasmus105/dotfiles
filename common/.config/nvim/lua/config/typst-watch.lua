@@ -27,11 +27,6 @@ function M.watch()
     local watcher = watchers[file]
     if watcher and vim.fn.jobwait({ watcher.job }, 0)[1] == -1 then
         watcher.buffers[buffer] = true
-        if vim.fn.filereadable(watcher.pdf) == 1 then
-            vim.ui.open(watcher.pdf)
-        else
-            vim.notify("Typst PDF is not ready yet; see :TypstWatchLog", vim.log.levels.INFO)
-        end
         return
     end
 
@@ -52,7 +47,7 @@ function M.watch()
     local pending = ""
     -- Keep the terminal output available without creating a window or tab.
     watcher.job = vim.api.nvim_buf_call(watcher.log, function()
-        return vim.fn.jobstart({ "typst", "watch", file, watcher.pdf, "--open", "--diagnostic-format=short" }, {
+        return vim.fn.jobstart({ "typst", "watch", file, watcher.pdf, "--diagnostic-format=short" }, {
             term = true,
             on_stdout = function(_, data)
                 if watchers[file] ~= watcher then

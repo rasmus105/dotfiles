@@ -38,6 +38,11 @@
   choice exists, a constraint or tradeoff, or the meaning or source of
   non-obvious logic or values. Keep them brief; do not narrate or summarize
   straightforward code.
+- Write comments that help readers understand the intent behind the code. For
+  central types and other important abstractions, explain why they exist, what
+  role they play in the system, and how they relate to the surrounding
+  components. Give readers the context they need to understand the design and
+  use it correctly.
 - Keep READMEs short and match the existing documentation's scope. A new flag
   or option gets one line in an existing usage snippet, not its own section;
   API details belong in doc comments next to the code.
@@ -74,3 +79,8 @@
   Use prose for explanation and reasoning; use labels, lists, tables, or visuals
   when they make facts, comparisons, or patterns easier to grasp. Avoid prose
   that merely narrates what is already apparent.
+
+- Choose the clearest way to explain an idea. Use a short code snippet when it
+  makes behavior, an API, or a proposed change easier to understand; use prose
+  when the reasoning matters more. Keep examples focused and avoid repeating
+  the same explanation in both forms.

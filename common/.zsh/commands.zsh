@@ -11,6 +11,7 @@ alias gp='git push'
 alias n='nvim'
 alias cx='codex'
 alias cl='claude'
+alias ck='chafa --format=kitty'
 alias grep='grep --color=auto'
 alias cd='z'
 alias cat='bat -p'
@@ -94,17 +95,19 @@ gd() {
 gstats() (
   emulate -L zsh
   setopt pipefail
-  local root file tracked color=0
+  local root file tracked directory="$PWD" color=0
+  local -a paths=("$@")
+  (( $# )) || paths=(':(top)')
 
   root="$(git rev-parse --show-toplevel)" || return
+  tracked="$(git diff --no-color --raw --numstat HEAD -- "${paths[@]}")" || return
   builtin cd -- "$root" || return
-  tracked="$(git diff --no-color --raw --numstat HEAD)" || return
   [[ -t 1 && -z "${NO_COLOR:-}" && "$TERM" != dumb ]] && color=1
 
   {
     [[ -z "$tracked" ]] || print -r -- "$tracked"
     print -r -- '?'
-    git ls-files --others --exclude-standard -z |
+    git -C "$directory" ls-files --full-name --others --exclude-standard -z -- "${paths[@]}" |
       while IFS= read -r -d '' file; do
         # A no-index diff exits with 1 when it finds changes.
         git diff --no-color --no-index --numstat -- /dev/null "$file" || (( $? == 1 )) || return
