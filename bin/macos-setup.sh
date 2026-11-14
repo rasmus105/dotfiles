@@ -1,6 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# https://github.com/biscuitehh/pam-watchid supports Touch ID and Apple Watch.
+# Sudo's remaining PAM rules allow passwords when the prompt is cancelled.
+(
+    temp_dir="$(mktemp -d)"
+    trap 'rm -rf "$temp_dir"' EXIT
+    swiftc "$repo_dir/vendor/pam-watchid/watchid-pam-extension.swift" \
+        -emit-library -o "$temp_dir/pam_watchid.so.2"
+
+    pam_module=/usr/local/lib/pam/pam_watchid.so.2
+    pam_config=/etc/pam.d/sudo_local
+    pam_line="auth       sufficient     $pam_module"
+    sudo install -d -o root -g wheel -m 755 /usr/local/lib/pam
+    sudo install -o root -g wheel -m 444 "$temp_dir/pam_watchid.so.2" "$pam_module"
+    if [[ -f "$pam_config" ]]; then
+        cat "$pam_config" > "$temp_dir/sudo_local"
+    else
+        : > "$temp_dir/sudo_local"
+    fi
+    if ! grep -Fxq "$pam_line" "$temp_dir/sudo_local"; then
+        printf '\n%s\n' "$pam_line" >> "$temp_dir/sudo_local"
+        sudo install -o root -g wheel -m 644 "$temp_dir/sudo_local" "$pam_config"
+    fi
+)
+
 defaults write com.apple.Terminal FocusFollowsMouse -bool true # avoid having to click once to focus on a window
 defaults write com.apple.dock mru-spaces -bool false # avoid MacOS reordering desktops.
 defaults write com.apple.dock autohide -bool true # automatically hide dock.
