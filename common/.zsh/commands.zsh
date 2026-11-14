@@ -9,14 +9,15 @@
 alias g='lazygit -ucd "$HOME/.config/lazygit"'
 alias gp='git push'
 alias n='nvim'
+alias zr='zig build run --'
 alias cx='codex'
 alias cl='claude'
 alias ck='chafa --format=kitty'
 alias grep='grep --color=auto'
 alias cd='z'
 alias cat='bat -p'
-alias disable_sleep='sudo pmset -a disablesleep 1' # useful when needing to close lid while keeping laptop on.
-alias enable_sleep='sudo pmset -a disablesleep 0'
+alias ds='sudo pmset -a disablesleep 1' # useful when needing to close lid while keeping laptop on.
+alias es='sudo pmset -a disablesleep 0'
 alias venv='source .venv/bin/activate'
 alias ..="cd .."
 alias ...="cd ../.."
