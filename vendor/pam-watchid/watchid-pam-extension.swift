@@ -24,7 +24,10 @@ public func pam_sm_authenticate(pamh: pam_handle_t, flags: CInt, argc: CInt, arg
     var reason = arguments["reason"] ?? DEFAULT_REASON
     reason = reason.isEmpty ? DEFAULT_REASON : reason
 
-    let policy = LAPolicy.deviceOwnerAuthenticationIgnoringUserID
+    guard #available(macOS 15.0, *) else {
+        return PAM_IGNORE
+    }
+    let policy = LAPolicy.deviceOwnerAuthenticationWithBiometricsOrCompanion
 
     let context = LAContext()
     if !context.canEvaluatePolicy(policy, error: nil) {
@@ -76,12 +79,6 @@ private func parseArguments(argc: Int, argv: vchar) -> [String: String] {
     }
 
     return parsed
-}
-
-private extension LAPolicy {
-    static var deviceOwnerAuthenticationIgnoringUserID: LAPolicy {
-        return .deviceOwnerAuthenticationWithBiometricsOrWatch
-    }
 }
 
 // MARK: - Ignored (unhandled) PAM events
