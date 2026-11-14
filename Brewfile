@@ -23,7 +23,7 @@ brew "ripgrep"
 brew "rustup"
 brew "scc"
 brew "stow"
-brew "tldr"
+brew "tlrc"
 brew "tmux"
 brew "tree-sitter"
 brew "pandoc"
@@ -39,5 +39,5 @@ if OS.mac?
   cask "karabiner-elements"
   cask "jurplel/tap/instant-space-switcher"
   cask "ghostty@tip"
-  cask "firefox"
+  cask "firefox" unless File.directory?("/Applications/Firefox.app") && !File.directory?("#{HOMEBREW_PREFIX}/Caskroom/firefox")
 end
