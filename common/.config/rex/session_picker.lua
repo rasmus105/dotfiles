@@ -3,6 +3,26 @@
 local visit_order = {}
 local visit_count = 0
 
+-- Host settings can store SF Symbols, but rex.ui.pick accepts a fixed set.
+local picker_icons = {
+  document = true,
+  folder = true,
+  branch = true,
+  terminal = true,
+  code = true,
+  server = true,
+  database = true,
+  package = true,
+  globe = true,
+  link = true,
+  person = true,
+  tag = true,
+  clock = true,
+  star = true,
+  gear = true,
+  plus = true,
+}
+
 local function record_visit(session_id)
   visit_count = visit_count + 1
   visit_order[session_id] = visit_count
@@ -79,6 +99,15 @@ rex.action{
       record_visit(ctx.session_id)
     end
 
+    local icon_by_host = {}
+    local call_home = ctx.server and home_call or rex.call
+    local host_list = call_home("hosts.list")
+    for _, host in ipairs(host_list and host_list.hosts or {}) do
+      if picker_icons[host.icon] then
+        icon_by_host[host.label:lower()] = host.icon
+      end
+    end
+
     local items = {}
     local session_hosts = {}
     local function add_sessions(server, result, err)
@@ -95,8 +124,8 @@ rex.action{
             id = id,
             title = session.label ~= "" and session.label or id,
             subtitle = host,
-            icon = server and "server" or "terminal",
-            detail = visit_order[id] and "Recent" or "Other sessions",
+            icon = icon_by_host[host:lower()],
+            detail = visit_order[id] and "Recent" or nil,
           }
         end
       end
