@@ -2,8 +2,7 @@
 rex.unbind("ctrl+tab")
 
 -- rex.bind("cmd+k", "pick_session")
-rex.bind("alt+cmd+k", "remember_session")
-rex.bind("shift+cmd+k", "toggle_session")
+rex.bind("shift+cmd+k", "session.recent")
 
 -- Adding Command distinguishes Rex panes from Neovim's Control shortcuts.
 rex.bind("cmd+ctrl+h", "pane.focus", { direction = "left" })
