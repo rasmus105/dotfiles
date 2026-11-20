@@ -1,7 +1,7 @@
 -- Let terminal applications handle Control+Tab.
 rex.unbind("ctrl+tab")
 
-rex.bind("cmd+k", "pick_session")
+-- rex.bind("cmd+k", "pick_session")
 rex.bind("shift+cmd+k", "session.recent")
 
 -- Adding Command distinguishes Rex panes from Neovim's Control shortcuts.
