@@ -53,6 +53,10 @@
 
 ## Workflow
 
+- Use the repository root's ignored `.sp/` for scratch work and `.sp/o/` for
+  generated deliverables such as reports, PDFs, and exports. Follow an explicit
+  user or project destination when one is given. Otherwise, use `.sp/o/` even
+  if a tool or skill suggests an `output/` directory.
 - Close temporary tabs and panes in Rex you create when finished.
 - NEVER name Rex tabs or sessions unless explicitly asked.
 - Before committing uncommitted work you did not write, review it against these
