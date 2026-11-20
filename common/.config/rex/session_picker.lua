@@ -8,6 +8,64 @@ local function record_visit(session_id)
   visit_order[session_id] = visit_count
 end
 
+local function run_rex(argv)
+  local command = { "rex", "--autostart=false", "--timeout", "3s" }
+  for _, arg in ipairs(argv) do
+    command[#command + 1] = arg
+  end
+  local options = { timeout = 5, env = { REX_SERVER = false } }
+  local result, err = rex.exec(command, options)
+  if not result and os.getenv("HOME") then
+    command[1] = os.getenv("HOME") .. "/Library/Application Support/com.superlogical.rex/"
+      .. "RexServer/Versions/Current/Rex Server.app/Contents/MacOS/rex"
+    result, err = rex.exec(command, options)
+  end
+  if not result then
+    return nil, err
+  end
+  if not result.ok then
+    return nil, result.stderr
+  end
+  return result.stdout
+end
+
+local function home_call(method, args)
+  -- From a remote session, rex.call follows that session's host.
+  local argv = { "api", "call", method }
+  if args then
+    argv[#argv + 1] = assert(rex.json.encode(args))
+  end
+  local output, err = run_rex(argv)
+  if not output then
+    return nil, err
+  end
+  return rex.json.decode(output)
+end
+
+local function select_session(ctx, session_id, server)
+  local args = { session_id = session_id }
+  if not server and not ctx.server then
+    rex.client.queue("session.select", args)
+    return
+  end
+
+  -- session.select resolves IDs on the connection that delivers the action.
+  -- Use a separate CLI connection so the app can answer the request while
+  -- it is waiting for this picker action to finish.
+  local call_home = ctx.server and home_call or rex.call
+  local client = assert(call_home("client.inspect", { client_id = ctx.client_id })).client
+  local label = client.info.label
+  if not label or label == "" then
+    error("The Rex app needs a client label to switch hosts.", 0)
+  end
+  local argv = { "-C", label, "do", "session.select", "session_id=" .. session_id }
+  if server then
+    table.insert(argv, 1, server)
+    table.insert(argv, 1, "-S")
+  end
+  assert(run_rex(argv))
+end
+
 rex.action{
   name = "pick_session",
   title = "Pick Recent Session",
@@ -17,24 +75,43 @@ rex.action{
       return
     end
 
-    local result, err = rex.call("session.list")
-    if not result then
-      error(err, 0)
-    end
-
     if ctx.session_id then
       record_visit(ctx.session_id)
     end
 
     local items = {}
-    for _, session in ipairs(result.sessions or {}) do
-      if session.session_id ~= ctx.session_id then
-        items[#items + 1] = {
-          id = session.session_id,
-          title = session.label ~= "" and session.label or session.session_id,
-        }
+    local session_hosts = {}
+    local function add_sessions(server, result, err)
+      local host = server or "This Mac"
+      if not result then
+        rex.log("warn", "Session picker (" .. host .. "): " .. (err or "session list unavailable"))
+        return
+      end
+      for _, session in ipairs(result.sessions or {}) do
+        local id = session.session_id
+        if id ~= ctx.session_id and session_hosts[id] == nil then
+          session_hosts[id] = server or false
+          items[#items + 1] = {
+            id = id,
+            title = session.label ~= "" and session.label or id,
+            subtitle = host,
+            icon = server and "server" or "terminal",
+            detail = visit_order[id] and "Recent" or "Other sessions",
+          }
+        end
       end
     end
+
+    if ctx.server then
+      add_sessions(nil, home_call("session.list"))
+    end
+    add_sessions(ctx.server, rex.call("session.list"))
+    for _, server in ipairs(rex.servers()) do
+      if server ~= ctx.server then
+        add_sessions(server, rex.server(server).call("session.list"))
+      end
+    end
+
     if #items == 0 then
       rex.client.queue("session.switch")
       return
@@ -51,6 +128,9 @@ rex.action{
       if a_title ~= b_title then
         return a_title < b_title
       end
+      if a.subtitle ~= b.subtitle then
+        return a.subtitle < b.subtitle
+      end
       return a.id < b.id
     end)
 
@@ -60,7 +140,7 @@ rex.action{
       items = items,
     }
     if selected then
-      rex.client.queue("session.select", { session_id = selected })
+      select_session(ctx, selected, session_hosts[selected])
       record_visit(selected)
     elseif reason == "unsupported" then
       rex.client.queue("session.switch")
