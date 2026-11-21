@@ -80,7 +80,7 @@ fzf-complete-path() {
   zle fzf-completion
 }
 zle -N fzf-complete-path
-bindkey '^X^T' fzf-complete-path
+bindkey '^T' fzf-complete-path
 
 # ==============================================================================
 # Prompt
