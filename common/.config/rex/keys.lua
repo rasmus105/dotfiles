@@ -11,14 +11,17 @@ rex.action{
     end
 
     local view = assert(rex.session.view{})
-    local before_window_id
+    local current_index
     for index, window in ipairs(view.windows) do
-      if window.window_id == view.active_window_id then
-        local next_window = view.windows[index + 1]
-        before_window_id = next_window and next_window.window_id
+      if ctx.block_id and window.focused_block_id == ctx.block_id then
+        current_index = index
         break
       end
+      if window.window_id == view.active_window_id then
+        current_index = index
+      end
     end
+    local next_window = current_index and view.windows[current_index + 1]
 
     local cwd
     if ctx.block_id then
@@ -31,24 +34,22 @@ rex.action{
       end
     end
     local tab = assert(rex.session.new_window{
+      focus = false,
       layout = rex.layout.block{
         flavor = "com.superlogical.terminal.shell",
         options = { cwd = cwd },
       },
     })
 
-    if before_window_id then
+    if next_window then
       assert(rex.session.move_window{
         window_id = tab.window_id,
-        before_window_id = before_window_id,
+        before_window_id = next_window.window_id,
       })
     end
 
-    -- The app tracks its selected tab separately from the server's active window.
-    rex.client.queue("session.select", {
-      session_id = ctx.session_id,
-      window_id = tab.window_id,
-    })
+    -- Let the app handle focus within its current session, including on remote hosts.
+    rex.client.queue("client.tab.goto", { index = next_window and current_index + 1 or -1 })
   end,
 }
 rex.bind("cmd+t", "new_tab_beside")
