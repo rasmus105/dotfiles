@@ -1,46 +1,57 @@
 -- Let terminal applications handle Control+Tab.
 rex.unbind("ctrl+tab")
 
-rex.bind("cmd+t", function(ctx)
-  if not ctx.session_id then
-    return false
-  end
-
-  local view = assert(rex.session.view{})
-  local before_window_id
-  for index, window in ipairs(view.windows) do
-    if window.window_id == view.active_window_id then
-      local next_window = view.windows[index + 1]
-      before_window_id = next_window and next_window.window_id
-      break
+rex.action{
+  name = "new_tab_beside",
+  title = "New Tab Beside Current Tab",
+  run = function(ctx)
+    if not ctx.session_id then
+      rex.client.queue("client.tab.new")
+      return
     end
-  end
 
-  local cwd
-  if ctx.block_id then
-    local directory = rex.block.call("com.superlogical.terminal", "pwd", { block_id = ctx.block_id })
-    if directory and directory.pwd then
-      local path = directory.pwd:match("^file://[^/]*(/.*)$")
-      cwd = path and path:gsub("%%(%x%x)", function(hex)
-        return string.char(tonumber(hex, 16))
-      end)
+    local view = assert(rex.session.view{})
+    local before_window_id
+    for index, window in ipairs(view.windows) do
+      if window.window_id == view.active_window_id then
+        local next_window = view.windows[index + 1]
+        before_window_id = next_window and next_window.window_id
+        break
+      end
     end
-  end
-  local tab = assert(rex.session.new_window{
-    layout = rex.layout.block{
-      flavor = "com.superlogical.terminal.shell",
-      options = { cwd = cwd },
-    },
-  })
 
-  if before_window_id then
-    assert(rex.session.move_window{
-      window_id = tab.window_id,
-      before_window_id = before_window_id,
+    local cwd
+    if ctx.block_id then
+      local directory = rex.block.call("com.superlogical.terminal", "pwd", { block_id = ctx.block_id })
+      if directory and directory.pwd then
+        local path = directory.pwd:match("^file://[^/]*(/.*)$")
+        cwd = path and path:gsub("%%(%x%x)", function(hex)
+          return string.char(tonumber(hex, 16))
+        end)
+      end
+    end
+    local tab = assert(rex.session.new_window{
+      layout = rex.layout.block{
+        flavor = "com.superlogical.terminal.shell",
+        options = { cwd = cwd },
+      },
     })
-  end
-  return true
-end)
+
+    if before_window_id then
+      assert(rex.session.move_window{
+        window_id = tab.window_id,
+        before_window_id = before_window_id,
+      })
+    end
+
+    -- The app tracks its selected tab separately from the server's active window.
+    rex.client.queue("session.select", {
+      session_id = ctx.session_id,
+      window_id = tab.window_id,
+    })
+  end,
+}
+rex.bind("cmd+t", "new_tab_beside")
 
 -- rex.bind("cmd+k", "pick_session")
 rex.bind("shift+cmd+k", "session.recent")
