@@ -34,6 +34,9 @@ export FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS:+$FZF_DEFAULT_OPTS }--bind=ctrl-n:do
 source <(fzf --zsh)
 eval "$(zoxide init zsh)"
 
+# The cd alias expands to z before fzf checks which commands take directories.
+FZF_COMPLETION_DIR_COMMANDS="${FZF_COMPLETION_DIR_COMMANDS-cd pushd rmdir} z"
+
 # ==============================================================================
 # Completion
 # ==============================================================================
@@ -71,6 +74,13 @@ zstyle ':fzf-tab:*' fzf-bindings 'ctrl-g:accept'
 KEYTIMEOUT=1
 bindkey -e
 bindkey '^U' backward-kill-line
+
+fzf-complete-path() {
+  local FZF_COMPLETION_TRIGGER=''
+  zle fzf-completion
+}
+zle -N fzf-complete-path
+bindkey '^X^T' fzf-complete-path
 
 # ==============================================================================
 # Prompt
