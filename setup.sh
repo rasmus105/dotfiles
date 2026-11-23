@@ -74,6 +74,11 @@ platform_setup="$repo_dir/bin/${platform}-setup.sh"
 
 install_homebrew
 activate_homebrew
+
+# The old client and tlrc install the same command and completion files.
+if [[ -n "$(brew list --versions tldr)" ]]; then
+    brew unlink tldr
+fi
 brew bundle --file "$repo_dir/Brewfile"
 
 nvim_bin="$HOMEBREW_PREFIX/bin/nvim"
