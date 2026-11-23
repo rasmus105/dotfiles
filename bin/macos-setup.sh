@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+brew bundle --file "$repo_dir/bin/macos.Brewfile"
+
 # https://github.com/biscuitehh/pam-watchid supports Touch ID and Apple Watch.
 # Sudo's remaining PAM rules allow passwords when the prompt is cancelled.
 (

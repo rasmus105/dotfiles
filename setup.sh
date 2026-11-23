@@ -76,6 +76,17 @@ install_homebrew
 activate_homebrew
 brew bundle --file "$repo_dir/Brewfile"
 
+nvim_bin="$HOMEBREW_PREFIX/bin/nvim"
+# Bundle considers a linked HEAD install sufficient even with a stable spec.
+if [[ -x "$nvim_bin" && "$("$nvim_bin" --version)" == NVIM\ *-dev* ]]; then
+    brew unlink neovim
+    if ! HOMEBREW_NO_INSTALL_CLEANUP=1 brew install --formula neovim; then
+        brew link --HEAD neovim
+        fail "Could not install stable Neovim."
+    fi
+    [[ -x "$nvim_bin" ]] || brew link neovim
+fi
+
 export PATH="$HOME/.juliaup/bin:$HOME/.cargo/bin:$HOMEBREW_PREFIX/opt/rustup/bin:$HOMEBREW_PREFIX/bin:$PATH"
 if ! rustup default >/dev/null 2>&1; then
     rustup default stable
@@ -101,7 +112,7 @@ stow --delete --dir "$repo_dir" --target "$HOME" common "$platform"
 stow_package common --defer
 stow_package "$platform" --override
 
-nvim --headless -i NONE -n -u NONE -l "$repo_dir/bin/nvim-setup.lua" plugins
-nvim --headless -i NONE -n -u "$HOME/.config/nvim/init.lua" -l "$repo_dir/bin/nvim-setup.lua"
+"$nvim_bin" --headless -i NONE -n -u NONE -l "$repo_dir/bin/nvim-setup.lua" plugins
+"$nvim_bin" --headless -i NONE -n -u "$HOME/.config/nvim/init.lua" -l "$repo_dir/bin/nvim-setup.lua"
 
 source "$platform_setup"
