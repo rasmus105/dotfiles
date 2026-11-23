@@ -97,9 +97,9 @@ if ! rustup default >/dev/null 2>&1; then
     rustup default stable
 fi
 rustup component add rust-src
+juliaup add 1.12
 if ! julia --version >/dev/null 2>&1; then
-    juliaup add release
-    juliaup default release
+    juliaup default 1.12
 fi
 if [[ ! -x "${JAVA_HOME:-}/bin/java" || -z "${JAVA_HOME:-}" ]]; then
     if [[ "$platform" == "macos" ]]; then

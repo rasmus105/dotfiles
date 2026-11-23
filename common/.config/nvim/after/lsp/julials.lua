@@ -1,7 +1,13 @@
 local julia_lsp = vim.fn.stdpath("data") .. "/mason/packages/julia-lsp/libexec/bin/julia-lsp"
 
 local function julia_env_path(root_dir)
-	if root_dir and vim.fn.filereadable(vim.fs.joinpath(root_dir, "Project.toml")) == 1 then
+	if
+		root_dir
+		and (
+			vim.fn.filereadable(vim.fs.joinpath(root_dir, "Project.toml")) == 1
+			or vim.fn.filereadable(vim.fs.joinpath(root_dir, "JuliaProject.toml")) == 1
+		)
+	then
 		return root_dir
 	end
 
@@ -10,7 +16,7 @@ local function julia_env_path(root_dir)
 		"--startup-file=no",
 		"--history-file=no",
 		"-e",
-		"using Pkg; print(dirname(Pkg.Types.Context().env.project_file))",
+		"print(dirname(Base.active_project()))",
 	})
 
 	if vim.v.shell_error == 0 then
@@ -19,6 +25,8 @@ local function julia_env_path(root_dir)
 end
 
 return {
+	-- Mason's Julia language server currently fails to precompile under Julia 1.13.
+	cmd_env = { JULIAUP_CHANNEL = "1.12" },
 	cmd = function(dispatchers, config)
 		return vim.lsp.rpc.start({ julia_lsp, julia_env_path(config.root_dir) }, dispatchers, {
 			cwd = config.cmd_cwd,
