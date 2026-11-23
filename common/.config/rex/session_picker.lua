@@ -1,5 +1,8 @@
--- Rex exposes history navigation as a focus change. Track the sessions seen
--- by this picker in memory for the lifetime of the loaded config.
+-- Rex keeps sessions attached after it switches away from them, so the app's
+-- attachment list cannot tell us its previous session.
+local pair_by_client = {}
+
+-- Track visits made by these actions for the lifetime of the loaded config.
 local visit_order = {}
 local visit_count = 0
 
@@ -86,9 +89,9 @@ local function select_session(ctx, session_id, server)
   assert(run_rex(argv))
 end
 
-rex.action{
-  name = "pick_session",
-  title = "Pick Recent Session",
+local pick_alternate = {
+  name = "pick_alternate_session",
+  title = "Choose Alternate Session",
   run = function(ctx)
     if not rex.ui then
       rex.client.queue("session.switch")
@@ -164,17 +167,40 @@ rex.action{
     end)
 
     local selected, reason, detail = rex.ui.pick{
-      title = "Switch Session",
+      title = "Choose Alternate Session",
       placeholder = "Filter sessions",
       items = items,
     }
     if selected then
       select_session(ctx, selected, session_hosts[selected])
+      if ctx.client_id and ctx.session_id then
+        pair_by_client[ctx.client_id] = {
+          [ctx.session_id] = { id = selected, server = session_hosts[selected] },
+          [selected] = { id = ctx.session_id, server = ctx.server },
+        }
+      end
       record_visit(selected)
     elseif reason == "unsupported" then
       rex.client.queue("session.switch")
     elseif reason ~= "cancelled" then
       rex.log("warn", "Session picker: " .. (detail or reason))
     end
+  end,
+}
+rex.action(pick_alternate)
+
+rex.action{
+  name = "toggle_session_pair",
+  title = "Toggle Between Sessions",
+  run = function(ctx)
+    local pair = pair_by_client[ctx.client_id]
+    local alternate = pair and pair[ctx.session_id]
+    if not alternate then
+      pick_alternate.run(ctx)
+      return
+    end
+
+    select_session(ctx, alternate.id, alternate.server)
+    record_visit(alternate.id)
   end,
 }
