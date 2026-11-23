@@ -44,7 +44,10 @@ stow_package() {
     [[ -d "$repo_dir/$package" ]] || fail "Missing Stow package: $package"
 
     stow --restow --no-folding --ignore='^\.gitkeep$' \
-        --ignore='(^|/)\.codex/(?!AGENTS\.md$).*' \
+        --ignore='(^|/)\.claude/(?!CLAUDE\.md$|settings\.json$|statusline-command\.sh$).*' \
+        --ignore='(^|/)\.codex/(?!AGENTS\.md$|shared\.config\.toml$).*' \
+        --ignore='(^|/)\.ssh/(?!config$).*' \
+        --ignore='(^|/)(\.gitconfig\.local|\.zsh/machine\.zsh)$' \
         --dir "$repo_dir" --target "$HOME" "$mode"='.*' "$package"
 }
 
@@ -73,11 +76,32 @@ install_homebrew
 activate_homebrew
 brew bundle --file "$repo_dir/Brewfile"
 
+export PATH="$HOME/.juliaup/bin:$HOME/.cargo/bin:$HOMEBREW_PREFIX/opt/rustup/bin:$HOMEBREW_PREFIX/bin:$PATH"
+if ! rustup default >/dev/null 2>&1; then
+    rustup default stable
+fi
+rustup component add rust-src
+if ! julia --version >/dev/null 2>&1; then
+    juliaup add release
+    juliaup default release
+fi
+if [[ ! -x "${JAVA_HOME:-}/bin/java" || -z "${JAVA_HOME:-}" ]]; then
+    if [[ "$platform" == "macos" ]]; then
+        export JAVA_HOME="$HOMEBREW_PREFIX/opt/openjdk/libexec/openjdk.jdk/Contents/Home"
+    else
+        export JAVA_HOME="$HOMEBREW_PREFIX/opt/openjdk"
+    fi
+fi
+export PATH="$JAVA_HOME/bin:$PATH"
+
 # Remove folded directory links from previous runs before merging packages.
 stow --delete --dir "$repo_dir" --target "$HOME" common "$platform"
 
 # Defer conflicts from the generic package so the platform package owns them.
 stow_package common --defer
 stow_package "$platform" --override
+
+nvim --headless -i NONE -n -u NONE -l "$repo_dir/bin/nvim-setup.lua" plugins
+nvim --headless -i NONE -n -u "$HOME/.config/nvim/init.lua" -l "$repo_dir/bin/nvim-setup.lua"
 
 source "$platform_setup"

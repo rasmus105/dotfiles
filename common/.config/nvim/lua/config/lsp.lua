@@ -102,6 +102,28 @@ vim.api.nvim_create_autocmd("LspAttach", {
     end,
 })
 
+local mason_tools = {
+    "clangd",
+    "dockerfile-language-server",
+    "jdtls",
+    "julia-lsp",
+    "lua-language-server",
+    "rust-analyzer",
+    "tsc", -- TypeScript/JavaScript language server (TypeScript 7+)
+    "zls",
+    "tinymist",
+    "marksman",
+    "yaml-language-server",
+    "codelldb", -- Debug adapter for Zig/C/C++/Rust
+    "clang-format",
+    "stylua",
+    "shellcheck",
+    "shfmt",
+    "ty",
+    "ruff",
+    "debugpy",
+}
+
 local setup_lsp = lazy.once("lsp", function()
     lazy.packadd("nvim-lspconfig")
     lazy.packadd("mason.nvim")
@@ -123,28 +145,9 @@ local setup_lsp = lazy.once("lsp", function()
     vim.lsp.enable("julials")
 
     require("mason-tool-installer").setup({
-        ensure_installed = {
-            "clangd", -- C/C++ language server
-            "dockerls", -- Docker language server
-            "jdtls", -- Java language server
-            "julials", -- Julia language server
-            "lua_ls", -- Lua language server
-            "rust_analyzer", -- Rust language server
-            "tsc", -- TypeScript/JavaScript language server (TypeScript 7+)
-            -- "emmylua_ls", -- Another lua language server
-            "zls", -- Zig language server
-            "tinymist", -- Typst language server
-            "marksman", -- Markdown language server
-            "yamlls", -- YAML language server
-            "codelldb", -- Debug adapter for Zig/C/C++/Rust
-            "clang-format", -- C/C++ formatter
-            "stylua", -- Lua formatter
-            "shellcheck", -- Shell linter
-            "shfmt", -- Shell formatter
-            "ty", -- Python type checker and language server
-            "ruff", -- Python linter and formatter
-            "debugpy", -- Python debug adapter
-        },
+        ensure_installed = mason_tools,
+        integrations = { ["mason-lspconfig"] = false },
+        run_on_start = not vim.g.dotfiles_setup,
     })
     -- Lazy loading can happen after the installer's VimEnter autocmd.
     if vim.v.vim_did_enter == 1 then
@@ -231,4 +234,14 @@ end)
 lazy.on_event({ "BufReadPost", "BufNewFile" }, "Lsp", setup_lsp, { once = true, schedule = true })
 lazy.on_event({ "InsertEnter", "CmdlineEnter" }, "LspImmediate", setup_lsp, { once = true })
 
-vim.api.nvim_create_user_command("LspSetup", setup_lsp, { desc = "Load LSP and completion plugins" })
+vim.api.nvim_create_user_command("LspSetup", function(args)
+    setup_lsp()
+    if args.bang then
+        vim.cmd.MasonToolsInstallSync()
+        local registry = require("mason-registry")
+        local missing = vim.tbl_filter(function(tool)
+            return not registry.is_installed(tool)
+        end, mason_tools)
+        assert(#missing == 0, "Mason failed to install: " .. table.concat(missing, ", "))
+    end
+end, { bang = true, desc = "Load LSP and completion plugins, and install tools with !" })
