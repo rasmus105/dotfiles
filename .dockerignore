@@ -1,1 +1,14 @@
 .git
+.sp
+common/.gitconfig.local
+common/.gitconfig-nversion
+common/.zsh/machine.zsh
+common/.claude/*
+!common/.claude/CLAUDE.md
+!common/.claude/settings.json
+!common/.claude/statusline-command.sh
+common/.codex/*
+!common/.codex/AGENTS.md
+!common/.codex/shared.config.toml
+common/.ssh/*
+!common/.ssh/config

@@ -1,15 +1,14 @@
-[user]
-    name = Rasmus Kargo
-    email = rasmus105@protonmail.com
+[include]
+    path = ~/.gitconfig-personal
 
 [alias]
     difft = -c diff.external='difft --color=always --background=dark' -c core.pager='less -R' diff
-	whoami = !git config --global user.name && git config --global user.email
+    whoami = !git config --global user.name && git config --global user.email
     l = log --graph --pretty=format:'%C(yellow)%h%C(auto)%d%Creset %s %C(white)- %an, %ar%Creset'
     c = "!f() { git clone --recursive \"$@\"; }; f"
     s = "status -s"
     count = rev-list --count --all
-	filelog = log --follow --stat
+    filelog = log --follow --stat
 
 [init]
     defaultBranch = main
@@ -17,67 +16,48 @@
 [pull]
     rebase = false
 
-[color]
-	branch = auto
-	diff = auto
-	interactive = auto
-	pager = true
-	status = auto
-	ui = true
-
 [core]
     editor = nvim
     excludesFile = ~/.gitignore_global
-    ; pager = delta
     ignoreCase = false
 
-; [interactive]
-;     diffFilter = delta --color-only
-;
-; [delta]
-;     side-by-side = true
-;     syntax-theme = gruvbox-dark
-
 [includeIf "gitdir:~/dev/work/"]
-    path = ~/.gitconfig-personal # (my company)
     path = ~/.gitconfig-nversion
 
 [includeIf "gitdir:~/dev/vl/"]
-    path = ~/.gitconfig-personal
     path = ~/.gitconfig-nversion
 
 [includeIf "gitdir:~/dev/cde/"]
-    path = ~/.gitconfig-personal
     path = ~/.gitconfig-nversion
 
 [includeIf "gitdir:~/dev/ts/"]
-    path = ~/.gitconfig-personal
     path = ~/.gitconfig-nversion
-
-[includeIf "gitdir:~/dev/p/"]
-    path = ~/.gitconfig-personal
 
 [includeIf "gitdir:~/dev/tt/"]
     path = ~/.gitconfig-traffitech
-
-[includeIf "gitdir:~/dev/personal/"]
-    path = ~/.gitconfig-personal
 
 [includeIf "gitdir:~/dev/traffitech/"]
     path = ~/.gitconfig-traffitech
 
 [filter "lfs"]
-	required = true
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
+    required = true
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
+
 [merge]
-	conflictStyle = zdiff3
+    conflictStyle = zdiff3
+
 [credential "https://github.com"]
-	helper =
-	helper = !/opt/homebrew/bin/gh auth git-credential
+    helper =
+    helper = !gh auth git-credential
+
 [credential "https://gist.github.com"]
-	helper =
-	helper = !/opt/homebrew/bin/gh auth git-credential
+    helper =
+    helper = !gh auth git-credential
+
 [url "git@ssh.bitbucket.org:"]
-	insteadOf = git@bitbucket.org:
+    insteadOf = git@bitbucket.org:
+
+[include]
+    path = ~/.gitconfig.local

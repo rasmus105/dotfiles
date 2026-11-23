@@ -1,5 +1,15 @@
 common/.gitconfig-nversion
+/.sp/
+/common/.gitconfig.local
+/common/.zsh/machine.zsh
+/common/.claude/*
+!/common/.claude/CLAUDE.md
+!/common/.claude/settings.json
+!/common/.claude/statusline-command.sh
+/common/.ssh/*
+!/common/.ssh/config
 **/lazygit/state.yml
 **/lazygit/github_pull_requests.json
 /common/.codex/*
 !/common/.codex/AGENTS.md
+!/common/.codex/shared.config.toml

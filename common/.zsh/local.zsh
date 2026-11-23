@@ -1,39 +1,20 @@
 #!/usr/bin/env zsh
 
-# Machine-local configuration.
+# Tab completion for juliaup and julia channel selection.
+[[ -r "$HOME/.julia/juliaup/completions/zsh.zsh" ]] && source "$HOME/.julia/juliaup/completions/zsh.zsh"
 
-# ==============================================================================
-# Toolchains
-# ==============================================================================
-
-export ARM_NONE_EABI_TOOLCHAIN_PATH="/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
-export CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm"
-export JAVA_HOME="/Library/Java/JavaVirtualMachines/liberica-jdk-26-full.jdk/Contents/Home"
-export PATH="$PATH:/Users/kargo/.lmstudio/bin"
-
-typeset -U path
-path=(
-  "$JAVA_HOME/bin"
-  "$ARM_NONE_EABI_TOOLCHAIN_PATH/bin"
-  "/Applications/SEGGER/JLink/JFlash.app/Contents/MacOS"
-  $path
-)
-export PATH
-
-# >>> juliaup initialize >>>
-
-# !! Contents within this block are managed by juliaup !!
-
-path=('/Users/kargo/.juliaup/bin' $path)
-export PATH
-# Tab completion for juliaup and julia channel selection
-[ -f "/Users/kargo/.julia/juliaup/completions/zsh.zsh" ] && source "/Users/kargo/.julia/juliaup/completions/zsh.zsh"
-
-# <<< juliaup initialize <<<
-
-# ==============================================================================
-# Local Completions
-# ==============================================================================
+if [[ -r "$HOME/.claude/settings-machine.json" ]]; then
+  claude() {
+    local arg
+    for arg in "$@"; do
+      if [[ "$arg" == --settings || "$arg" == --settings=* ]]; then
+        command claude "$@"
+        return
+      fi
+    done
+    command claude --settings "$HOME/.claude/settings-machine.json" "$@"
+  }
+fi
 
 # lazy-load bun.
 bun() {

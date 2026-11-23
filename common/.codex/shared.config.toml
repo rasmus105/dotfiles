@@ -1,0 +1,9 @@
+model = "gpt-6.2-sol"
+model_reasoning_effort = "xhigh"
+model_verbosity = "low"
+
+[tui]
+theme = "gruvbox-dark"
+status_line = ["model-with-reasoning", "current-dir", "thread-name"]
+status_line_use_colors = true
+session_picker_view = "comfortable"
