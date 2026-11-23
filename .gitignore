@@ -1,6 +1,7 @@
 common/.gitconfig-nversion
 /.sp/
 /common/.gitconfig.local
+/common/.zprofile.local
 /common/.zsh/machine.zsh
 /common/.claude/*
 !/common/.claude/CLAUDE.md

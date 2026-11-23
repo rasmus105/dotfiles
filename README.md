@@ -23,6 +23,7 @@ macos/.config/ghostty/config
 `setup.sh` stows `common/` first, then stows the platform package. Platform
 files override files at the same path in `common/`.
 
+Setup moves an existing regular `~/.zprofile` to `~/.zprofile.local`.
 Put machine-specific shell settings in `~/.zsh/machine.zsh` and Git overrides
 in `~/.gitconfig.local`. For Claude Code CLI overrides, put a settings object
 in `~/.claude/settings-machine.json`. Zsh passes it to `claude --settings`.

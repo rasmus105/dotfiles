@@ -47,7 +47,7 @@ stow_package() {
         --ignore='(^|/)\.claude/(?!CLAUDE\.md$|settings\.json$|statusline-command\.sh$).*' \
         --ignore='(^|/)\.codex/(?!AGENTS\.md$|shared\.config\.toml$).*' \
         --ignore='(^|/)\.ssh/(?!config$).*' \
-        --ignore='(^|/)(\.gitconfig\.local|\.zsh/machine\.zsh)$' \
+        --ignore='(^|/)(\.gitconfig\.local|\.zprofile\.local|\.zsh/machine\.zsh)$' \
         --dir "$repo_dir" --target "$HOME" "$mode"='.*' "$package"
 }
 
@@ -110,11 +110,27 @@ if [[ ! -x "${JAVA_HOME:-}/bin/java" || -z "${JAVA_HOME:-}" ]]; then
 fi
 export PATH="$JAVA_HOME/bin:$PATH"
 
+migrate_zprofile=false
+if [[ -f "$HOME/.zprofile" && ! -L "$HOME/.zprofile" ]]; then
+    [[ ! -e "$HOME/.zprofile.local" && ! -L "$HOME/.zprofile.local" ]] ||
+        fail "Both ~/.zprofile and ~/.zprofile.local exist. Back up and merge their contents before setup."
+    migrate_zprofile=true
+fi
+
 # Remove folded directory links from previous runs before merging packages.
 stow --delete --dir "$repo_dir" --target "$HOME" common "$platform"
 
+if [[ "$migrate_zprofile" == true ]]; then
+    mv "$HOME/.zprofile" "$HOME/.zprofile.local"
+fi
+
 # Defer conflicts from the generic package so the platform package owns them.
-stow_package common --defer
+if ! stow_package common --defer; then
+    if [[ "$migrate_zprofile" == true && ! -e "$HOME/.zprofile" && ! -L "$HOME/.zprofile" ]]; then
+        mv "$HOME/.zprofile.local" "$HOME/.zprofile"
+    fi
+    exit 1
+fi
 stow_package "$platform" --override
 
 "$nvim_bin" --headless -i NONE -n -u NONE -l "$repo_dir/bin/nvim-setup.lua" plugins

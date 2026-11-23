@@ -27,9 +27,29 @@ vim.g.dotfiles_setup = true
 vim.cmd("LspSetup!")
 vim.cmd.packadd("nvim-treesitter")
 
--- Replace the Zig parser if a stale revision cannot load the current queries.
-local ok, query = pcall(vim.treesitter.query.get, "zig", "highlights")
-if not ok or not query then
-    assert(require("nvim-treesitter").install({ "zig" }, { force = true }):wait(300000),
-        "Failed to install the Zig Tree-sitter parser")
+local treesitter = require("nvim-treesitter")
+local parsers = {
+    "bash", "c", "cmake", "cpp", "css", "diff", "dockerfile", "dtd",
+    "editorconfig", "fish", "git_config", "git_rebase", "gitattributes", "gitignore",
+    "go", "gomod", "gosum", "gotmpl", "gowork", "graphql", "html", "ini",
+    "java", "javascript", "jsdoc", "json", "json5", "julia", "just", "kotlin",
+    "lua", "luadoc", "make", "markdown", "markdown_inline", "meson", "ninja", "nix",
+    "php", "php_only", "proto", "python", "requirements", "ruby", "rust", "scss",
+    "ssh_config", "svelte", "swift", "terraform", "toml", "tsx", "typescript",
+    "typst", "vim", "vimdoc", "vue", "xml", "yaml", "zig",
+}
+
+-- A failed install can leave queries behind even when the parser is missing.
+local installed = treesitter.get_installed("parsers")
+local missing = vim.tbl_filter(function(parser)
+    return not vim.list_contains(installed, parser)
+end, parsers)
+assert(treesitter.install(missing, { force = true, summary = true }):wait(300000),
+    "Failed to install Tree-sitter parsers")
+assert(treesitter.update(parsers, { summary = true }):wait(300000),
+    "Failed to update Tree-sitter parsers")
+
+installed = treesitter.get_installed("parsers")
+for _, parser in ipairs(parsers) do
+    assert(vim.list_contains(installed, parser), "Tree-sitter parser is missing: " .. parser)
 end

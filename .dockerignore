@@ -1,6 +1,7 @@
 .git
 .sp
 common/.gitconfig.local
+common/.zprofile.local
 common/.gitconfig-nversion
 common/.zsh/machine.zsh
 common/.claude/*
