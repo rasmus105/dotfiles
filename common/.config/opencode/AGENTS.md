@@ -24,7 +24,10 @@
   test has no independent oracle and can repeat the implementation's mistake,
   omit it.
 
-- Branches should be named in format `rasmus105/<name>`, unless otherwise
+- Commit to the currently checked-out branch. Do not create branches or
+  worktrees, or propose them, unless asked or the checked-out branch is
+  unrelated to the work; extra branches only clutter the repo.
+- When a branch is needed, name it `rasmus105/<name>`, unless otherwise
   specified. Worktrees should always go into `wt/<name>`, as `wt` is
   configured to be ignored globally by git (e.g. `rasmus105/plotting` ->
   `wt/plotting`)
